@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+.env.local
+.env.production
+
+# BOS runtime credentials — generated at build time, never commit
+public/svr-env.js
+.vercel
+
+.vercel

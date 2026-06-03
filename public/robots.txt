@@ -1,0 +1,25 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /bos/
+Disallow: /boss
+Disallow: /manager
+Disallow: /bos-admin
+Disallow: /recipe
+Disallow: /allergen
+Disallow: /inward
+Disallow: /store
+Disallow: /traceability
+Disallow: /production
+Disallow: /quality
+Disallow: /haccp
+Disallow: /fssai
+Disallow: /capa
+Disallow: /recall
+Disallow: /prp
+Disallow: /dispatch
+Disallow: /accounts
+Disallow: /dms
+
+Sitemap: https://www.srivriddhi.com/sitemap.xml

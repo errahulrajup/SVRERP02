@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  STATIC SITEMAP — srivriddhi.com
+  This file covers core pages. Blog post and product URLs are dynamically
+  indexed by Google via JavaScript rendering (SPA).
+
+  TO UPDATE: After adding new products or blog posts via Admin,
+  regenerate this file or submit updated URLs via Google Search Console.
+  A dynamic sitemap endpoint can be added as a Vercel Edge Function at /api/sitemap.xml
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://www.srivriddhi.com/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://www.srivriddhi.com/products</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://www.srivriddhi.com/products/plant-based-butter</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.srivriddhi.com/products/vegan-cooking-cream</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.srivriddhi.com/products/vegan-mayonnaise</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.srivriddhi.com/about</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.srivriddhi.com/contact</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.srivriddhi.com/blog</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>
+</urlset>
