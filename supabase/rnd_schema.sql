@@ -169,6 +169,7 @@ CREATE TABLE IF NOT EXISTS rnd_formula_params (
   target_min  numeric,
   target_max  numeric,
   unit        text,
+  sort_order  integer DEFAULT 0,
   created_at  timestamptz DEFAULT now(),
   UNIQUE(formula_id, param_name)
 );
