@@ -10,7 +10,9 @@ describe('Maker-Checker Workflow Security', () => {
     const { error } = await supabase
       .from('payments')
       .update({ maker_checker_status: 'APPROVED' })
-      .eq('id', dummyPaymentId);
+      .eq('id', dummyPaymentId)
+      .select()
+      .single();
 
     // Should fail (either by RLS or by our protective trigger)
     expect(error).not.toBeNull();

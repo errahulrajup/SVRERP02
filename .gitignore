@@ -3,6 +3,7 @@ dist/
 .env
 .env.local
 .env.production
+.env.staging
 
 # BOS runtime credentials — generated at build time, never commit
 public/svr-env.js
