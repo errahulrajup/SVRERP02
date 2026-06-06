@@ -40,10 +40,20 @@ interface DailyLog {
 
 const LS_KEY = 'bos_daily_logs';
 
+const DEFAULT_LOG: Omit<DailyLog, 'id' | 'created_at'> = {
+  log_date: '', shift: 'Morning', work_center: '', operator: '', supervisor: null,
+  planned_output: 0, actual_output: 0, output_unit: 'kg', reject_qty: 0,
+  downtime_mins: 0, downtime_reason: null, power_kwh: null, water_kl: null,
+  qc_checks_done: 0, qc_issues: null, observations: null, safety_incidents: 0
+};
+
 function lsLoad(): DailyLog[] {
-  try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch { return []; }
+  try { 
+    const arr = JSON.parse(localStorage.getItem(LS_KEY) || '[]'); 
+    return arr.map((l: any) => ({ ...DEFAULT_LOG, ...l }));
+  } catch { return []; }
 }
-function lsSave(data: DailyLog[]) { localStorage.setItem(LS_KEY, JSON.stringify(data)); }
+function lsSave(data: DailyLog[]) { localStorage.setItem(LS_KEY, JSON.stringify(data.slice(0, 50))); }
 
 async function fetchDailyLogs(): Promise<DailyLog[]> {
   try {
@@ -193,7 +203,25 @@ export function DailyLogs() {
     if (!form.operator.trim()) return alert('Operator is required');
     const planned = parseFloat(form.planned_output as string) || 0;
     const actual = parseFloat(form.actual_output as string) || 0;
-    if (planned <= 0) return alert('Planned output must be > 0');
+    const reject = parseFloat(form.reject_qty as string) || 0;
+    const checksDone = parseInt(form.qc_checks_done as string) || 0;
+    
+    if (planned <= 0 || form.planned_output === '') return alert('Planned output must be > 0');
+    if (actual < 0 || form.actual_output === '') return alert('Actual output cannot be negative or empty');
+    if (reject < 0) return alert('Reject quantity cannot be negative');
+
+    if (actual + reject > planned) {
+      if (!confirm(`Total actual + reject (${actual + reject}) is greater than planned (${planned}). Are you sure?`)) return;
+    }
+    
+    if (checksDone === 0 && form.qc_issues.trim()) {
+      return alert('Contradiction: You logged QC issues but 0 QC checks done.');
+    }
+
+    const yld = yieldPct(planned, actual);
+    if (yld && yld > 200) {
+      if (!confirm(`Yield is extremely high (${yld.toFixed(0)}%). Are you sure this is correct?`)) return;
+    }
 
     setSaving(true);
     try {
@@ -203,7 +231,7 @@ export function DailyLogs() {
         supervisor: form.supervisor.trim() || null,
         planned_output: planned, actual_output: actual,
         output_unit: form.output_unit,
-        reject_qty: parseFloat(form.reject_qty as string) || 0,
+        reject_qty: reject,
         downtime_mins: parseInt(form.downtime_mins as string) || 0,
         downtime_reason: form.downtime_reason.trim() || null,
         power_kwh: form.power_kwh ? parseFloat(form.power_kwh as string) : null,
@@ -220,19 +248,19 @@ export function DailyLogs() {
         await saveDailyLog(payload);
         alert('✅ Daily Log submitted');
       }
-      setModalOpen(false);
-      load();
+      await load();
     } catch (e: any) {
       alert(`Error: ${e.message}`);
     } finally {
       setSaving(false);
+      setModalOpen(false);
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this daily log? This cannot be undone.')) return;
     await deleteDailyLog(id);
-    load();
+    await load();
   };
 
   if (loading) return <div style={{ padding: 40, color: '#9AAF96' }}>Loading Daily Logs...</div>;
@@ -471,8 +499,9 @@ export function DailyLogs() {
               </div>
 
               {parseInt(form.safety_incidents as string) > 0 && (
-                <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: 12, marginTop: 8, color: '#EF4444', fontSize: 13 }}>
-                  ⚠️ Safety incident reported. Please raise a CAPA from the QC module for investigation.
+                <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: 12, marginTop: 8, color: '#EF4444', fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>⚠️ Safety incident reported. FSSAI requires immediate logging.</span>
+                  <button className="bos-btn bos-btn-sm bos-btn-danger" onClick={(e) => { e.preventDefault(); window.location.hash = '#/compliances/capa'; }}>Raise CAPA ↗</button>
                 </div>
               )}
             </div>

@@ -99,3 +99,37 @@ BEGIN
     ALTER TABLE fg_lots ADD COLUMN holding_status text DEFAULT 'RELEASED' CHECK (holding_status IN ('INCUBATION', 'MATURATION', 'RELEASED', 'QUARANTINE', 'HOLD'));
   END IF;
 END $$;
+
+-- RLS for all tables in this file (were missing — added to prevent anon key access)
+ALTER TABLE locations       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE stock_transfers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bulk_lots       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE packaging_runs  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE wastage_logs    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sales_returns   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE return_qc       ENABLE ROW LEVEL SECURITY;
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'locations' AND policyname = 'allow_authenticated_locations') THEN
+    CREATE POLICY allow_authenticated_locations ON locations FOR ALL TO authenticated USING (true) WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'stock_transfers' AND policyname = 'allow_authenticated_stock_transfers') THEN
+    CREATE POLICY allow_authenticated_stock_transfers ON stock_transfers FOR ALL TO authenticated USING (true) WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'bulk_lots' AND policyname = 'allow_authenticated_bulk_lots') THEN
+    CREATE POLICY allow_authenticated_bulk_lots ON bulk_lots FOR ALL TO authenticated USING (true) WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'packaging_runs' AND policyname = 'allow_authenticated_packaging_runs') THEN
+    CREATE POLICY allow_authenticated_packaging_runs ON packaging_runs FOR ALL TO authenticated USING (true) WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'wastage_logs' AND policyname = 'allow_authenticated_wastage_logs') THEN
+    CREATE POLICY allow_authenticated_wastage_logs ON wastage_logs FOR ALL TO authenticated USING (true) WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'sales_returns' AND policyname = 'allow_authenticated_sales_returns') THEN
+    CREATE POLICY allow_authenticated_sales_returns ON sales_returns FOR ALL TO authenticated USING (true) WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'return_qc' AND policyname = 'allow_authenticated_return_qc') THEN
+    CREATE POLICY allow_authenticated_return_qc ON return_qc FOR ALL TO authenticated USING (true) WITH CHECK (true);
+  END IF;
+END $$;
+

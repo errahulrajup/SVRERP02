@@ -239,7 +239,7 @@ CREATE TABLE IF NOT EXISTS mfg.packing_orders (
 CREATE OR REPLACE VIEW sales.customer_basket_analysis AS
 SELECT 
   o.org_id,
-  o.site_id,
+  NULL::uuid AS site_id,
   o.customer_id,
   c.name AS customer_name,
   i.id AS product_item_id,
@@ -251,7 +251,7 @@ CROSS JOIN md.items i
 LEFT JOIN fin.dispatch_orders o ON o.customer_id = c.id
 LEFT JOIN fin.dispatch_lines l ON l.dispatch_order_id = o.id AND l.item_id = i.id
 WHERE i.item_type = 'FINISHED_GOOD'
-GROUP BY o.org_id, o.site_id, o.customer_id, c.name, i.id, i.name;
+GROUP BY o.org_id, o.customer_id, c.name, i.id, i.name;
 
 -- ============================================================
 -- 9. Contract Manufacturing

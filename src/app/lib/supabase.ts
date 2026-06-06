@@ -70,6 +70,7 @@ export interface Testimonial {
   rating: number;
   visible: boolean;
   sort_order: number;
+  approved_by?: string | null;
   created_at: string;
 }
 

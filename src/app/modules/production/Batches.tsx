@@ -5,12 +5,14 @@ import { fmtINR, BatchStatus, Batch } from '../../types/bos';
 import { useAuth } from '../../hooks';
 import { supabase } from '../../lib/supabase';
 import { logAudit } from '../../lib/auditLogger';
+import { useCompleteProduction } from '../../hooks/useProduction';
 
 export function Batches() {
   const { items: batches, loading: bLoading, reload: bReload } = useBatches();
   const { items: recipes, loading: rLoading } = useRecipes();
   const { items: recipeSteps, loading: rsLoading } = useRecipeSteps();
   const { user } = useAuth();
+  const { completeBatch: rpcCompleteBatch } = useCompleteProduction();
 
   const [filter, setFilter] = useState<BatchStatus | 'ALL'>('ALL');
   
@@ -22,7 +24,7 @@ export function Batches() {
   // New Batch Form
   const [bForm, setBForm] = useState({
     batchNo: '', recipeId: '', product: '', plannedQty: '', unit: 'kg',
-    line: '', operator: user?.name || '', overhead: '', labour: '', notes: ''
+    line: '', operator: '', overhead: '', labour: '', notes: ''
   });
 
   // Complete Batch Form
@@ -64,7 +66,7 @@ export function Batches() {
   const handleRecipeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const rid = e.target.value;
     const r = activeRecipes.find(x => x.id === rid);
-    setBForm({ ...bForm, recipeId: rid, product: r ? (r.product_id || '') : '', unit: r ? r.output_unit : 'kg' });
+    setBForm({ ...bForm, recipeId: rid, product: r ? (r.name.split(' v')[0] || '') : '', unit: r ? r.output_unit : 'kg' });
   };
 
   const saveBatch = async () => {
@@ -103,7 +105,7 @@ export function Batches() {
       logAudit({ user_name: user?.name, action: 'INSERT', module: 'Production', record_label: batchNo, details: `New batch created: ${productName} | Line: ${bForm.line || 'N/A'}` });
       setIsBatchModalOpen(false);
       setBForm({ batchNo:'', recipeId:'', product:'', plannedQty:'', unit:'kg', line:'', operator:user?.name||'', overhead:'', labour:'', notes:'' });
-      bReload();
+      await bReload(); // FIX-5: await so list refreshes before user can click again
     } catch (e: any) {
       alert(`Error saving batch: ${e.message}`);
     } finally {
@@ -140,7 +142,11 @@ export function Batches() {
     try {
       const payload: Partial<Batch> = { status: nextStatus };
       if (nextStatus === 'RUNNING') {
-        payload.start_time = new Date().toISOString();
+        const { batchesApi: bApi } = await import('../../lib/bosApi');
+        const { data: bInfo } = await bApi.byId(id);
+        if (!bInfo?.start_time) {
+          payload.start_time = new Date().toISOString();
+        }
       }
       await batchesApi.update(id, payload);
       bReload();
@@ -156,114 +162,49 @@ export function Batches() {
 
     setSaving(true);
     try {
-      const result = await batchesApi.byId(cForm.id);
-      const b = result.data;
-      if (!b || b.status !== 'RUNNING') {
-        alert('Batch already processed');
+      const { data: b, error: fetchErr } = await batchesApi.byId(cForm.id);
+      if (fetchErr || !b || b.status !== 'RUNNING') {
+        alert('Batch already processed or status changed. Please refresh.');
         setIsCompleteModalOpen(false);
+        bReload();
         return;
       }
 
-      const yieldPct = cForm.plannedQty > 0 ? (actual / cForm.plannedQty) * 100 : 0;
       const rmCost = parseFloat(cForm.rmCost) || 0;
       const laborCost = (parseFloat(cForm.laborHours) || 0) * 150;
       const overhead = parseFloat(cForm.overheadCost) || 0;
       const totalCost = rmCost + laborCost + overhead;
       const unitCost = actual > 0 ? totalCost / actual : 0;
 
-      // ── RM Lot Deduction via stock_ledger ─────────────────────────────────
-      const { batchComponentsApi: bcApi, stockLedgerApi, consumedLotsApi, expensesApi, laborHoursApi } = await import('../../lib/bosApi');
-      const { data: components } = await bcApi.byBatch(cForm.id);
-      
-      // Auto-log labor hours
-      const loggedLabor = parseFloat(cForm.laborHours) || 0;
-      if (loggedLabor > 0) {
-        await laborHoursApi.create({
-          org_id: 'ORG-SVR',
-          site_id: 'SITE-MAIN',
-          batch_id: b.id,
-          employee_id: 'GENERAL-OPERATOR',
-          hours_worked: loggedLabor,
-          hourly_rate: 150,
-        });
-      }
+      // Auto-log labor hours if dynamic params are needed we can still update them
+      const parsedParams = Object.fromEntries(
+        Object.entries(cForm.dynamicParams).map(([k, v]) => [k, parseFloat(v as string) || null])
+      );
 
-      let autoRmCost = 0;
+      // We call the new RPC via our hook
+      await rpcCompleteBatch(
+        cForm.id,
+        {
+          product: b.product,
+          qty: actual,
+          unit: b.unit,
+          batch_no: `${b.batch_no}-FG`,
+          expiry_date: new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0],
+          unit_cost: unitCost
+        },
+        // We pass null for QC data because QC is done by analyst later
+        undefined
+      );
 
-      if (components && components.length > 0) {
-        for (const comp of components) {
-          const qtyUsed = comp.actual_qty || comp.planned_qty;
-          const rate    = comp.unit_cost || 0;
-          const cost    = Math.round(qtyUsed * rate * 100) / 100;
-          autoRmCost   += cost;
-
-          // Record RM consumption
-          await consumedLotsApi.create({
-            batch_id:    b.id,
-            batch_no:    b.batch_no,
-            lot_id:      comp.lot_id || null,
-            lot_no:      null,
-            material:    comp.material,
-            qty_consumed: qtyUsed,
-            rate,
-            cost,
-          });
-
-          // Deduct from lot stock ledger
-          if (comp.lot_id) {
-            await stockLedgerApi.create({
-              lot_id:            comp.lot_id,
-              fg_lot_id:         null,
-              erp_product_id:    null,
-              transaction_type:  'OUT',
-              qty_change:        -Math.abs(qtyUsed),
-              reference_id:      b.id,
-              notes:             `Batch ${b.batch_no} — RM consumption`,
-              created_by:        null,
-            });
-
-            // BUG-03: Decrement lot remaining_qty to stay in sync with stock ledger
-            const { lotsApi } = await import('../../lib/bosApi');
-            const { data: lotData } = await lotsApi.byId(comp.lot_id);
-            if (lotData) {
-              await lotsApi.update(comp.lot_id, {
-                remaining_qty: Math.max(0, (lotData.remaining_qty ?? 0) - qtyUsed),
-              });
-            }
-          }
-        }
-
-        // Auto-log RM expense if autoRmCost > 0
-        if (autoRmCost > 0) {
-          await expensesApi.create({
-            date:        new Date().toISOString().split('T')[0],
-            category:    'Raw Material',
-            description: `RM consumed — Batch ${b.batch_no} (${b.product})`,
-            amount:      autoRmCost,
-            recorded_by: null,
-            notes:       `Auto-created from batch completion`,
-          });
-        }
-      }
-
-      const finalRmCost = rmCost || autoRmCost;
-      const finalTotal  = finalRmCost + laborCost + overhead;
-      const finalUnit   = actual > 0 ? finalTotal / actual : 0;
-
+      // Still update dynamic params and notes on the batch
       await batchesApi.update(cForm.id, {
-        status:    'QC_HOLD',
-        actual_qty: actual,
-        reject_qty: reject,
-        yield_pct:  yieldPct,
-        end_time:   new Date().toISOString(),
-        notes: (b.notes ? b.notes + '\n' : '') +
-          `Batch Cost: ₹${finalTotal.toFixed(2)} (Unit Cost: ₹${finalUnit.toFixed(2)})\n` + cForm.notes,
-        dynamic_params: cForm.dynamicParams,
+        dynamic_params: parsedParams,
+        notes: cForm.notes
       });
 
-      alert(`✅ Batch completed — moved to QC Hold. RM deducted from stock.`);
+      alert(`✅ Batch completed — FG lot created (Quarantined) & RM deducted.`);
       setIsCompleteModalOpen(false);
-      bReload();
+      await bReload();
     } catch (e: any) {
       alert(`Error completing batch: ${e.message}`);
     } finally {
@@ -279,6 +220,14 @@ export function Batches() {
       const { data: fgLots } = await fgLotsApi.byBatch(id);
       if (fgLots && fgLots.length > 0) {
         return alert('Cannot delete — FG lots exist for this batch. Reject the batch via QC first.');
+      }
+      
+      const { batchComponentsApi: bcApi } = await import('../../lib/bosApi');
+      const { data: bComps } = await bcApi.byBatch(id);
+      if (bComps) {
+        for (const bc of bComps) {
+          await bcApi.remove(bc.id);
+        }
       }
 
       await batchesApi.remove(id);
@@ -307,7 +256,11 @@ export function Batches() {
             <p className="bos-page-sub">Batch engine · BOM · Step logs · Yield tracking</p>
           </div>
           {canEdit && (
-            <button className="bos-btn bos-btn-primary" onClick={() => setIsBatchModalOpen(true)}>+ New Batch</button>
+            // FIX-1: update operator from user context at modal open time (not stale useState init)
+            <button className="bos-btn bos-btn-primary" onClick={() => {
+              setBForm(prev => ({ ...prev, operator: user?.name || prev.operator }));
+              setIsBatchModalOpen(true);
+            }}>+ New Batch</button>
           )}
         </div>
       </div>

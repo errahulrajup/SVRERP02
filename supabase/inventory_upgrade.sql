@@ -47,3 +47,12 @@ CREATE TRIGGER trigger_update_lot_qty
 AFTER INSERT ON public.stock_ledger
 FOR EACH ROW
 EXECUTE FUNCTION update_lot_remaining_qty();
+
+-- RLS for stock_ledger (was missing — added to prevent anon key access)
+ALTER TABLE public.stock_ledger ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'stock_ledger' AND policyname = 'allow_authenticated_stock_ledger') THEN
+    CREATE POLICY allow_authenticated_stock_ledger ON public.stock_ledger
+      FOR ALL TO authenticated USING (true) WITH CHECK (true);
+  END IF;
+END $$;

@@ -1,25 +1,64 @@
-import React from 'react';
-import { useInvoices, useExpenses } from '../../hooks/useBos';
+import React, { useState, useMemo } from 'react';
+import { useInvoices, useExpenses, useBatches } from '../../hooks/useBos';
 import { fmtINR, fmtDate } from '../../types/bos';
 
 export function AccountsDashboard() {
   const { items: invoices, loading: iLoading } = useInvoices();
   const { items: expenses, loading: eLoading } = useExpenses();
+  const { items: batches } = useBatches();
 
-  // ── Financials ─────────────────────────────────────────────────────────────
-  // Revenue = total billed (invoice.total), not just collected
-  const billedRevenue = invoices.reduce((a, i) => a + (i.total || 0), 0);
-  const collected     = invoices.reduce((a, i) => a + (i.paid_amt || 0), 0);
+  const [period, setPeriod] = useState<'MTD'|'QTD'|'YTD'|'ALL'>('MTD');
+  const [basis, setBasis] = useState<'accrual'|'cash'>('accrual');
+
+  const [startDate, endDate] = useMemo(() => {
+    const now = new Date();
+    if (period === 'MTD') return [new Date(now.getFullYear(), now.getMonth(), 1), now];
+    if (period === 'QTD') {
+      const q = Math.floor(now.getMonth() / 3);
+      return [new Date(now.getFullYear(), q * 3, 1), now];
+    }
+    if (period === 'YTD') return [new Date(now.getFullYear(), 0, 1), now];
+    return [new Date(0), now];
+  }, [period]);
+
+  const filteredInvoices = useMemo(() =>
+    invoices.filter(i => {
+      const d = new Date(i.date || i.created_at);
+      return d >= startDate && d <= endDate;
+    }), [invoices, startDate, endDate]
+  );
+
+  const filteredExpenses = useMemo(() =>
+    expenses.filter(e => {
+      const d = new Date(e.date);
+      return d >= startDate && d <= endDate;
+    }), [expenses, startDate, endDate]
+  );
+
+  const filteredBatches = useMemo(() =>
+    batches.filter(b => {
+      const d = new Date(b.end_time || b.created_at);
+      return d >= startDate && d <= endDate && b.status === 'COMPLETED';
+    }), [batches, startDate, endDate]
+  );
+
+  const billedRevenue = filteredInvoices.reduce((a, i) => a + (i.total || 0), 0);
+  const collected     = filteredInvoices.reduce((a, i) => a + (i.paid_amt || 0), 0);
   const outstanding   = Math.max(0, billedRevenue - collected);
-  const expTotal      = expenses.reduce((a, e) => a + (e.amount || 0), 0);
+  const expTotal      = filteredExpenses.reduce((a, e) => a + (e.amount || 0), 0);
 
-  const autoExp  = expenses.filter(e => e.category === 'Raw Material' && (e.notes || '').includes('Auto-created'));
-  const manualExp = expenses.filter(e => !(e.category === 'Raw Material' && (e.notes || '').includes('Auto-created')));
-  const procTotal  = autoExp.reduce((a, e) => a + e.amount, 0);
-  const opexTotal  = manualExp.reduce((a, e) => a + e.amount, 0);
-  const grossProfit = billedRevenue - procTotal;
+  const revenue = basis === 'accrual' ? billedRevenue : collected;
+
+  const autoExp   = filteredExpenses.filter(e => e.source !== 'manual');
+  const manualExp = filteredExpenses.filter(e => e.source === 'manual' || !e.source);
+  
+  const procTotal   = filteredBatches.reduce((a, b) => a + ((b as any).actual_rm_cost || 0), 0);
+  const wastageTotal = autoExp.reduce((a, e) => a + e.amount, 0) - procTotal; // For visibility
+  
+  const opexTotal   = manualExp.reduce((a, e) => a + e.amount, 0);
+  const grossProfit = revenue - procTotal;
   const netProfit   = grossProfit - opexTotal;
-  const margin      = billedRevenue > 0 ? ((netProfit / billedRevenue) * 100).toFixed(1) : 0;
+  const margin      = revenue > 0 ? ((netProfit / revenue) * 100).toFixed(1) : 0;
 
   const byCat: Record<string, number> = {};
   manualExp.forEach(e => { byCat[e.category] = (byCat[e.category] || 0) + e.amount; });
@@ -35,16 +74,43 @@ export function AccountsDashboard() {
   if (iLoading || eLoading) return <div style={{ padding: 40, color: '#9AAF96' }}>Loading Dashboard...</div>;
 
   const entries = [
-    ...invoices.map(i => ({ id: i.id, date: i.date || i.created_at, desc: `Invoice ${i.invoice_no} — ${i.customer}`, debit: 0, credit: i.total || 0, collected: i.paid_amt || 0, type: 'Revenue' })),
-    ...expenses.map(e => ({ id: e.id, date: e.date, desc: `${e.category}: ${e.description}`, debit: e.amount, credit: 0, collected: 0, type: 'Expense' }))
+    ...filteredInvoices.map(i => ({ id: i.id, date: i.date || i.created_at, desc: `Invoice ${i.invoice_no} — ${i.customer}`, debit: 0, credit: i.total || 0, collected: i.paid_amt || 0, type: 'Revenue' })),
+    ...filteredExpenses.map(e => ({ id: e.id, date: e.date, desc: `${e.category}: ${e.description}`, debit: e.amount, credit: 0, collected: 0, type: 'Expense' }))
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const exportCSV = () => {
+    const csv = [
+      ['Date','Description','Type','Debit','Credit'].join(','),
+      ...entries.map(r => [r.date, `"${r.desc}"`, r.type, r.debit, r.credit].join(','))
+    ].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `GL_${period}_${new Date().toISOString().split('T')[0]}.csv`; a.click();
+  };
 
   return (
     <div>
-      <div className="bos-page-header">
-        <p className="bos-eyebrow">Finance · Dashboard</p>
-        <h1 className="bos-page-title">P&L Summary</h1>
-        <p className="bos-page-sub">Track revenue, expenses, and overall business health</p>
+      <div className="bos-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <p className="bos-eyebrow">Finance · Dashboard</p>
+          <h1 className="bos-page-title">P&L Summary</h1>
+          <p className="bos-page-sub">Track revenue, expenses, and overall business health</p>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 8, justifyContent: 'flex-end' }}>
+            {(['MTD','QTD','YTD','ALL'] as const).map(p => (
+              <button key={p} className={`bos-btn bos-btn-sm ${period===p?'bos-btn-primary':''}`} onClick={() => setPeriod(p)}>{p}</button>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+            <select className="bos-form-field" style={{ padding: '4px 8px', width: 'auto', fontSize: 12 }} value={basis} onChange={e => setBasis(e.target.value as any)}>
+              <option value="accrual">Accrual Basis</option>
+              <option value="cash">Cash Basis</option>
+            </select>
+            <button className="bos-btn bos-btn-sm" onClick={exportCSV}>📥 Export CSV</button>
+          </div>
+        </div>
       </div>
 
       <div className="bos-kpi-grid" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>
@@ -60,10 +126,9 @@ export function AccountsDashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 24 }}>
         <div className="bos-card">
           <div className="bos-card-title">💰 Profit & Loss Statement</div>
-          <PlRow label="Billed Revenue"         val={fmtINR(billedRevenue)} color="#22C55E" />
-          <PlRow label="Collected (Cash In)"    val={fmtINR(collected)}     color="#86EFAC" />
+          <PlRow label={basis === 'accrual' ? "Billed Revenue" : "Collected (Cash In)"} val={fmtINR(revenue)} color="#22C55E" />
           <hr style={{ border: 0, borderTop: '1px dashed rgba(123,169,123,0.2)', margin: '10px 0' }} />
-          <PlRow label="Procurement / RM Cost" val={fmtINR(procTotal)} color="#FB923C" />
+          <PlRow label="Cost of Goods Sold (Actual)" val={fmtINR(procTotal)} color="#FB923C" />
           <PlRow label="Gross Profit"          val={fmtINR(grossProfit)} color={grossProfit >= 0 ? '#22C55E' : '#EF4444'} bold />
           <hr style={{ border: 0, borderTop: '1px dashed rgba(123,169,123,0.2)', margin: '10px 0' }} />
           <PlRow label="Operating Expenses"    val={fmtINR(opexTotal)} color="#EF4444" />
@@ -100,7 +165,7 @@ export function AccountsDashboard() {
           )}
           {autoExp.length > 0 && (
             <div style={{ marginTop: 12, padding: 10, background: 'rgba(251,146,60,0.08)', borderRadius: 8, fontSize: 12, color: '#9AAF96' }}>
-              📦 <strong>{autoExp.length} auto-procurement entries</strong> ({fmtINR(procTotal)}) from GRN approvals are tracked separately above.
+              📦 <strong>{autoExp.length} auto-procurement entries</strong> from GRNs. Total RM purchased: {fmtINR(procTotal + wastageTotal)}. Unconsumed / wastage offset: {fmtINR(wastageTotal)}.
             </div>
           )}
         </div>

@@ -28,7 +28,8 @@ create table if not exists public.rnd_trial_params (
   measured_value numeric(10,4),
   pass         boolean,                       -- auto-calculated vs formula targets
   notes        text,
-  created_at   timestamptz default now()
+  created_at   timestamptz default now(),
+  unique(trial_id, param_name)               -- required for upsert (matches rnd_schema.sql)
 );
 
 -- Indexes

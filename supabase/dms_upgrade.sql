@@ -26,6 +26,7 @@ CREATE INDEX IF NOT EXISTS idx_dms_links_doc ON dms_links(document_id);
 CREATE INDEX IF NOT EXISTS idx_dms_links_entity ON dms_links(entity_type, entity_id);
 
 ALTER TABLE dms_links ENABLE ROW LEVEL SECURITY;
+drop policy if exists "allow_all_dms_links" on dms_links;
 CREATE POLICY "allow_all_dms_links" ON dms_links FOR ALL USING (true) WITH CHECK (true);
 
 -- 3. Create dms_access_logs table
@@ -41,4 +42,5 @@ CREATE TABLE IF NOT EXISTS dms_access_logs (
 CREATE INDEX IF NOT EXISTS idx_dms_access_logs_doc ON dms_access_logs(document_id);
 
 ALTER TABLE dms_access_logs ENABLE ROW LEVEL SECURITY;
+drop policy if exists "allow_all_dms_access" on dms_access_logs;
 CREATE POLICY "allow_all_dms_access" ON dms_access_logs FOR ALL USING (true) WITH CHECK (true);

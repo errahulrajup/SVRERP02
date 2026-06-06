@@ -24,17 +24,20 @@ export function InwardGrn() {
     if (filter !== 'ALL') list = list.filter(g => g.status === filter);
     if (search) {
       const q = search.toLowerCase();
-      list = list.filter(g => 
-        g.grn_no?.toLowerCase().includes(q) || 
-        g.supplier?.toLowerCase().includes(q) || 
+      list = list.filter(g =>
+        g.grn_no?.toLowerCase().includes(q) ||
+        g.supplier?.toLowerCase().includes(q) ||
         g.material?.toLowerCase().includes(q)
       );
     }
-    return list.sort((a, b) => {
-      if (!a.expiry_date || !b.expiry_date) return 0;
+    // FIX-1: spread to avoid mutating original grns state array
+    // FIX-2: FEFO — null expiry goes to end, not randomly middle
+    return [...list].sort((a, b) => {
+      if (!a.expiry_date) return 1;
+      if (!b.expiry_date) return -1;
       return new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime();
     });
-  }, [grns, filter]);
+  }, [grns, filter, search]); // FIX-3: search added to deps
 
   const canDelete = user?.role === 'ADMIN' || user?.role === 'MANAGER';
 
@@ -56,14 +59,15 @@ export function InwardGrn() {
     if (qty <= 0) return alert('Quantity must be > 0');
     if (rate <= 0) return alert('Rate must be > 0');
 
-    if (form.mfgDate && form.expDate && form.mfgDate > form.expDate) {
+    // FIX-4: use Date objects instead of string comparison to avoid timezone/format edge cases
+    if (form.mfgDate && form.expDate && new Date(form.mfgDate) > new Date(form.expDate)) {
       return alert('Manufacturing date cannot be after expiry date');
     }
 
     setSaving(true);
     const grnNo = form.grnNo.trim() || `GRN-${Date.now().toString(36).toUpperCase()}`;
 
-    const isDuplicate = grns.some(g => g.grn_no.toLowerCase() === grnNo.toLowerCase() || (form.invNo && g.invoice_no?.toLowerCase() === form.invNo.trim().toLowerCase()));
+    const isDuplicate = grns.some(g => g.grn_no?.toLowerCase() === grnNo.toLowerCase() || (form.invNo && g.invoice_no?.toLowerCase() === form.invNo.trim().toLowerCase()));
     if (isDuplicate) {
       if (!confirm('A GRN with this number or Invoice number already exists. Proceed anyway?')) {
         setSaving(false);
@@ -72,8 +76,8 @@ export function InwardGrn() {
     }
 
     try {
-      const gstAmt = (qty * rate * gst) / 100;
-      const totalCost = (qty * rate) + gstAmt;
+      const gstAmt = Math.round(qty * rate * gst) / 100;
+      const totalCost = Math.round((qty * rate + gstAmt) * 100) / 100;
 
       const res = await grnsApi.create({
         grn_no: grnNo,
@@ -92,7 +96,7 @@ export function InwardGrn() {
         status: 'QC_PENDING',
         reject_reason: null,
         notes: form.remarks.trim() ? form.remarks.trim() + (form.lotNo ? ` | Lot: ${form.lotNo}` : '') : (form.lotNo ? `Lot: ${form.lotNo}` : null),
-        created_by: user?.name || 'System',
+        created_by: user?.id || null,
         erp_product_id: null
       });
       if (res.error) throw new Error(res.error.message);
@@ -113,6 +117,10 @@ export function InwardGrn() {
   };
 
   const deleteGRN = async (id: string) => {
+    const grn = grns.find(g => g.id === id);
+    if (grn?.status === 'APPROVED') {
+      return alert('Cannot delete approved GRN. It has been converted to a Lot. Please reverse the Lot first.');
+    }
     if (!confirm('Delete this GRN?')) return;
     setDeletingId(id);
     try {
@@ -126,9 +134,9 @@ export function InwardGrn() {
     return <div style={{ padding: 40, color: '#9AAF96' }}>Loading Inward...</div>;
   }
 
-  const subtotal = (parseFloat(form.qty)||0) * (parseFloat(form.rate)||0);
-  const gstAmt = subtotal * (parseFloat(form.gst)||0) / 100;
-  const landCost = subtotal + gstAmt;
+  const subtotal = Math.round((parseFloat(form.qty)||0) * (parseFloat(form.rate)||0) * 100) / 100;
+  const gstAmtDisplay = Math.round((subtotal * (parseFloat(form.gst)||0)) / 100 * 100) / 100;
+  const landCost = Math.round((subtotal + gstAmtDisplay) * 100) / 100;
 
   return (
     <div>
@@ -220,8 +228,9 @@ export function InwardGrn() {
         )}
       </div>
 
+      {/* FIX-5: cancel button now resets form so stale data doesn't show on reopen */}
       {isModalOpen && (
-        <div className="bos-modal-overlay">
+        <div className="bos-modal-overlay" onMouseDown={(e) => { if(e.target === e.currentTarget) { setIsModalOpen(false); setForm({ grnNo:'', supplier:'', material:'', lotNo:'', qty:'', uom:'kg', rate:'', gst:'18', mfgDate:'', expDate:'', invNo:'', vehNo:'', remarks:'' }); } }}>
           <div className="bos-modal">
             <div className="bos-modal-header">
               <span className="bos-modal-title">📥 New Goods Receipt Note</span>
@@ -287,7 +296,7 @@ export function InwardGrn() {
               
               {subtotal > 0 && (
                 <div style={{ background: 'rgba(212,168,67,0.1)', border: '1px solid rgba(212,168,67,0.2)', padding: 12, borderRadius: 8, marginTop: 16, color: '#D4A843' }}>
-                  Sub-total: <strong>{fmtINR(subtotal)}</strong> + GST ({form.gst}%): <strong>{fmtINR(gstAmt)}</strong> = Landing: <strong>{fmtINR(landCost)}</strong>
+                  Sub-total: <strong>{fmtINR(subtotal)}</strong> + GST ({form.gst}%): <strong>{fmtINR(gstAmtDisplay)}</strong> = Landing: <strong>{fmtINR(landCost)}</strong>
                 </div>
               )}
 
@@ -298,7 +307,7 @@ export function InwardGrn() {
             </div>
             <div className="bos-modal-footer">
               <button className="bos-btn bos-btn-primary" onClick={handleSaveGRN} disabled={saving}>{saving ? 'Saving...' : 'Record GRN →'}</button>
-              <button className="bos-btn bos-btn-ghost" onClick={() => setIsModalOpen(false)}>Cancel</button>
+              <button className="bos-btn bos-btn-ghost" onClick={() => { setIsModalOpen(false); setForm({ grnNo:'', supplier:'', material:'', lotNo:'', qty:'', uom:'kg', rate:'', gst:'18', mfgDate:'', expDate:'', invNo:'', vehNo:'', remarks:'' }); }}>Cancel</button>
             </div>
           </div>
         </div>

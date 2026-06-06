@@ -102,6 +102,7 @@ export function TrialManager() {
       if (paramsRes.error) throw new Error(paramsRes.error.message);
       if (itemsRes.error) throw new Error(itemsRes.error.message);
       if (formRes.error) throw new Error(formRes.error.message);
+      if (readingsRes.error) console.warn('Readings fetch failed:', readingsRes.error.message);
 
       setRunnerSteps(stepsRes.data || []);
       setRunnerParams(paramsRes.data || []);
@@ -137,7 +138,7 @@ export function TrialManager() {
     let pass = true;
     if (param.target_min != null && val < param.target_min) pass = false;
     if (param.target_max != null && val > param.target_max) pass = false;
-    if (param.target_value != null && val !== param.target_value) pass = false;
+    if (param.target_value != null && Math.abs(val - param.target_value) > 0.001) pass = false;
 
     return {
       status: pass ? 'PASS' : 'FAIL',
@@ -178,12 +179,12 @@ export function TrialManager() {
 
       if (updateRes.error) throw new Error(updateRes.error.message);
 
-      for (const param of runnerParams) {
+      await Promise.all(runnerParams.map(param => {
         const valStr = measuredReadings[param.id];
         const val = valStr && valStr.trim() !== '' ? parseFloat(valStr) : null;
         const result = getParamResult(param);
         
-        await rndTrialParamsApi.upsert({
+        return rndTrialParamsApi.upsert({
           trial_id: activeRunnerTrial.id,
           param_name: param.param_name,
           unit: param.unit,
@@ -191,7 +192,7 @@ export function TrialManager() {
           pass: result.pass,
           notes: measuredNotes[param.id] || null
         });
-      }
+      }));
 
       alert('Trial logs saved successfully!');
       setActiveRunnerTrial(null);
@@ -204,10 +205,14 @@ export function TrialManager() {
   };
 
   const promoteToProductionRecipe = async () => {
+    if (promoting) return;
     if (!activeRunnerTrial || !runnerFormula) return;
     if (!confirm('Are you sure you want to promote this formula to a Master Production Recipe? This will lock the R&D formula.')) return;
     setPromoting(true);
     try {
+      if (form.actual_yield_kg === '' || form.actual_yield_kg == null) {
+        throw new Error('Please enter Actual Yield (kg) before promoting to Production Recipe.');
+      }
       const overall = getOverallStatus();
       if (overall !== 'COMPLETED') {
         throw new Error('All QC parameters must PASS to promote the trial to a Production Recipe.');
@@ -254,7 +259,7 @@ export function TrialManager() {
           step_no: step.step_no,
           step_name: step.step_type || 'Process Step',
           machine: step.machine,
-          instruction: step.description,
+          instruction: step.description || step.step_type || 'Process Step',
           temp_min: step.temp_c,
           temp_max: step.temp_c,
           duration_min: step.duration_min
@@ -280,12 +285,12 @@ export function TrialManager() {
       }
 
       // Upsert trial params readings
-      for (const param of runnerParams) {
+      await Promise.all(runnerParams.map(param => {
         const valStr = measuredReadings[param.id];
         const val = valStr && valStr.trim() !== '' ? parseFloat(valStr) : null;
         const result = getParamResult(param);
         
-        await rndTrialParamsApi.upsert({
+        return rndTrialParamsApi.upsert({
           trial_id: activeRunnerTrial.id,
           param_name: param.param_name,
           unit: param.unit,
@@ -293,7 +298,7 @@ export function TrialManager() {
           pass: result.pass,
           notes: measuredNotes[param.id] || null
         });
-      }
+      }));
 
       // Update Trial status
       await rndTrialsApi.update(activeRunnerTrial.id, {
@@ -896,16 +901,26 @@ export function TrialManager() {
                     >
                       {saving ? 'Saving...' : '💾 Save Readings & Log Trial'}
                     </button>
-                    
                     {getOverallStatus() === 'COMPLETED' && (
-                      <button
-                        className="rnd-btn rnd-btn-primary"
-                        onClick={promoteToProductionRecipe}
-                        disabled={promoting || saving}
-                        style={{ padding: '10px 20px', fontSize: 13, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', border: 'none' }}
-                      >
-                        {promoting ? 'Promoting...' : '🚀 Promote to Production Recipe'}
-                      </button>
+                      runnerFormula?.erp_product_id ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                          <button
+                            className="rnd-btn rnd-btn-primary"
+                            onClick={promoteToProductionRecipe}
+                            disabled={promoting || saving}
+                            style={{ padding: '10px 20px', fontSize: 13, background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', border: 'none' }}
+                          >
+                            {promoting ? 'Promoting...' : '🚀 Promote to Production Recipe'}
+                          </button>
+                          <div style={{ fontSize: 11, color: '#94a3b8', textAlign: 'center' }}>
+                            Promoting will lock the formulation and create a new active Master Recipe in Production.
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{ padding: '10px 16px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: 8, textAlign: 'center', fontSize: 12, color: '#ef4444' }}>
+                          Cannot promote: Formula is not linked to an ERP Finished Product.
+                        </div>
+                      )
                     )}
                   </div>
                 </div>

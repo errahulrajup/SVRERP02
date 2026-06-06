@@ -124,6 +124,7 @@ export interface Batch {
   target_mixing_temp?: number | null;
   target_pasteurization_temp?: number | null;
   dynamic_params?: Record<string, any> | null;
+  unit_cost?: number | null;           // FIX-4: computed during batch completion, used by QC for FG lot costing
   created_at: string;
 }
 
@@ -280,6 +281,8 @@ export interface Prp {
   last_reviewed: string | null;
   next_review: string | null;
   status: PrpStatus;
+  approved_by?: string | null;
+  compliance_standard?: string | null;
   notes: string | null;
   created_at: string;
 }
@@ -319,6 +322,7 @@ export interface Recall {
   completed_at: string | null;
   closed_at: string | null;
   closed_by: string | null;
+  fssai_notified_at?: string | null;
   notes: string | null;
   created_at: string;
 }
@@ -424,6 +428,7 @@ export interface Expense {
   amount: number;
   recorded_by: string | null;
   notes: string | null;
+  source?: string;
   created_at: string;
 }
 
@@ -540,6 +545,10 @@ export interface AllergenMatrix {
   sulphites: string;
   lupin: string;
   molluscs: string;
+  version?: number;
+  superseded_by?: string | null;
+  approved_by?: string | null;
+  compliance_standard?: string | null;
   created_at: string;
 }
 
@@ -591,7 +600,12 @@ export function fmtDateTime(iso: string | null | undefined): string {
 
 export function daysUntil(d: string | null | undefined): number {
   if (!d) return 9999;
-  return Math.floor((new Date(d).getTime() - Date.now()) / 86400000);
+  // FIX: Parse as local midnight (YYYY-MM-DD) to avoid UTC/IST 1-day offset bug
+  const [y, m, day] = d.split('T')[0].split('-').map(Number);
+  const expiry = new Date(y, m - 1, day);               // local midnight
+  const todayMidnight = new Date();
+  todayMidnight.setHours(0, 0, 0, 0);                   // local midnight today
+  return Math.floor((expiry.getTime() - todayMidnight.getTime()) / 86400000);
 }
 
 export function today(): string {
@@ -740,6 +754,7 @@ export interface DispatchOrder {
   status: DispatchOrderStatus;
   actual_ship_date: string | null;
   challan_no: string | null;
+  notes: string | null;          // optional DO-level notes
   created_at: string;
 }
 

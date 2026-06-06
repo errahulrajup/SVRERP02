@@ -22,11 +22,15 @@ interface WorkCenter {
 const LS_KEY = 'bos_work_centers';
 
 // ── Local Storage helpers (fallback when table doesn't exist) ─────────────────
+const DEFAULT_WC = { capacity: 0, capacity_unit: 'kg/hr', shift_hours: 8, status: 'Active' as const };
 function lsLoad(): WorkCenter[] {
-  try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch { return []; }
+  try { 
+    const arr = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+    return arr.map((w: any) => ({ ...DEFAULT_WC, ...w }));
+  } catch { return []; }
 }
 function lsSave(data: WorkCenter[]) {
-  localStorage.setItem(LS_KEY, JSON.stringify(data));
+  localStorage.setItem(LS_KEY, JSON.stringify(data.slice(0, 50)));
 }
 
 // ── API (Supabase first, localStorage fallback) ───────────────────────────────
@@ -67,13 +71,8 @@ async function updateWorkCenter(id: string, wc: Partial<WorkCenter>): Promise<vo
 }
 
 async function deleteWorkCenter(id: string): Promise<void> {
-  try {
-    const { error } = await workCentersApi.remove(id);
-    if (error) throw error;
-  } catch (e: any) {
-    alert(e.message);
-    lsSave(lsLoad().filter(x => x.id !== id));
-  }
+  const { error } = await workCentersApi.remove(id);
+  if (error) throw error;
 }
 
 // ── Status badge colors ────────────────────────────────────────────────────────
@@ -102,6 +101,7 @@ export function WorkCenters() {
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<'ALL' | WorkCenter['status']>('ALL');
+  const [supervisors, setSupervisors] = useState<any[]>([]);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -113,6 +113,15 @@ export function WorkCenters() {
     setLoading(true);
     const data = await fetchWorkCenters();
     setItems(data);
+    
+    try {
+      const { data: sups } = await supabase
+        .from('profiles')
+        .select('id, name')
+        .in('role', ['SUPERVISOR', 'MANAGER']);
+      if (sups) setSupervisors(sups);
+    } catch(e) {}
+    
     setLoading(false);
   }, []);
 
@@ -129,8 +138,8 @@ export function WorkCenters() {
     setEditId(wc.id);
     setForm({
       name: wc.name, code: wc.code, type: wc.type,
-      capacity: String(wc.capacity), capacity_unit: wc.capacity_unit,
-      shift_hours: String(wc.shift_hours), status: wc.status,
+      capacity: wc.capacity != null ? String(wc.capacity) : '', capacity_unit: wc.capacity_unit,
+      shift_hours: wc.shift_hours != null ? String(wc.shift_hours) : '8', status: wc.status,
       location: wc.location || '', supervisor: wc.supervisor || '', notes: wc.notes || '',
     });
     setModalOpen(true);
@@ -140,14 +149,20 @@ export function WorkCenters() {
     if (!form.name.trim()) return alert('Work Center name is required');
     if (!form.code.trim()) return alert('Work Center code is required');
     const cap = parseFloat(form.capacity as string) || 0;
-    if (cap <= 0) return alert('Capacity must be > 0');
+    if (cap < 1) return alert('Capacity too low, min 1');
+    const shiftHrs = parseFloat(form.shift_hours as string) || 8;
+    if (shiftHrs <= 0 || shiftHrs > 24) return alert('Shift hours must be between 1 and 24');
+
+    const uCode = form.code.trim().toUpperCase();
+    const exists = items.find(w => w.code === uCode && w.id !== editId);
+    if (exists) return alert('Code already exists');
 
     setSaving(true);
     try {
       const payload = {
-        name: form.name.trim(), code: form.code.trim().toUpperCase(),
+        name: form.name.trim(), code: uCode,
         type: form.type, capacity: cap, capacity_unit: form.capacity_unit,
-        shift_hours: parseFloat(form.shift_hours as string) || 8,
+        shift_hours: shiftHrs,
         status: form.status,
         location: form.location.trim() || null,
         supervisor: form.supervisor.trim() || null,
@@ -160,8 +175,8 @@ export function WorkCenters() {
         await saveWorkCenter(payload);
         alert('✅ Work Center created');
       }
+      await load();
       setModalOpen(false);
-      load();
     } catch (e: any) {
       alert(`Error: ${e.message}`);
     } finally {
@@ -173,18 +188,25 @@ export function WorkCenters() {
     if (!confirm(`Delete Work Center "${name}"? This cannot be undone.`)) return;
     try {
       await deleteWorkCenter(id);
-      load();
+      await load();
     } catch (e: any) {
       alert(`Error: ${e.message}`);
     }
   };
 
+  const activeItems = items.filter(w => w.status === 'Active');
+  const capByUnit = activeItems.reduce((acc, w) => {
+    acc[w.capacity_unit] = (acc[w.capacity_unit] || 0) + w.capacity;
+    return acc;
+  }, {} as Record<string, number>);
+  const totalCapStr = Object.entries(capByUnit).map(([u,v]) => `${v.toFixed(0)} ${u}`).join(', ') || '0';
+
   const stats = [
     { label: 'Total', val: items.length, color: '#FFC107' },
-    { label: 'Active', val: items.filter(w => w.status === 'Active').length, color: '#22C55E' },
+    { label: 'Active', val: activeItems.length, color: '#22C55E' },
     { label: 'Inactive', val: items.filter(w => w.status === 'Inactive').length, color: '#9AAF96' },
     { label: 'Under Maintenance', val: items.filter(w => w.status === 'Under Maintenance').length, color: '#FDE047' },
-    { label: 'Total Capacity', val: items.filter(w => w.status === 'Active').reduce((a, w) => a + w.capacity, 0).toFixed(0) + ' ' + (items[0]?.capacity_unit || 'kg/hr'), color: '#60A5FA' },
+    { label: 'Total Capacity', val: totalCapStr, color: '#60A5FA' },
   ];
 
   if (loading) return <div style={{ padding: 40, color: '#9AAF96' }}>Loading Work Centers...</div>;
@@ -335,7 +357,7 @@ export function WorkCenters() {
                 </div>
                 <div className="bos-form-group">
                   <label className="bos-form-label">Shift Hours/Day</label>
-                  <input className="bos-form-field" type="number" placeholder="8" value={form.shift_hours} onChange={e => setForm({ ...form, shift_hours: e.target.value })} />
+                  <input className="bos-form-field" type="number" min="1" max="24" placeholder="8" value={form.shift_hours} onChange={e => setForm({ ...form, shift_hours: e.target.value })} />
                 </div>
                 <div className="bos-form-group">
                   <label className="bos-form-label">Location / Area</label>
@@ -344,7 +366,10 @@ export function WorkCenters() {
               </div>
               <div className="bos-form-group" style={{ marginTop: 16 }}>
                 <label className="bos-form-label">Supervisor</label>
-                <input className="bos-form-field" placeholder="Responsible person" value={form.supervisor} onChange={e => setForm({ ...form, supervisor: e.target.value })} />
+                <select className="bos-form-field" value={form.supervisor} onChange={e => setForm({ ...form, supervisor: e.target.value })}>
+                  <option value="">-- Select --</option>
+                  {supervisors.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
               </div>
               <div className="bos-form-group" style={{ marginTop: 12 }}>
                 <label className="bos-form-label">Notes</label>

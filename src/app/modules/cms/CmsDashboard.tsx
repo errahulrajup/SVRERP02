@@ -1,15 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { metricsApi } from '../../lib/bosApi';
-import { useActivityLog } from '../../hooks';
+import { supabase } from '../../lib/supabase';
 
 interface Stats {
-  products: number;
-  posts: number;
-  inquiries: number;
-  unread: number;
-  published: number;
-  testimonials: number;
+  oee: number;
+  yieldVar: number;
+  openCapas: number;
+  ccpCompliance: number;
+  mockRecallTime: number;
 }
 
 function StatCard({ icon, label, value, sub, color, path, loading }: {
@@ -60,36 +58,58 @@ const ACTION_COLORS: Record<string, string> = {
 
 export function CmsDashboard() {
   const navigate = useNavigate();
-  const [stats, setStats] = useState<Stats>({ products: 0, posts: 0, inquiries: 0, unread: 0, published: 0, testimonials: 0 });
+  const [stats, setStats] = useState<Stats>({ oee: 0, yieldVar: 0, openCapas: 0, ccpCompliance: 0, mockRecallTime: 0 });
   const [loading, setLoading] = useState(true);
-  const { data: activity, loading: actLoading } = useActivityLog(12);
+  const [activity, setActivity] = useState<any[]>([]);
+  const [actLoading, setActLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
-      const [p, b, bp, i, u, t] = await Promise.all([
-        metricsApi.count('products'),
-        metricsApi.count('blog_posts'),
-        metricsApi.count('blog_posts', { published: true }),
-        metricsApi.count('inquiries'),
-        metricsApi.count('inquiries', { read: false }),
-        metricsApi.count('testimonials'),
+      // 1. Load FSMS KPIs
+      const [oee, yieldVar, capas, ccp, recall] = await Promise.all([
+        supabase.rpc('calculate_oee', { p_days: 7 }),
+        supabase.rpc('get_yield_variance', { p_days: 30 }),
+        supabase.rpc('count_open_capas_older_than', { p_days: 30 }),
+        supabase.rpc('get_ccp_compliance_24h'),
+        supabase.rpc('get_avg_mock_recall_time')
       ]);
-      setStats({ products: p, posts: b, published: bp, inquiries: i, unread: u, testimonials: t });
+      setStats({
+        oee: oee.data || 0,
+        yieldVar: yieldVar.data || 0,
+        openCapas: capas.data || 0,
+        ccpCompliance: ccp.data || 0,
+        mockRecallTime: recall.data || 0
+      });
       setLoading(false);
+
+      // 2. Load 21 CFR Part 11 Audit Trail
+      setActLoading(true);
+      const { data: actData } = await supabase
+        .from('v_audit_trail_unified')
+        .select('*')
+        .order('changed_at', { ascending: false })
+        .limit(12);
+      if (actData) setActivity(actData);
+      setActLoading(false);
     };
     load();
   }, []);
 
-  const QUICK = [
-    { icon: '📦', label: 'Create Product',   path: '/cms/products/new' },
-    { icon: '📝', label: 'Write Blog Post',  path: '/cms/blog/new' },
-    { icon: '🏠', label: 'Edit Homepage',    path: '/cms/homepage' },
-    { icon: '📬', label: 'View Inquiries',   path: '/cms/inquiries' },
-    { icon: '🔍', label: 'Manage SEO',       path: '/cms/seo' },
-    { icon: '⭐', label: 'Testimonials',     path: '/cms/testimonials' },
-    { icon: '🗂️', label: 'Categories',       path: '/cms/categories' },
-    { icon: '🖼️', label: 'Media Library',    path: '/cms/media' },
-    { icon: '📈', label: 'Analytics',         path: '/cms/analytics' },
+  const FSMS_STATS = [
+    { icon: "⚙️", label: "OEE - Last 7 Days", value: `${stats.oee}%`, color: stats.oee > 85 ? "#22C55E" : stats.oee > 75 ? "#F59E0B" : "#EF4444", path: "/production/oee" },
+    { icon: "📊", label: "Yield Variance", value: `${stats.yieldVar}%`, color: Math.abs(stats.yieldVar) < 2 ? "#22C55E" : "#EF4444", path: "/production/variance" },
+    { icon: "🚨", label: "Open CAPAs >30d", value: stats.openCapas, color: stats.openCapas === 0 ? "#22C55E" : "#EF4444", path: "/capa" },
+    { icon: "🌡️", label: "CCP Compliance 24h", value: `${stats.ccpCompliance}%`, color: stats.ccpCompliance === 100 ? "#22C55E" : "#EF4444", path: "/haccp/live" },
+    { icon: "⏱️", label: "Avg Mock Recall Time", value: `${stats.mockRecallTime} min`, color: stats.mockRecallTime < 120 ? "#22C55E" : "#EF4444", path: "/recall" },
+  ];
+
+  const FSMS_QUICK = [
+    { icon: '🚨', label: 'Initiate Recall', path: '/recall', color: '#EF4444' },
+    { icon: '🔍', label: 'Investigate CAPA', path: '/capa?filter=OPEN', color: '#F59E0B' },
+    { icon: '🌡️', label: 'Log CCP Reading', path: '/haccp/live', color: '#60A5FA' },
+    { icon: '🧹', label: 'PRP Checklist', path: '/prp', color: '#22C55E' },
+    { icon: '📋', label: 'SOP Register', path: '/sops', color: '#C084FC' },
+    { icon: '⚙️', label: 'Calibrate Equipment', path: '/equipment', color: '#A78BFA' },
   ];
 
   return (
@@ -105,10 +125,10 @@ export function CmsDashboard() {
       </div>
 
       {/* ── Stat Grid ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, marginBottom: 40 }}>
-        <StatCard icon="📦" label="Total Products"   value={stats.products}     color="var(--gold)"  path="/cms/products"    loading={loading} />
-        <StatCard icon="📝" label="Blog Posts"        value={stats.posts}        sub={`${stats.published} published`} color="#60A5FA" path="/cms/blog" loading={loading} />
-        <StatCard icon="📬" label="Inquiries"         value={stats.inquiries}    sub={`${stats.unread} unread`}       color={stats.unread > 0 ? '#F87171' : '#4ADE80'} path="/cms/inquiries" loading={loading} />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 14, marginBottom: 40 }}>
+        {FSMS_STATS.map(s => (
+          <StatCard key={s.label} icon={s.icon} label={s.label} value={s.value as any} color={s.color} path={s.path} loading={loading} />
+        ))}
       </div>
 
       {/* ── Bottom grid: Quick Actions + Activity Log ── */}
@@ -120,7 +140,7 @@ export function CmsDashboard() {
             Quick Actions
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            {QUICK.map(q => (
+            {FSMS_QUICK.map(q => (
               <button key={q.label} onClick={() => navigate(q.path)}
                 style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '13px 16px', cursor: 'pointer', width: '100%', textAlign: 'left', transition: 'border-color 0.2s, background 0.2s' }}
                 onMouseEnter={e => { const d = e.currentTarget as HTMLButtonElement; d.style.borderColor = 'var(--border-gold)'; d.style.background = 'var(--bg-card2)'; }}
@@ -167,10 +187,10 @@ export function CmsDashboard() {
                     </span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: 'rgba(255,255,255,0.6)', lineHeight: 1.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {log.detail ?? `${log.action} ${log.entity}`}
+                        [{log.module}] {log.detail ?? `${log.action} ${log.entity}`}
                       </p>
                       <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: 'rgba(255,255,255,0.2)', marginTop: 2 }}>
-                        {log.user_email ?? 'System'} · {new Date(log.created_at).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        {log.changed_by ?? 'System'} · {new Date(log.changed_at).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
                   </div>

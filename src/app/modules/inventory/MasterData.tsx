@@ -16,7 +16,8 @@ import type {
 } from '../../types/bos';
 
 export function MasterData() {
-  const orgId = 'a0000000-0000-0000-0000-000000000001';
+  const { user } = useAuth();
+  const orgId = (user as any)?.org_id || 'a0000000-0000-0000-0000-000000000001';
 
   // Tabs: 'ITEMS' | 'SKUS' | 'RELATIONS' | 'SITES'
   const [activeTab, setActiveTab] = useState<'ITEMS' | 'SKUS' | 'RELATIONS' | 'SITES'>('ITEMS');
@@ -73,17 +74,15 @@ export function MasterData() {
     setLoading(true);
     setError(null);
     try {
-      const [itemsRes, skusRes, relRes, sitesRes] = await Promise.all([
-        mdItemsApi.list(),
-        mdSkusApi.list(),
-        mdItemRelationshipsApi.list(),
-        mdSitesApi.list(),
-      ]);
+      const itemsRes = await mdItemsApi.list().catch((e: any) => ({ error: e, data: null }));
+      const skusRes = await mdSkusApi.list().catch((e: any) => ({ error: e, data: null }));
+      const relRes = await mdItemRelationshipsApi.list().catch((e: any) => ({ error: e, data: null }));
+      const sitesRes = await mdSitesApi.list().catch((e: any) => ({ error: e, data: null }));
 
-      if (itemsRes.error) throw new Error(itemsRes.error.message);
-      if (skusRes.error) throw new Error(skusRes.error.message);
-      if (relRes.error) throw new Error(relRes.error.message);
-      if (sitesRes.error) throw new Error(sitesRes.error.message);
+      if (itemsRes.error) console.error('Items load failed:', itemsRes.error);
+      if (skusRes.error) console.error('SKUs load failed:', skusRes.error);
+      if (relRes.error) console.error('Relationships load failed:', relRes.error);
+      if (sitesRes.error) console.error('Sites load failed:', sitesRes.error);
 
       setItems(itemsRes.data || []);
       setSkus(skusRes.data || []);
@@ -104,7 +103,7 @@ export function MasterData() {
         setRelForm((prev) => ({
           ...prev,
           parent_item_id: itemsData[0].id,
-          child_item_id: itemsData[0].id,
+          child_item_id: itemsData[1]?.id || '',
         }));
       }
     } catch (e: any) {
@@ -129,8 +128,14 @@ export function MasterData() {
         name: 'Srivriddhi Main Plant',
       });
       if (res.error) throw new Error(res.error.message);
+      
+      if (res.data) {
+        setSkuForm(prev => ({ ...prev, site_id: res.data!.id }));
+        setRelForm(prev => ({ ...prev, site_id: res.data!.id }));
+      }
+      
       alert('Default site initialized successfully!');
-      loadAllData();
+      await loadAllData();
     } catch (e: any) {
       alert(`Initialization failed: ${e.message}`);
     } finally {
@@ -181,6 +186,7 @@ export function MasterData() {
 
   const handleCreateSku = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!/^\d+(\.\d{1,3})?$/.test(skuForm.pack_size_kg)) return alert('Invalid pack size format.');
     const packSize = parseFloat(skuForm.pack_size_kg);
     if (!skuForm.code.trim() || !skuForm.name.trim() || isNaN(packSize) || packSize <= 0) {
       return alert('Enter valid Code, Name, and Pack Size.');
@@ -276,24 +282,32 @@ export function MasterData() {
 
   // Removers
   const handleRemoveItem = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this Item? This will fail if SKUs or transactions reference it.')) return;
+    const skusUsingItem = skus.filter(s => s.item_id === id);
+    if (skusUsingItem.length > 0) {
+      return alert(`Cannot delete. Used in ${skusUsingItem.length} SKU(s). Delete SKUs first.`);
+    }
+    if (!confirm('Are you sure you want to delete this Item?')) return;
+    
+    setItems(prev => prev.filter(i => i.id !== id));
     try {
       const res = await mdItemsApi.remove(id);
       if (res.error) throw new Error(res.error.message);
-      loadAllData();
     } catch (e: any) {
       alert(`Delete failed: ${e.message}`);
+      loadAllData();
     }
   };
 
   const handleRemoveSku = async (id: string) => {
     if (!confirm('Are you sure you want to delete this SKU?')) return;
+    
+    setSkus(prev => prev.filter(s => s.id !== id));
     try {
       const res = await mdSkusApi.remove(id);
       if (res.error) throw new Error(res.error.message);
-      loadAllData();
     } catch (e: any) {
       alert(`Delete failed: ${e.message}`);
+      loadAllData();
     }
   };
 

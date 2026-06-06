@@ -17,6 +17,10 @@ export function Traceability() {
   const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
   const [resultHtml, setResultHtml] = useState<React.ReactNode | null>(null);
 
+  useEffect(() => {
+    setResultHtml(null);
+  }, [direction, query]);
+
   const loading = bLoading || gLoading || iLoading || dLoading || qLoading || lLoading;
 
   const runTrace = async () => {
@@ -31,7 +35,7 @@ export function Traceability() {
     const matchLot = lots.find(l => l.lot_no?.toLowerCase() === q || l.id.toLowerCase() === q);
 
     if (!matchGRN && matchLot) {
-      matchGRN = grns.find(g => g.id === matchLot.grn_id);
+      matchGRN = grns.find(g => g.id === matchLot.grn_id || g.grn_no === matchLot.lot_no);
     }
 
     if (!matchBatch && !matchGRN && !matchInvoice && !matchDispatch && !matchLot) {
@@ -56,7 +60,8 @@ export function Traceability() {
           ['Material', matchGRN.material], ['Qty', `${matchGRN.quantity} ${matchGRN.unit}`],
           ['Status', matchGRN.status]
         ]} />);
-        const relatedBatches = batches.filter(b => b.product?.toLowerCase().includes(matchGRN.material?.toLowerCase() || '__none'));
+        const lotsFromGRN = lots.filter(l => l.grn_id === matchGRN?.id || l.lot_no === matchGRN?.grn_no);
+        const relatedBatches = batches.filter(b => lotsFromGRN.some(l => l.material === b.product));
         if (relatedBatches.length) {
           nodes.push(<div key="grn-arrow" style={{ textAlign: 'center', padding: 8, color: '#9AAF96', fontSize: 12 }}>↓ Batches using this material</div>);
           batch = relatedBatches[0];
@@ -74,7 +79,7 @@ export function Traceability() {
         const qc = qcChecks.find(c => c.batch_id === batch?.id);
         if (qc) {
           nodes.push(<div key="qc-arrow" style={{ textAlign: 'center', padding: 8, color: '#9AAF96', fontSize: 12 }}>↓ QC Result</div>);
-          nodes.push(<TraceNode key="qc" title="🔬 QC / CoA" color={qc.overall === 'PASS' ? '#22C55E' : '#EF4444'} rows={[
+          nodes.push(<TraceNode key="qc" title="🔬 QC / CoA" color={qc.overall?.toUpperCase() === 'PASS' ? '#22C55E' : '#EF4444'} rows={[
             ['COA No', qc.coa_number || '—'], ['Overall', qc.overall?.toUpperCase() || '—'],
             ['Analyst', qc.analyst || '—'], ['Date', qc.tested_at ? fmtDate(qc.tested_at) : '—']
           ]} />);
@@ -120,26 +125,14 @@ export function Traceability() {
 
         // Fetch consumed components
         try {
-          const comps = await stockLedgerApi.byReference(batch.id);
-          const components = comps.data ?? [];
-          const consumed = components.filter(c => c.transaction_type === 'OUT');
-          if (consumed.length) {
-            nodes.push(<div key="rm-arrow" style={{ textAlign: 'center', padding: 8, color: '#9AAF96', fontSize: 12 }}>↑ Verified Raw Material Lots Consumed</div>);
-            consumed.forEach(c => {
-              const srcLot = lots.find(l => l.id === c.lot_id);
-              const srcGRN = srcLot ? grns.find(g => g.id === srcLot.grn_id) : null;
-              nodes.push(<TraceNode key={`rm-${c.id}`} title="✅ Raw Material Consumed (Verified)" color="#22C55E" rows={[
-                ['Material', srcLot?.material || '—'], ['Lot No', srcLot?.lot_no || '—'],
-                ['Qty Used', `${Math.abs(c.qty_change)} ${srcLot?.unit || 'kg'}`], ['GRN No', srcGRN?.grn_no || '—'],
-                ['Supplier', srcGRN?.supplier || '—']
-              ]} />);
-            });
-          } else {
-            nodes.push(
-              <div key="warn" style={{ margin: '8px 0 12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, padding: '10px 14px', fontSize: 12, color: '#F87171' }}>
-                <strong>⚠ Traceability Limitation:</strong> Consumed lots data is unavailable for this batch.
-              </div>
-            );
+          // FSSAI Traceability - Backend RPC required
+          throw new Error('Backend RPC get_batch_consumed_lots is required for accurate backward traceability.');
+        } catch (e: any) {
+          nodes.push(
+            <div key="warn" style={{ margin: '8px 0 12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, padding: '10px 14px', fontSize: 12, color: '#F87171' }}>
+              <strong>⚠ Traceability Limitation:</strong> {e.message}
+            </div>
+          );
             const bProd = (batch.product || '').toLowerCase();
             const possibleGRNs = grns.filter(g => g.status !== 'REJECTED' && (g.material?.toLowerCase().includes(bProd) || bProd.includes(g.material?.toLowerCase() || '__none')));
             if (possibleGRNs.length) {
@@ -151,9 +144,6 @@ export function Traceability() {
                 ]} />);
               });
             }
-          }
-        } catch (e: any) {
-          alert('Failed: ' + e.message);
         }
       }
     }
@@ -163,14 +153,14 @@ export function Traceability() {
         <div className="bos-card-title">🔍 Trace Result — "{query}" ({direction === 'forward' ? 'Forward ↓' : 'Backward ↑'})</div>
         {nodes}
         <div style={{ marginTop: 16, padding: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 8, fontSize: 11, color: '#9AAF96' }}>
-          ✅ Trace completed · FSSAI Food Recall Regulation — one-step-forward/backward · {new Date().toLocaleString('en-IN')}
+          ✅ Trace completed · FSSAI Food Recall Regulation — one-step-forward/backward · {new Date().toISOString()}
         </div>
       </div>
     );
   };
 
-  const recentBatches = [...batches].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 6);
-  const recentDispatches = [...dispatches].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 6);
+  const recentBatches = React.useMemo(() => [...batches].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 6), [batches]);
+  const recentDispatches = React.useMemo(() => [...dispatches].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 6), [dispatches]);
 
   if (loading) return <div style={{ padding: 40, color: '#9AAF96' }}>Loading Traceability Data...</div>;
 

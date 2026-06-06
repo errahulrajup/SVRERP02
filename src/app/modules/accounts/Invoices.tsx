@@ -3,6 +3,7 @@ import { useInvoices, usePayments } from '../../hooks/useBos';
 import { invoicesApi, paymentsApi } from '../../lib/bosApi';
 import { fmtINR, fmtDate } from '../../types/bos';
 import { useAuth } from '../../hooks';
+import { supabase } from '../../lib/supabase';
 
 export function Invoices() {
   const { items: invoices, loading: iLoading, reload: reloadInv } = useInvoices();
@@ -20,48 +21,26 @@ export function Invoices() {
     if (!pForm.invId) return alert('Select an invoice');
     if (amt <= 0) return alert('Amount must be > 0');
 
-    const inv = invoices.find(i => i.id === pForm.invId);
-    if (!inv) return;
-
-    const outstanding = Math.max(0, inv.total - (inv.paid_amt || 0));
-    if (amt > outstanding + 0.01) return alert(`Max payable is ${fmtINR(outstanding)}`);
-
     setSaving(true);
     try {
-      const newPaid = Math.round(((inv.paid_amt || 0) + amt) * 100) / 100;
-      const status = newPaid >= inv.total - 0.01 ? 'PAID' : 'PARTIAL';
-
-      const payRes = await paymentsApi.create({
-        invoice_id: inv.id,
-        invoice_no: inv.invoice_no,
-        customer: inv.customer,
-        amount: amt,
-        mode: pForm.mode,
-        reference: pForm.ref.trim() || null,
-        payment_date: pForm.date,
-        recorded_by: user?.name || null,
-        notes: pForm.notes?.trim() || null,  // BUG-04: persist notes field
+      const { data, error } = await supabase.rpc('record_payment', {
+        p_invoice_id: pForm.invId,
+        p_amount: amt,
+        p_mode: pForm.mode,
+        p_reference: pForm.ref.trim() || null,
+        p_payment_date: pForm.date,
+        p_notes: pForm.notes?.trim() || null,
+        p_user_id: user?.id
       });
-      if (payRes.error) {
-        // BUG-06: show error and do NOT close modal on payment failure
-        alert('Payment creation failed: ' + payRes.error.message);
-        return;
-      }
 
-      const invRes = await invoicesApi.update(inv.id, { paid_amt: newPaid, status });
-      if (invRes.error) {
-        // BUG-06: show error and do NOT close modal on invoice update failure
-        alert('Invoice update failed: ' + invRes.error.message);
-        return;
-      }
+      if (error) throw error;
 
-      alert(`✅ Payment ${fmtINR(amt)} recorded`);
+      alert(`✅ Payment ${fmtINR(amt)} recorded. Outstanding: ${fmtINR(data.outstanding)}`);
       setIsPaymentModalOpen(false);
       setPForm({ invId: '', amt: '', mode: 'BANK', ref: '', date: new Date().toISOString().split('T')[0], notes: '' });
-      reloadInv();
-      reloadPay();
+      await Promise.all([reloadInv(), reloadPay()]);
     } catch (e: any) {
-      alert(`Error saving payment: ${e.message}`);
+      alert(`Error: ${e.message}`);
     } finally {
       setSaving(false);
     }
@@ -100,10 +79,10 @@ export function Invoices() {
                       <td style={{ fontWeight: 500 }}>{fmtINR(i.total)}</td>
                       <td style={{ color: '#88C096' }}>{fmtINR(i.paid_amt || 0)}</td>
                       <td style={{ color: out > 0 ? '#E05252' : '#88C096' }}>{fmtINR(out)}</td>
-                      <td><span className={`bos-badge ${i.status === 'PAID' ? 'bos-badge-green' : i.status === 'PARTIAL' ? 'bos-badge-yellow' : 'bos-badge-red'}`}>{i.status || 'UNPAID'}</span></td>
+                      <td><span className={`bos-badge ${i.status === 'PAID' ? 'bos-badge-green' : i.status === 'PARTIAL' ? 'bos-badge-yellow' : 'bos-badge-red'}`}>{i.status || 'PENDING'}</span></td>
                       <td>
                         {i.status !== 'PAID' ? (
-                          <button className="bos-btn bos-btn-sm" style={{ background: '#2B4A34', color: '#88C096' }} onClick={() => { setPForm({ ...pForm, invId: i.id }); setIsPaymentModalOpen(true); }}>+ Pay</button>
+                          <button className="bos-btn bos-btn-sm" style={{ background: '#2B4A34', color: '#88C096' }} onClick={() => { setPForm({ ...pForm, invId: i.id, amt: '', notes: '' }); setIsPaymentModalOpen(true); }}>+ Pay</button>
                         ) : (
                           <span style={{ fontSize: 11, color: '#88C096' }}>✓ Paid</span>
                         )}
@@ -136,6 +115,11 @@ export function Invoices() {
                 <div className="bos-form-group"><label className="bos-form-label">Payment Mode</label><select className="bos-form-field" value={pForm.mode} onChange={e => setPForm({ ...pForm, mode: e.target.value })}><option>BANK</option><option>CASH</option><option>UPI</option><option>CHEQUE</option><option>NEFT</option></select></div>
                 <div className="bos-form-group"><label className="bos-form-label">Reference No.</label><input className="bos-form-field" placeholder="UTR / Cheque no." value={pForm.ref} onChange={e => setPForm({ ...pForm, ref: e.target.value })} /></div>
                 <div className="bos-form-group"><label className="bos-form-label">Payment Date</label><input className="bos-form-field" type="date" value={pForm.date} onChange={e => setPForm({ ...pForm, date: e.target.value })} /></div>
+              </div>
+              {/* FIX-3: Added missing notes field in UI */}
+              <div className="bos-form-group" style={{ marginTop: 16 }}>
+                <label className="bos-form-label">Notes</label>
+                <textarea className="bos-form-field" rows={2} value={pForm.notes} onChange={e => setPForm({ ...pForm, notes: e.target.value })} />
               </div>
             </div>
             <div className="bos-modal-footer">

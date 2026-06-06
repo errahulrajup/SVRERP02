@@ -91,6 +91,9 @@ ALTER TABLE store_items        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE store_indents      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE store_transactions ENABLE ROW LEVEL SECURITY;
 
+drop policy if exists "allow_all_store_items" on store_items;
 CREATE POLICY "allow_all_store_items"   ON store_items        FOR ALL USING (true) WITH CHECK (true);
+drop policy if exists "allow_all_store_indents" on store_indents;
 CREATE POLICY "allow_all_store_indents" ON store_indents       FOR ALL USING (true) WITH CHECK (true);
+drop policy if exists "allow_all_store_txns" on store_transactions;
 CREATE POLICY "allow_all_store_txns"    ON store_transactions  FOR ALL USING (true) WITH CHECK (true);

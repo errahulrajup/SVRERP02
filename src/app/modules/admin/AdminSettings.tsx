@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { siteSettingsApi } from '../../lib/bosApi';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../hooks';
 
 function PageShell({ eyebrow, title, sub, action }: {
   eyebrow: string; title: string; sub: string; action?: React.ReactNode;
@@ -45,6 +47,7 @@ const DEFAULT_SETTINGS = {
 };
 
 export function AdminSettings() {
+  const { user } = useAuth();
   const [form, setForm] = useState(DEFAULT_SETTINGS);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -66,7 +69,11 @@ export function AdminSettings() {
     try {
       const rows = Object.entries(form).map(([key, value]) => ({ key, value }));
       for (const row of rows) {
-        await siteSettingsApi.upsert(row.key, row.value);
+        await supabase.rpc('update_site_setting', {
+          p_key: row.key,
+          p_value: row.value,
+          p_user_id: user?.id
+        });
       }
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);

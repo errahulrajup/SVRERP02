@@ -1,6 +1,6 @@
 import { useState, useEffect, type ChangeEvent } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { blogApi, inquiriesApi, homepageApi, aboutApi, testimonialsApi, settingsApi, seoApi, storageApi, categoriesApi, activityApi, type BlogPost, type Testimonial, type Category } from '../../lib/supabase';
+import { supabase, blogApi, inquiriesApi, homepageApi, aboutApi, testimonialsApi, settingsApi, seoApi, storageApi, categoriesApi, activityApi, type BlogPost, type Testimonial, type Category } from '../../lib/supabase';
 import { useBlogPosts, useInquiries, useHomepageSections, useAboutContent, useTestimonials, useCategories, useActivityLog } from '../../hooks';
 import { ImageUpload } from '../../components/ImageUpload';
 import { ErrorState } from '../../components/ErrorState';
@@ -404,6 +404,14 @@ export function CmsTestimonials() {
   const remove = async (id: string) => { if (!confirm('Delete?')) return; await testimonialsApi.remove(id); await activityApi.log('deleted', 'testimonial', id, 'Deleted testimonial'); showToast('Testimonial deleted.', 'success'); reload(); };
   const toggle = async (id: string, visible: boolean) => { await testimonialsApi.update(id, { visible }); await activityApi.log('updated', 'testimonial', id, `Set visible=${visible}`); showToast('Testimonial visibility updated.', 'success'); reload(); };
 
+  const approveTestimonial = async (id: string) => {
+    try {
+      await supabase.rpc('approve_testimonial', { p_id: id });
+      showToast('Testimonial approved & published.', 'success');
+      reload();
+    } catch(e: any) { alert(e.message); }
+  };
+
   return (
     <div style={{ padding:'40px 32px' }}>
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:28, flexWrap:'wrap', gap:14 }}>
@@ -442,6 +450,9 @@ export function CmsTestimonials() {
             <p style={{ fontFamily:"'Cormorant Garamond',Georgia,serif", fontSize:13, fontStyle:'italic', color:'rgba(255,255,255,0.45)', display:'-webkit-box', WebkitLineClamp:1, WebkitBoxOrient:'vertical', overflow:'hidden' }}>"{t.quote}"</p>
           </div>
           <div style={{ display:'flex', gap:8, flexShrink:0 }}>
+            {!t.approved_by && (
+              <button className="btn btn-success btn-sm" onClick={() => approveTestimonial(t.id)}>✓ Approve</button>
+            )}
             <button className="btn btn-dark btn-sm" onClick={() => startEdit(t)}>Edit</button>
             <button className={`btn ${t.visible?'btn-ghost':'btn-success'} btn-sm`} onClick={() => toggle(t.id, !t.visible)}>{t.visible?'Hide':'Show'}</button>
             <button className="btn-danger" onClick={() => remove(t.id)}>Delete</button>

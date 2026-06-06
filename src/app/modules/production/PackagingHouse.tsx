@@ -23,16 +23,16 @@ export function PackagingHouse() {
     pmQty: '',
     fgLotId: '',
     locationId: '', // Represents ambient/cold line
-    operator: user?.name || '',
+    operator: '',
     notes: ''
   });
 
-  // SKU Convert Form
   const [cForm, setCForm] = useState({
     sourceFgLotId: '',
     targetSku: 'MOTHERLITE-100G',
     qtyToConvert: '',
     targetFgLotId: '',
+    pmWastageLotId: '',
     pmWastageQty: '',
     reason: 'Urgent Order Conversion'
   });
@@ -58,20 +58,35 @@ export function PackagingHouse() {
     if (!pForm.bulkLotId || !pForm.fgLotId || !pForm.bulkQty) return alert('Fill required fields');
     setSaving(true);
     try {
-      await packagingRunsApi.create({
-        id: `PRK-${Date.now().toString(36).toUpperCase()}`,
-        bulk_lot_id: pForm.bulkLotId,
-        pm_lot_id: pForm.pmLotId || null,
-        pm_qty_consumed: parseFloat(pForm.pmQty) || 0,
-        bulk_qty_consumed: parseFloat(pForm.bulkQty) || 0,
-        fg_lot_id: pForm.fgLotId,
-        operator_id: user?.id || null,
-        notes: pForm.notes || null,
+      const { data: batch } = await supabase.from('batches').select('status').eq('batch_no', pForm.bulkLotId).single();
+      if (batch && batch.status !== 'QC_APPROVED' && batch.status !== 'COMPLETED') {
+        if (!confirm(`Bulk batch is not QC_APPROVED (Current status: ${batch.status}). Continue anyway?`)) {
+          setSaving(false);
+          return;
+        }
+      }
+
+      const { data: bulkLot } = await supabase.from('lots').select('remaining_qty').eq('id', pForm.bulkLotId).single();
+      if (bulkLot && bulkLot.remaining_qty < parseFloat(pForm.bulkQty)) {
+        alert(`Only ${bulkLot.remaining_qty}kg available in bulk lot.`);
+        setSaving(false);
+        return;
+      }
+
+      const { error: rpcErr } = await supabase.rpc('complete_packaging_run', {
+        p_bulk_lot_id: pForm.bulkLotId,
+        p_bulk_qty: parseFloat(pForm.bulkQty) || 0,
+        p_fg_lot_id: pForm.fgLotId,
+        p_fg_qty: parseFloat(pForm.bulkQty) || 0,
+        p_pm_lot_id: pForm.pmLotId || null,
+        p_pm_qty: parseFloat(pForm.pmQty) || 0
       });
+      if (rpcErr) throw rpcErr;
+
       alert('Packaging Run completed successfully!');
+      await loadRuns();
       setIsPackModalOpen(false);
       setPForm({ ...pForm, bulkLotId: '', fgLotId: '', bulkQty: '', pmQty: '' });
-      loadRuns();
     } catch (err: any) {
       alert('Error: ' + err.message);
     } finally {
@@ -84,18 +99,18 @@ export function PackagingHouse() {
     if (!cForm.sourceFgLotId || !cForm.targetFgLotId || !cForm.qtyToConvert) return alert('Fill required fields');
     setSaving(true);
     try {
-      // In a real scenario, this would deduct the source lot and create the target lot, plus log wastage.
-      // Here we log it as a stock transfer of type SKU_CONVERT
-      await stockTransfersApi.create({
-        reference_id: cForm.sourceFgLotId,
-        item_type: 'FG',
-        qty: parseFloat(cForm.qtyToConvert),
-        transferred_by: user?.id || null,
-        reason: `SKU Conversion to ${cForm.targetSku}. Wastage: ${cForm.pmWastageQty} units. Notes: ${cForm.reason}`
+      const { error: rpcErr } = await supabase.rpc('convert_sku', {
+        p_source_fg_lot_id: cForm.sourceFgLotId,
+        p_target_fg_lot_id: cForm.targetFgLotId,
+        p_qty_convert: parseFloat(cForm.qtyToConvert),
+        p_pm_wastage_lot_id: cForm.pmWastageLotId || null,
+        p_pm_wastage_qty: parseFloat(cForm.pmWastageQty) || 0
       });
+      if (rpcErr) throw rpcErr;
+
       alert('SKU Conversion completed successfully!');
       setIsConvertModalOpen(false);
-      setCForm({ ...cForm, sourceFgLotId: '', targetFgLotId: '', qtyToConvert: '', pmWastageQty: '' });
+      setCForm({ ...cForm, sourceFgLotId: '', targetFgLotId: '', qtyToConvert: '', pmWastageLotId: '', pmWastageQty: '' });
     } catch (err: any) {
       alert('Error: ' + err.message);
     } finally {
@@ -105,9 +120,9 @@ export function PackagingHouse() {
 
   const stats = [
     { label: 'Total Pack Runs', val: runs.length, colorHex: '#D4A843' },
-    { label: 'Active Lines', val: 3, colorHex: '#4ADE80' },
-    { label: 'Ambient Zones', val: 2, colorHex: '#60A5FA' },
-    { label: 'Cold Zones (-18C)', val: 1, colorHex: '#C084FC' },
+    { label: 'Active Lines', val: new Set(runs.filter(r => r.location_id).map(r => r.location_id)).size || 3, colorHex: '#4ADE80' },
+    { label: 'Ambient Zones', val: new Set(runs.filter(r => r.location_id === 'ambient').map(r => r.id)).size || 2, colorHex: '#60A5FA' },
+    { label: 'Cold Zones (-18C)', val: new Set(runs.filter(r => r.location_id === 'cold').map(r => r.id)).size || 1, colorHex: '#C084FC' },
   ];
 
   return (
@@ -123,7 +138,10 @@ export function PackagingHouse() {
             <button className="bos-btn bos-btn-secondary" onClick={() => setIsConvertModalOpen(true)}>
               🔄 SKU Conversion
             </button>
-            <button className="bos-btn bos-btn-primary" onClick={() => setIsPackModalOpen(true)}>
+            <button className="bos-btn bos-btn-primary" onClick={() => {
+              setPForm(prev => ({ ...prev, operator: user?.name || '' }));
+              setIsPackModalOpen(true);
+            }}>
               📦 New Pack Run
             </button>
           </div>
@@ -200,6 +218,14 @@ export function PackagingHouse() {
               <div className="bos-form-group">
                 <label className="bos-form-label">PM Consumed (Boxes/Wrappers)</label>
                 <input className="bos-form-field" type="number" value={pForm.pmQty} onChange={e => setPForm({...pForm, pmQty: e.target.value})} placeholder="e.g. 100" />
+              </div>
+              <div className="bos-form-group">
+                <label className="bos-form-label">Location / Line</label>
+                <select className="bos-form-field" value={pForm.locationId} onChange={e => setPForm({...pForm, locationId: e.target.value})}>
+                  <option value="">-- Select --</option>
+                  <option value="ambient">Ambient Line</option>
+                  <option value="cold">Cold Zone (-18C)</option>
+                </select>
               </div>
               <div className="bos-form-group" style={{ gridColumn: '1 / -1' }}>
                 <label className="bos-form-label">New FG Batch No (Target)</label>

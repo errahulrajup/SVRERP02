@@ -43,13 +43,13 @@ export function ProductValidation() {
         validation_notes: notes.trim() || null
       });
       alert(`Product marked as ${status}`);
-      logAudit({ user_name: user?.name, action: status === 'VIABLE' ? 'APPROVE' : 'REJECT', module: 'RND', details: `Product validation: ${status} | Notes: ${notes || 'None'}` });
+      logAudit({ user_name: user?.name || user?.email || 'System', action: status === 'VIABLE' ? 'APPROVE' : 'REJECT', module: 'RND', details: `Product validation: ${status} | Notes: ${notes || 'None'}` });
       
       // If VIABLE, trigger promotion to Production Recipe
       if (status === 'VIABLE') {
         await promoteToRecipe(id);
       }
-      load();
+      await load();
     } catch (e: any) {
       alert(`Error: ${e.message}`);
     } finally {
@@ -62,9 +62,22 @@ export function ProductValidation() {
     if (!fRes.data) return;
     const formula = fRes.data;
 
-    // Check for unlinked ingredients
-    const itemsCheck = await rndFormulaItemsApi.byFormula(formulaId);
-    const unlinked = itemsCheck.data?.filter(it => !it.ingredient?.erp_product_id) ?? [];
+    if (!formula.erp_product_id) {
+      alert('Cannot promote: Formula is not linked to an ERP Finished Product.');
+      return;
+    }
+
+    try {
+      const existing = (recipesApi as any).byProductId ? await (recipesApi as any).byProductId(formula.erp_product_id) : { data: [] };
+      if (existing.data?.length) {
+        alert('A recipe already exists for this product.');
+        return;
+      }
+    } catch(e) {}
+
+    // Check for unlinked ingredients (Single fetch)
+    const itemsRes = await rndFormulaItemsApi.byFormula(formulaId);
+    const unlinked = itemsRes.data?.filter(it => !it.ingredient?.erp_product_id) ?? [];
     if (unlinked.length > 0) {
       const names = unlinked.map(it => it.ingredient?.name ?? 'Unknown').join(', ');
       const ok = window.confirm(
@@ -73,35 +86,36 @@ export function ProductValidation() {
       if (!ok) return;
     }
 
-    // Create Recipe
-    const rRes = await recipesApi.create({
-      product_id: formula.erp_product_id || null,
-      name: `[RND] ${formula.name}`,
-      version: Math.floor(formula.version),
-      is_active: true, locked: false,
-      notes: `Promoted from RND ${formula.formula_code}. Validation Notes: ${formula.validation_notes || 'None'}`,
-      output_qty: 100, output_unit: 'kg', expected_loss: 0,
-    });
-    
-    if (rRes.error) throw new Error(rRes.error.message);
-    if (!rRes.data) throw new Error('Recipe creation returned no data');
-    const newRecipeId = rRes.data.id;
+    let newRecipeId: string | null = null;
+    try {
+      // Create Recipe
+      const rRes = await recipesApi.create({
+        product_id: formula.erp_product_id,
+        name: `[RND] ${formula.name}`,
+        version: formula.version || 1,
+        is_active: true, locked: false,
+        notes: `Promoted from RND ${formula.formula_code}. Validation Notes: ${formula.validation_notes || 'None'}`,
+        output_qty: 100, output_unit: 'kg', expected_loss: 0,
+      });
+      
+      if (rRes.error) throw new Error(rRes.error.message);
+      if (!rRes.data) throw new Error('Recipe creation returned no data');
+      newRecipeId = rRes.data.id;
 
-    // 1. Copy BOM / Inputs
-    const itemsRes = await rndFormulaItemsApi.byFormula(formulaId);
-    if (itemsRes.data) {
-      for (const it of itemsRes.data) {
-        if (!it.ingredient?.erp_product_id) continue;
-        await recipeInputsApi.create({
-          recipe_id: newRecipeId,
-          material: it.ingredient.name,
-          qty: Number(it.percentage),
-          unit: 'kg', tolerance: 0, notes: it.phase,
-        });
+      // 1. Copy BOM / Inputs
+      if (itemsRes.data) {
+        for (const it of itemsRes.data) {
+          if (!it.ingredient?.erp_product_id) continue;
+          await recipeInputsApi.create({
+            recipe_id: newRecipeId,
+            material: it.ingredient.name,
+            qty: (Number(it.percentage) / 100) * 100, // 100kg base calculation
+            unit: 'kg', tolerance: 0, notes: it.phase,
+          });
+        }
       }
-    }
 
-    // 2. Copy QC target parameters
+      // 2. Copy QC target parameters
     const paramsRes = await rndFormulaParamsApi.byFormula(formulaId);
     if (paramsRes.data) {
       for (const p of paramsRes.data) {
@@ -134,9 +148,9 @@ export function ProductValidation() {
         await recipeStepsApi.create({
           recipe_id: newRecipeId,
           step_no: s.step_no,
-          step_name: s.description || `Step ${s.step_no}`,
-          machine: s.step_type || null,
-          instruction: s.description || null,
+          step_name: s.step_type || s.description || `Step ${s.step_no}`,
+          machine: s.machine || null,
+          instruction: (s.ccp ? '[CCP] ' : '') + (s.description || ''),
           temp_min: s.temp_c ? s.temp_c - 2 : null,
           temp_max: s.temp_c ? s.temp_c + 2 : null,
           duration_min: s.duration_min || null,
@@ -150,6 +164,12 @@ export function ProductValidation() {
     });
     
     alert(`Recipe successfully promoted to production! Recipe ID: ${newRecipeId}`);
+    } catch (e: any) {
+      if (newRecipeId) {
+        await recipesApi.remove(newRecipeId).catch(console.error); // cleanup rollback
+      }
+      throw new Error(`Promotion failed: ${e.message}. Partial recipe rolled back.`);
+    }
   };
 
   if (loading) return <div className="bos-page"><div className="bos-loading"><div className="bos-spinner"/>Loading Validations...</div></div>;

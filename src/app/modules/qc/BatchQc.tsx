@@ -3,6 +3,7 @@ import { useQcChecks, useBatches } from '../../hooks/useBos';
 import { qcChecksApi, batchesApi, fgLotsApi, recipeQcParamsApi } from '../../lib/bosApi';
 import { QcCheck, QcCheckResult, fmtDate, RecipeQcParam } from '../../types/bos';
 import { useAuth } from '../../hooks';
+import { supabase } from '../../lib/supabase';
 
 const DEFAULT_PARAMS: Record<string, string[]> = {
   Physical: ["Appearance", "Colour", "Odour", "Texture", "Particle Size"],
@@ -48,7 +49,11 @@ export function BatchQc() {
             result: '',
             verdict: 'pending' as const
           }));
-          setQcForm((prev: any) => ({ ...prev, results: initialResults }));
+          // FIX-3: only init results when empty — don't overwrite user's already-entered data
+          setQcForm((prev: any) => ({
+            ...prev,
+            results: prev.results?.length ? prev.results : initialResults
+          }));
         } else {
           setActiveRecipeParams([]);
         }
@@ -57,7 +62,7 @@ export function BatchQc() {
       .finally(() => {
         setLoadingParams(false);
       });
-  }, [activeBatchId, batches]);
+  }, [activeBatchId, batches, user]); // FIX-1: user added to deps so analyst field updates after auth loads
 
   const paramsToRender = useMemo(() => {
     if (activeRecipeParams.length > 0) {
@@ -92,7 +97,7 @@ export function BatchQc() {
   const startQC = (batchId: string) => {
     setActiveBatchId(batchId);
     setQcForm({
-      analyst: user?.name || '',
+      analyst: user?.name || '',   // FIX-1: always use fresh user context, not stale useState init
       reviewer: '',
       packSize: '',
       formatNo: 'FSMS/QC/12',
@@ -104,18 +109,17 @@ export function BatchQc() {
   const cancelQC = () => { setActiveBatchId(null); };
 
   const handleResultChange = (type: string, param: string, field: 'spec' | 'result' | 'verdict', value: string) => {
-    const newResults = [...(qcForm.results || [])];
-    const existingIdx = newResults.findIndex((r: any) => r.type === type && r.parameter === param);
-    if (existingIdx >= 0) {
-      newResults[existingIdx] = { ...newResults[existingIdx], [field === 'spec' ? 'specification' : field]: value };
-    } else {
-      newResults.push({
-        type, parameter: param,
-        specification: field === 'spec' ? value : '',
-        result: field === 'result' ? value : '',
-        verdict: field === 'verdict' ? value : 'pending'
-      });
-    }
+    // FIX-5: use map instead of find+splice — avoids full copy on every keystroke for large param sets
+    const key = field === 'spec' ? 'specification' : field;
+    const exists = (qcForm.results || []).some((r: any) => r.type === type && r.parameter === param);
+    const newResults = exists
+      ? (qcForm.results as any[]).map((r: any) =>
+          r.type === type && r.parameter === param ? { ...r, [key]: value } : r
+        )
+      : [
+          ...(qcForm.results || []),
+          { type, parameter: param, specification: field === 'spec' ? value : '', result: field === 'result' ? value : '', verdict: field === 'verdict' ? value : 'pending' }
+        ];
     setQcForm({ ...qcForm, results: newResults });
   };
 
@@ -124,60 +128,33 @@ export function BatchQc() {
   };
 
   const submitQC = async (verdict: 'PASS' | 'FAIL') => {
-    const batch = batches.find(b => b.id === activeBatchId);
-    if (!batch) return;
+    if (!activeBatchId) return;
 
     setSaving(true);
     try {
-      const coaNo = verdict === 'PASS' ? `CoA-${batch.batch_no}-${Date.now().toString(36).toUpperCase()}` : '';
-      
-      const checkData: any = {
-        batch_id: batch.id,
-        batch_no: batch.batch_no,
-        product: batch.product,
+      const qcData = {
         results: qcForm.results.filter((r: any) => r.result || r.specification),
-        overall: verdict,
-        coa_issued: verdict === 'PASS',
-        coa_number: coaNo || null,
         analyst: qcForm.analyst,
         reviewer: qcForm.reviewer,
         pack_size: qcForm.packSize,
         format_no: qcForm.formatNo,
         remarks: qcForm.remarks,
-        tested_at: new Date().toISOString(),
         tested_by: user?.name || 'System'
       };
 
-      const qcRes = await qcChecksApi.create(checkData);
-      if (qcRes.error) throw new Error(qcRes.error.message);
+      const { data, error } = await supabase.rpc('submit_batch_qc', {
+        p_batch_id: activeBatchId,
+        p_verdict: verdict,
+        p_qc_data: qcData,
+        p_user_id: user?.id
+      });
 
-      const newStatus = verdict === 'PASS' ? 'COMPLETED' : 'REJECTED';
-      const batchRes = await batchesApi.update(batch.id, { status: newStatus, qc_verdict: verdict, coa_no: coaNo });
-      if (batchRes.error) throw new Error(batchRes.error.message);
+      if (error) throw error;
 
-      // ── FG Lot creation on QC PASS ──────────────────────────────────────────
-      if (verdict === 'PASS') {
-        // BUG-02: Read unit_cost from proper DB column instead of parsing notes regex
-        const unitCost = (batch as any).unit_cost ?? 0;
-
-        const fgRes = await fgLotsApi.create({
-          batch_id:      batch.id,           // BUG-01: link FG lot to source batch
-          batch_no:      batch.batch_no,
-          product:       batch.product,
-          qty:           batch.actual_qty ?? batch.planned_qty,
-          available_qty: batch.actual_qty ?? batch.planned_qty,
-          unit:          batch.unit ?? 'kg',
-          unit_cost:     unitCost,
-          coa_no:        coaNo || null,
-          coa_issued:    true,
-        });
-        if (fgRes.error) throw new Error(fgRes.error.message);
-      }
-
-      alert(verdict === 'PASS' ? `✅ QC Approved — CoA ${coaNo} issued!` : '❌ Batch rejected — quarantined.');
+      alert(verdict === 'PASS' ? `✅ QC Approved — CoA ${data.coa_no} issued!` : '❌ Batch rejected — quarantined.');
       setActiveBatchId(null);
-      reloadChecks();
-      reloadBatches();
+      await reloadChecks();
+      await reloadBatches();
     } catch (e: any) {
       alert(`Error submitting QC: ${e.message}`);
     } finally {

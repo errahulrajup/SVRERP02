@@ -83,21 +83,25 @@ alter table recipes       enable row level security;
 alter table recipe_inputs enable row level security;
 alter table recipe_steps  enable row level security;
 
+drop policy if exists "auth_only_products" on products;
 create policy "auth_only_products"
   on products for all
   using (auth.uid() is not null)
   with check (auth.uid() is not null);
 
+drop policy if exists "auth_only_recipes" on recipes;
 create policy "auth_only_recipes"
   on recipes for all
   using (auth.uid() is not null)
   with check (auth.uid() is not null);
 
+drop policy if exists "auth_only_recipe_inputs" on recipe_inputs;
 create policy "auth_only_recipe_inputs"
   on recipe_inputs for all
   using (auth.uid() is not null)
   with check (auth.uid() is not null);
 
+drop policy if exists "auth_only_recipe_steps" on recipe_steps;
 create policy "auth_only_recipe_steps"
   on recipe_steps for all
   using (auth.uid() is not null)

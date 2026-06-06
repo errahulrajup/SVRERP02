@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { costCentersApi, utilityConsumptionApi, laborHoursApi, overheadAllocationsApi } from '../../lib/bosApi';
 import { CostCenter, UtilityConsumption, LaborHours, OverheadAllocation, fmtINR, fmtDate } from '../../types/bos';
 import { useAuth } from '../../hooks';
+import { supabase } from '../../lib/supabase';
 
 export function CostingDashboard() {
   const { user } = useAuth();
@@ -11,9 +12,35 @@ export function CostingDashboard() {
   const [allocations, setAllocations] = useState<OverheadAllocation[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [period, setPeriod] = useState<'MTD'|'QTD'|'YTD'>('MTD');
+
+  const [startDate, endDate] = React.useMemo(() => {
+    const now = new Date();
+    if (period === 'MTD') return [new Date(now.getFullYear(), now.getMonth(), 1), now];
+    if (period === 'QTD') {
+      const q = Math.floor(now.getMonth() / 3);
+      return [new Date(now.getFullYear(), q * 3, 1), now];
+    }
+    return [new Date(now.getFullYear(), 0, 1), now]; // YTD
+  }, [period]);
+
+  const filteredUtilities = React.useMemo(() =>
+    utilities.filter(u => {
+      const d = new Date(u.reading_date);
+      return d >= startDate && d <= endDate;
+    }), [utilities, startDate, endDate]
+  );
+
+  const filteredAllocations = React.useMemo(() =>
+    allocations.filter(a => {
+      const d = new Date(a.allocation_date);
+      return d >= startDate && d <= endDate;
+    }), [allocations, startDate, endDate]
+  );
+
   // Stats
-  const totalUtilityCost = utilities.reduce((sum, u) => sum + (u.total_cost || 0), 0);
-  const totalAllocations = allocations.reduce((sum, a) => sum + a.amount, 0);
+  const totalUtilityCost = filteredUtilities.reduce((sum, u) => sum + (u.total_cost || 0), 0);
+  const totalAllocations = filteredAllocations.reduce((sum, a) => sum + a.amount, 0);
 
   const canEdit = user?.role === 'ADMIN' || user?.role === 'MANAGER';
 
@@ -58,15 +85,16 @@ export function CostingDashboard() {
     if (qty <= 0) return alert('Enter valid quantity');
     
     try {
-      await utilityConsumptionApi.create({
-        org_id: 'ORG-SVR', site_id: 'SITE-MAIN',
-        cost_center_id: uForm.cost_center_id || null,
-        utility_type: uForm.utility_type as any,
-        reading_date: uForm.reading_date,
-        qty_consumed: qty,
-        unit: uForm.unit,
-        rate: rate
+      const { error } = await supabase.rpc('record_utility_consumption', {
+        p_cost_center_id: uForm.cost_center_id || null,
+        p_utility_type: uForm.utility_type,
+        p_reading_date: uForm.reading_date,
+        p_qty_consumed: qty,
+        p_unit: uForm.unit,
+        p_rate: rate,
+        p_user_id: user?.id
       });
+      if (error) throw error;
       alert('Utility recorded successfully');
       setShowUtilModal(false);
       loadData();
@@ -79,13 +107,14 @@ export function CostingDashboard() {
     if (amt <= 0) return alert('Enter valid amount');
 
     try {
-      await overheadAllocationsApi.create({
-        org_id: 'ORG-SVR', site_id: 'SITE-MAIN',
-        cost_center_id: ohForm.cost_center_id,
-        allocation_date: ohForm.allocation_date,
-        amount: amt,
-        allocation_basis: ohForm.allocation_basis as any
+      const { error } = await supabase.rpc('allocate_overhead', {
+        p_cost_center_id: ohForm.cost_center_id,
+        p_allocation_date: ohForm.allocation_date,
+        p_amount: amt,
+        p_allocation_basis: ohForm.allocation_basis,
+        p_user_id: user?.id
       });
+      if (error) throw error;
       alert('Overhead allocated successfully');
       setShowOhModal(false);
       loadData();
@@ -103,7 +132,12 @@ export function CostingDashboard() {
             <h1 className="bos-page-title">Overheads & Utilities</h1>
             <p className="bos-page-sub">Track production utilities, overheads, and allocate costs across centers.</p>
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 4, marginRight: 16 }}>
+              {(['MTD','QTD','YTD'] as const).map(p => (
+                <button key={p} className={`bos-btn bos-btn-sm ${period===p?'bos-btn-primary':''}`} onClick={() => setPeriod(p)}>{p}</button>
+              ))}
+            </div>
             {canEdit && <button className="bos-btn bos-btn-ghost" onClick={() => setShowOhModal(true)}>+ Allocate Overhead</button>}
             {canEdit && <button className="bos-btn bos-btn-primary" onClick={() => setShowUtilModal(true)}>+ Record Utility</button>}
           </div>
@@ -140,8 +174,8 @@ export function CostingDashboard() {
             <table className="bos-tbl">
               <thead><tr><th>Date</th><th>Utility</th><th>Center</th><th>Qty Consumed</th><th>Total Cost</th></tr></thead>
               <tbody>
-                {utilities.length === 0 ? <tr><td colSpan={5} style={{textAlign: 'center', padding: 20}}>No utility data</td></tr> : null}
-                {utilities.map(u => (
+                {filteredUtilities.length === 0 ? <tr><td colSpan={5} style={{textAlign: 'center', padding: 20}}>No utility data for this period</td></tr> : null}
+                {filteredUtilities.map(u => (
                   <tr key={u.id}>
                     <td>{fmtDate(u.reading_date)}</td>
                     <td>{u.utility_type}</td>
@@ -160,8 +194,8 @@ export function CostingDashboard() {
             <table className="bos-tbl">
               <thead><tr><th>Date</th><th>Cost Center</th><th>Allocation Basis</th><th>Amount</th></tr></thead>
               <tbody>
-                {allocations.length === 0 ? <tr><td colSpan={4} style={{textAlign: 'center', padding: 20}}>No overhead allocations</td></tr> : null}
-                {allocations.map(a => (
+                {filteredAllocations.length === 0 ? <tr><td colSpan={4} style={{textAlign: 'center', padding: 20}}>No overhead allocations for this period</td></tr> : null}
+                {filteredAllocations.map(a => (
                   <tr key={a.id}>
                     <td>{fmtDate(a.allocation_date)}</td>
                     <td>{costCenters.find(c => c.id === a.cost_center_id)?.name || a.cost_center_id}</td>

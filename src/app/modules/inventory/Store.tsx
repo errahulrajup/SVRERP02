@@ -6,7 +6,7 @@ import { useAuth } from '../../hooks';
 
 export function Store() {
   const { items: lots, loading: rmLoading, reload: reloadLots } = useLots();
-  const { items: fgLots, loading: fgLoading } = useFgLots();
+  const { items: fgLots, loading: fgLoading, reload: reloadFgLots } = useFgLots();
   const [activeTab, setActiveTab] = useState<'RM' | 'FG' | 'ALERTS'>('RM');
   const [hideZero, setHideZero] = useState(true);
   const { user } = useAuth();
@@ -32,40 +32,70 @@ export function Store() {
 
   const handleAdjustStock = async () => {
     if (!ledgerModal.item) return;
+
+    if (!/^\d*\.?\d+$/.test(adjustForm.qty)) return alert('Invalid quantity format. Enter a positive number.');
     const qty = parseFloat(adjustForm.qty);
-    if (!qty || qty <= 0) return alert('Enter valid quantity');
+    if (isNaN(qty) || qty <= 0) return alert('Enter valid quantity');
+
+    const change = adjustForm.type === 'OUT' ? -qty : qty;
+    
+    if (Math.abs(change) > 1000 && !window.confirm(`You are adjusting a large quantity (${change}). Are you sure?`)) {
+      return;
+    }
 
     try {
-      const change = adjustForm.type === 'OUT' ? -qty : qty;
       const payload: Partial<StockLedgerTransaction> = {
         transaction_type: 'ADJUSTMENT',
         qty_change: change,
         reference_id: 'MANUAL',
-        notes: adjustForm.notes || 'Manual stock adjustment',
+        notes: (adjustForm.notes || 'Manual stock adjustment') + (user?.name ? ` | By: ${user.name}` : ''),
         created_by: user?.id || null
       };
 
+      let newQty = 0;
+      let updatedItem: any = { ...ledgerModal.item };
+
       if (ledgerModal.type === 'RM') {
-        payload.lot_id = ledgerModal.item.id;
-        payload.erp_product_id = (ledgerModal.item as Lot).erp_product_id;
+        const lot = ledgerModal.item as Lot;
+        const freshLot = await lotsApi.byId(lot.id);
+        if (!freshLot.data) throw new Error('Lot not found or deleted');
+        const currentQty = freshLot.data.remaining_qty || 0;
+        
+        if (change < 0 && Math.abs(change) > currentQty) {
+          return alert(`Cannot deduct ${Math.abs(change)}. Only ${currentQty} available.`);
+        }
+
+        newQty = currentQty + change;
+        payload.lot_id = lot.id;
+        payload.erp_product_id = lot.erp_product_id;
+        
+        await lotsApi.update(lot.id, { remaining_qty: newQty });
+        updatedItem = { ...lot, remaining_qty: newQty };
       } else {
-        payload.fg_lot_id = ledgerModal.item.id;
+        const fglot = ledgerModal.item as FgLot;
+        const freshLot = await fgLotsApi.byId(fglot.id);
+        if (!freshLot.data) throw new Error('Lot not found or deleted');
+        const currentQty = freshLot.data.available_qty || 0;
+        
+        if (change < 0 && Math.abs(change) > currentQty) {
+          return alert(`Cannot deduct ${Math.abs(change)}. Only ${currentQty} available.`);
+        }
+
+        newQty = currentQty + change;
+        payload.fg_lot_id = fglot.id;
+        
+        await fgLotsApi.update(fglot.id, { available_qty: newQty });
+        updatedItem = { ...fglot, available_qty: newQty };
       }
 
       await stockLedgerApi.create(payload as Omit<StockLedgerTransaction, 'id' | 'created_at'>);
       
-      if (ledgerModal.type === 'RM') {
-        const lot = ledgerModal.item as Lot;
-        await lotsApi.update(lot.id, { remaining_qty: Math.max(0, (lot.remaining_qty || 0) + change) });
-      } else {
-        const fglot = ledgerModal.item as FgLot;
-        await fgLotsApi.update(fglot.id, { available_qty: Math.max(0, (fglot.available_qty || 0) + change) });
-      }
-
       alert('Stock adjusted successfully!');
       setAdjustForm({ qty: '', type: 'OUT', notes: '' });
-      openLedger(ledgerModal.item, ledgerModal.type);
-      reloadLots();
+      
+      await openLedger(updatedItem, ledgerModal.type);
+      
+      ledgerModal.type === 'RM' ? reloadLots() : reloadFgLots();
     } catch(e:any) {
       alert(`Error adjusting stock: ${e.message}`);
     }
@@ -76,23 +106,28 @@ export function Store() {
   }
 
   // Pre-calculate RM KPI
-  const rmVal = lots
+  const rmVal = React.useMemo(() => lots
     .filter(l => l.qc_status === 'approved')
-    .reduce((acc, l) => acc + ((l.remaining_qty || 0) * (l.unit_cost || 0)), 0);
+    .reduce((acc, l) => acc + ((l.remaining_qty || 0) * (l.unit_cost || 0)), 0), [lots]);
+
+  const lotsWithDays = React.useMemo(() => lots.map(l => ({
+    ...l, 
+    d: l.expiry_date ? daysUntil(l.expiry_date) : null 
+  })), [lots]);
 
   // Pre-calculate FG KPI
-  const fgVal = fgLots.reduce((acc, l) => acc + ((l.available_qty || 0) * (l.unit_cost || 0)), 0);
+  const fgVal = React.useMemo(() => fgLots.reduce((acc, l) => acc + ((l.available_qty || 0) * (l.unit_cost || 0)), 0), [fgLots]);
 
   // Alerts
-  const now = Date.now();
-  const expiringRM = lots.filter(l => {
-    if (!l.expiry_date) return false;
-    const d = daysUntil(l.expiry_date);
-    return d >= 0 && d <= 30;
-  });
-  const expiredRM = lots.filter(l => l.expiry_date && daysUntil(l.expiry_date) < 0);
-  const criticalRM = expiringRM.filter(l => daysUntil(l.expiry_date) >= 0 && daysUntil(l.expiry_date) <= 7);
-  const warningRM = expiringRM.filter(l => daysUntil(l.expiry_date) > 7 && daysUntil(l.expiry_date) <= 30);
+  const { expiringRM, expiredRM, criticalRM, warningRM } = React.useMemo(() => {
+    const expiring = lotsWithDays.filter(l => l.d !== null && l.d >= 0 && l.d <= 30);
+    return {
+      expiringRM: expiring,
+      expiredRM: lotsWithDays.filter(l => l.d !== null && l.d < 0),
+      criticalRM: expiring.filter(l => l.d !== null && l.d >= 0 && l.d <= 7),
+      warningRM: expiring.filter(l => l.d !== null && l.d > 7 && l.d <= 30)
+    };
+  }, [lotsWithDays]);
 
   const stats = [
     { label: 'RM Lots (Approved)', val: lots.filter(l => l.qc_status === 'approved').length, color: '#22C55E' },
@@ -106,7 +141,7 @@ export function Store() {
   ];
 
   const renderRM = () => {
-    const sorted = [...lots]
+    const sorted = [...lotsWithDays]
       .filter(l => hideZero ? (l.remaining_qty || 0) > 0 : true)
       .sort((a, b) => {
       if (!a.expiry_date) return 1;
@@ -135,9 +170,9 @@ export function Store() {
             </thead>
             <tbody>
               {sorted.map(l => {
-                const d = daysUntil(l.expiry_date);
-                const eClass = !l.expiry_date ? 'bos-badge-gray' : d < 0 ? 'bos-badge-red' : d <= 7 ? 'bos-badge-red' : d <= 30 ? 'bos-badge-yellow' : 'bos-badge-green';
-                const eLbl = !l.expiry_date ? '—' : d < 0 ? 'EXPIRED' : `${l.expiry_date} (${d}d)`;
+                const d = l.d;
+                const eClass = d === null ? 'bos-badge-gray' : d < 0 ? 'bos-badge-red' : d <= 7 ? 'bos-badge-red' : d <= 30 ? 'bos-badge-yellow' : 'bos-badge-green';
+                const eLbl = d === null ? '—' : d < 0 ? 'EXPIRED' : `${l.expiry_date} (${d}d)`;
                 const qClass = l.qc_status === 'approved' ? 'bos-badge-green' : l.qc_status === 'rejected' ? 'bos-badge-red' : 'bos-badge-yellow';
                 const remVal = (l.remaining_qty || 0) * (l.unit_cost || 0);
                 const isLow = (l.remaining_qty || 0) <= (l.quantity || 0) * 0.1;
@@ -219,9 +254,7 @@ export function Store() {
   };
 
   const renderAlerts = () => {
-    const expiring = [...lots].filter(l => l.expiry_date && daysUntil(l.expiry_date) <= 30);
-    
-    if (expiring.length === 0) {
+    if (expiringRM.length === 0) {
       return (
         <div style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', padding: 16, borderRadius: 8, color: '#88C096' }}>
           ✅ No expiry alerts. All lots are within safe shelf-life limits.
@@ -229,7 +262,7 @@ export function Store() {
       );
     }
 
-    const sortedExpiring = expiring.sort((a, b) => new Date(a.expiry_date!).getTime() - new Date(b.expiry_date!).getTime());
+    const sortedExpiring = [...expiringRM].sort((a, b) => new Date(a.expiry_date!).getTime() - new Date(b.expiry_date!).getTime());
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -257,7 +290,7 @@ export function Store() {
               </thead>
               <tbody>
                 {sortedExpiring.map(l => {
-                  const d = daysUntil(l.expiry_date);
+                  const d = l.d as number;
                   return (
                     <tr key={l.id}>
                       <td><span style={{ fontFamily: 'monospace', color: '#D4A843' }}>{l.lot_no || l.id}</span></td>

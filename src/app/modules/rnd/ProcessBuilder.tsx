@@ -36,7 +36,7 @@ export function ProcessBuilder() {
   const loadEquipment = async () => {
     try {
       const { data } = await equipmentApi.list();
-      setEquipment((data || []).filter((eq: any) => eq.status === 'Operational'));
+      setEquipment((data || []).filter((eq: any) => eq.status !== 'Retired'));
     } catch (e: any) {
       console.error('Error loading equipment:', e);
     }
@@ -48,21 +48,31 @@ export function ProcessBuilder() {
 
   useEffect(() => {
     const formulaIdFromUrl = new URLSearchParams(location.search).get('formulaId');
-    if (formulaIdFromUrl) {
+    if (formulaIdFromUrl && formulaIdFromUrl !== selectedFormula) {
       setSelectedFormula(formulaIdFromUrl);
-      return;
     }
-    loadSteps(selectedFormula);
-  }, [selectedFormula, location.search]);
+  }, [location.search]);
 
   useEffect(() => {
-    if (!selectedFormula) return;
+    if (!selectedFormula) {
+      setSteps([]);
+      return;
+    }
     loadSteps(selectedFormula);
   }, [selectedFormula]);
 
   const handleSave = async () => {
     if (!selectedFormula) return alert('Select a formula first');
     if (!form.description.trim()) return alert('Description is required');
+    
+    if (steps.some(s => s.step_no === form.step_no)) {
+      return alert(`Step ${form.step_no} already exists. Please delete it first or use a different number.`);
+    }
+
+    if (form.ccp && !form.temp_c && !form.pressure_bar && !form.duration_min) {
+      return alert('CCP steps must have at least one critical parameter defined (Temp, Pressure, or Duration)');
+    }
+
     setSaving(true);
     try {
       const res = await rndProcessesApi.create({
@@ -70,10 +80,10 @@ export function ProcessBuilder() {
         step_no: form.step_no,
         step_type: form.step_type,
         description: form.description.trim(),
-        duration_min: form.duration_min ? Number(form.duration_min) : null,
-        temp_c: form.temp_c ? Number(form.temp_c) : null,
-        rpm: form.rpm ? Number(form.rpm) : null,
-        pressure_bar: form.pressure_bar ? Number(form.pressure_bar) : null,
+        duration_min: form.duration_min !== '' ? Number(form.duration_min) : null,
+        temp_c: form.temp_c !== '' ? Number(form.temp_c) : null,
+        rpm: form.rpm !== '' ? Number(form.rpm) : null,
+        pressure_bar: form.pressure_bar !== '' ? Number(form.pressure_bar) : null,
         ccp: form.ccp,
         machine: form.machine || null
       });
@@ -82,15 +92,22 @@ export function ProcessBuilder() {
         return;
       }
       setForm({ step_no: form.step_no + 1, step_type: 'Mix', description: '', duration_min: '', temp_c: '', rpm: '', pressure_bar: '', ccp: false, machine: '' });
-      loadSteps(selectedFormula);
+      await loadSteps(selectedFormula);
     } catch (e: any) { alert('Error: ' + e.message); }
     finally { setSaving(false); }
   };
 
   const handleDelete = async (id: string) => {
+    if (!confirm('Delete this step? Sub-sequent steps will be re-numbered.')) return;
     try {
       await rndProcessesApi.remove(id);
-      loadSteps(selectedFormula);
+      
+      const remaining = steps.filter(s => s.id !== id).sort((a, b) => a.step_no - b.step_no);
+      await Promise.all(remaining.map((s, idx) =>
+        rndProcessesApi.update(s.id, { step_no: idx + 1 })
+      ));
+      
+      await loadSteps(selectedFormula);
     } catch (e: any) { alert('Error: ' + e.message); }
   };
 

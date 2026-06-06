@@ -46,7 +46,9 @@ ALTER TABLE recipe_fsms_ccp ENABLE ROW LEVEL SECURITY;
 ALTER TABLE recipe_fsms_prp ENABLE ROW LEVEL SECURITY;
 
 -- Allow all policy for development (as per current schema patterns)
+drop policy if exists "allow_all_recipe_fsms_ccp" on recipe_fsms_ccp;
 CREATE POLICY "allow_all_recipe_fsms_ccp" ON recipe_fsms_ccp FOR ALL USING (true);
+drop policy if exists "allow_all_recipe_fsms_prp" on recipe_fsms_prp;
 CREATE POLICY "allow_all_recipe_fsms_prp" ON recipe_fsms_prp FOR ALL USING (true);
 
 -- Indexing for performance

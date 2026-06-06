@@ -26,7 +26,16 @@ interface Equipment {
 const LS_KEY = 'bos_equipment';
 
 function lsLoad(): Equipment[] {
-  try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch { return []; }
+  try { 
+    const arr = JSON.parse(localStorage.getItem(LS_KEY) || '[]'); 
+    return arr.map((e: any) => ({
+      name: '', asset_code: '', category: 'Mixer',
+      make: null, model: null, serial_no: null, work_center: null,
+      status: 'Operational', purchase_date: null, last_maintenance: null,
+      next_maintenance: null, maintenance_freq_days: null, notes: null,
+      ...e
+    }));
+  } catch { return []; }
 }
 function lsSave(data: Equipment[]) { localStorage.setItem(LS_KEY, JSON.stringify(data)); }
 
@@ -129,6 +138,17 @@ export function Equipment() {
     return () => { mountedRef.current = false; };
   }, [load]);
 
+  useEffect(() => {
+    if (form.last_maintenance && form.maintenance_freq_days) {
+      const d = new Date(form.last_maintenance);
+      const freq = parseInt(form.maintenance_freq_days as string);
+      if (!isNaN(freq) && freq > 0) {
+        d.setDate(d.getDate() + freq);
+        setForm(f => ({ ...f, next_maintenance: d.toISOString().split('T')[0] }));
+      }
+    }
+  }, [form.last_maintenance, form.maintenance_freq_days]);
+
   const filtered = items.filter(eq => {
     const matchSearch = !search ||
       eq.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -158,6 +178,7 @@ export function Equipment() {
     if (!form.asset_code.trim()) return alert('Asset code is required');
     setSaving(true);
     try {
+      const freqRaw = parseInt(form.maintenance_freq_days as string);
       const payload = {
         name: form.name.trim(), asset_code: form.asset_code.trim().toUpperCase(),
         category: form.category, make: form.make.trim() || null, model: form.model.trim() || null,
@@ -166,7 +187,7 @@ export function Equipment() {
         purchase_date: form.purchase_date || null,
         last_maintenance: form.last_maintenance || null,
         next_maintenance: form.next_maintenance || null,
-        maintenance_freq_days: form.maintenance_freq_days ? parseInt(form.maintenance_freq_days as string) : null,
+        maintenance_freq_days: !isNaN(freqRaw) && freqRaw > 0 ? freqRaw : null,
         notes: form.notes.trim() || null,
       };
       if (editId) {
@@ -186,9 +207,14 @@ export function Equipment() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
-    await deleteEquipment(id);
-    load();
+    if (!confirm(`Delete "${name}"? This cannot be undone. Make sure it is not referenced in active Work Orders or logs.`)) return;
+    setSaving(true);
+    try {
+      await deleteEquipment(id);
+      load();
+    } finally {
+      if (mountedRef.current) setSaving(false);
+    }
   };
 
   const openMaintLog = (eq: Equipment) => {

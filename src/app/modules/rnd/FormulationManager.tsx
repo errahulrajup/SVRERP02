@@ -79,6 +79,7 @@ export function FormulationManager() {
 
   const openEdit = (formula: RndFormula) => {
     setEditingFormula(formula);
+    setIsCreatingProduct(false);
     setForm({
       formula_code: formula.formula_code,
       name: formula.name,
@@ -137,6 +138,12 @@ export function FormulationManager() {
       return;
     }
 
+    const existing = formulas.find(f => f.formula_code === form.formula_code.trim().toUpperCase());
+    if (existing && existing.id !== editingFormula?.id) {
+      alert('Formula code already exists');
+      return;
+    }
+
     setSaving(true);
     try {
       const payload = {
@@ -144,9 +151,9 @@ export function FormulationManager() {
         name: form.name.trim(),
         description: form.description.trim() || null,
         version: Number(form.version) || 1,
-        target_ph: form.target_ph ? Number(form.target_ph) : null,
-        target_brix: form.target_brix ? Number(form.target_brix) : null,
-        target_sg: form.target_sg ? Number(form.target_sg) : null,
+        target_ph: form.target_ph !== '' ? Number(form.target_ph) : null,
+        target_brix: form.target_brix !== '' ? Number(form.target_brix) : null,
+        target_sg: form.target_sg !== '' ? Number(form.target_sg) : null,
         erp_product_id: form.erp_product_id || null,
       };
 
@@ -239,11 +246,11 @@ export function FormulationManager() {
                   value={form.erp_product_id}
                   onChange={(e) => {
                     const selectedProd = (productsData || []).find((p: Product) => p.id === e.target.value);
-                    setForm({ ...form, erp_product_id: e.target.value, name: selectedProd ? selectedProd.name : form.name });
+                    setForm({ ...form, erp_product_id: e.target.value, name: form.name || (selectedProd ? selectedProd.name : form.name) });
                   }}
                 >
                   <option value="">-- Choose Product from ERP Catalog --</option>
-                  {(productsData || []).map((p: Product) => (
+                  {(productsData || []).filter((p: Product) => p.is_active).map((p: Product) => (
                     <option key={p.id} value={p.id}>{p.name} ({p.sku_code})</option>
                   ))}
                 </select>

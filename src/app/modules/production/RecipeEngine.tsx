@@ -66,8 +66,22 @@ export function RecipeEngine() {
   }, [activeRecipeId]);
 
   useEffect(() => {
-    loadQcParams();
-  }, [loadQcParams]);
+    let cancelled = false;
+    const load = async () => {
+      if (!activeRecipeId) return setQcParams([]);
+      setLoadingParams(true);
+      try {
+        const res = await recipeQcParamsApi.byRecipe(activeRecipeId);
+        if (!cancelled && res.data) setQcParams(res.data);
+      } catch (e: any) {
+        if (!cancelled) alert('Error: ' + e.message);
+      } finally {
+        if (!cancelled) setLoadingParams(false);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [activeRecipeId]);
 
   const handleSaveQcParam = async () => {
     if (!activeRecipeId || !qcParamForm.param_name.trim()) return alert('Parameter name is required');
@@ -83,7 +97,7 @@ export function RecipeEngine() {
         target_value: qcParamForm.target_value ? parseFloat(qcParamForm.target_value) : null,
         test_method: qcParamForm.test_method.trim() || null,
         notes: qcParamForm.notes.trim() || null,
-        sort_order: qcParams.length
+        sort_order: 0
       };
 
       if (editQcParamId) {
@@ -130,10 +144,14 @@ export function RecipeEngine() {
     }
   };
 
+  const [addingPreset, setAddingPreset] = useState<string | null>(null);
+
   const handleQuickAddQcParam = async (preset: typeof COMMON_QC_PRESETS[number]) => {
+    if (addingPreset === preset.name) return;
     if (qcParams.find(p => p.param_name === preset.name)) {
       return alert('Parameter already exists');
     }
+    setAddingPreset(preset.name);
     try {
       await recipeQcParamsApi.create({
         recipe_id: activeRecipeId!,
@@ -145,11 +163,13 @@ export function RecipeEngine() {
         target_value: null,
         test_method: null,
         notes: null,
-        sort_order: qcParams.length
+        sort_order: 0
       });
       loadQcParams();
     } catch (e: any) {
       alert(`Error: ${e.message}`);
+    } finally {
+      setAddingPreset(null);
     }
   };
   const activeInputs = useMemo(() => allInputs.filter(i => i.recipe_id === activeRecipeId), [allInputs, activeRecipeId]);
@@ -237,10 +257,16 @@ export function RecipeEngine() {
   const handleSaveStep = async () => {
     if (!activeRecipeId || !sForm.name.trim()) return alert('Invalid step');
     setSaving(true);
+    const stepNo = parseInt(sForm.stepNo) || activeSteps.length + 1;
+    if (activeSteps.find(s => s.step_no === stepNo)) {
+      setSaving(false);
+      return alert(`Step number ${stepNo} already exists.`);
+    }
+
     try {
       await recipeStepsApi.create({
         recipe_id: activeRecipeId,
-        step_no: parseInt(sForm.stepNo) || activeSteps.length + 1,
+        step_no: stepNo,
         step_name: sForm.name.trim(),
         machine: sForm.machine.trim() || null,
         instruction: sForm.instruction.trim() || null,
@@ -259,7 +285,7 @@ export function RecipeEngine() {
     if (!activeRecipeId) return;
     if (!confirm('Approve & lock recipe? Only Admin can unlock.')) return;
     try {
-      await recipesApi.update(activeRecipeId, { locked: true, approved_by: user?.name || null });
+      await recipesApi.update(activeRecipeId, { locked: true, approved_by: user?.id || null });
       alert('✅ Recipe approved & locked!');
       reloadRecipes();
     } catch (e: any) { alert(`Error: ${e.message}`); }
@@ -269,7 +295,7 @@ export function RecipeEngine() {
     if (user?.role !== 'ADMIN') return alert('Only ADMIN can unlock approved recipes');
     if (!activeRecipeId || !confirm('Admin override: Unlock recipe?')) return;
     try {
-      await recipesApi.update(activeRecipeId, { locked: false, approved_by: null });
+      await recipesApi.update(activeRecipeId, { locked: false });
       alert('🔓 Recipe unlocked');
       reloadRecipes();
     } catch (e: any) { alert(`Error: ${e.message}`); }

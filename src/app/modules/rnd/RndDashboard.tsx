@@ -3,35 +3,50 @@ import { useRndFormulas, useRndTrials } from '../../hooks';
 import { fmtDate } from '../../types/bos'; // Using BOS formatter
 
 export function RndDashboard() {
-  const { items: formulas, loading: fLoad } = useRndFormulas();
-  const { items: trials, loading: tLoad } = useRndTrials();
+  const { items: formulas, loading: fLoad, error: fErr, reload: fReload } = useRndFormulas();
+  const { items: trials, loading: tLoad, error: tErr, reload: tReload } = useRndTrials();
 
   const loading = fLoad || tLoad;
+  const error = fErr || tErr;
+
+  const handleRefresh = () => {
+    fReload();
+    tReload();
+  };
 
   const stats = useMemo(() => {
-    const validTrials = Array.isArray(trials) ? trials : [];
-    const validFormulas = Array.isArray(formulas) ? formulas : [];
-    const ago30 = new Date(Date.now() - 30 * 86_400_000).toISOString();
+    const validTrials = trials || [];
+    const validFormulas = formulas || [];
+    const ago30 = new Date(Date.now() - 30 * 86_400_000);
     return {
       activeTrials: validTrials.filter(t => t.status === 'IN_PROGRESS').length,
       failedBatches: validTrials.filter(
-        t => t.status === 'FAILED' && t.created_at > ago30
+        t => t.status === 'FAILED' && new Date(t.created_at) > ago30
       ).length,
       approvedFormulas: validFormulas.filter(f => f.status === 'APPROVED' || f.status === 'LOCKED').length,
       draftFormulas: validFormulas.filter(f => f.status === 'DRAFT').length
     };
   }, [formulas, trials]);
 
-  const recentTrials = useMemo(() => (Array.isArray(trials) ? [...trials] : []).slice(0, 5), [trials]);
-  const recentFormulas = useMemo(() => (Array.isArray(formulas) ? [...formulas] : []).slice(0, 5), [formulas]);
+  const recentTrials = useMemo(() => 
+    [...(trials || [])].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5), 
+  [trials]);
+  
+  const recentFormulas = useMemo(() => 
+    [...(formulas || [])].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5), 
+  [formulas]);
 
   if (loading) return <div style={{ padding: 40, color: '#94a3b8' }}>Loading Dashboard Data...</div>;
+  if (error) return <div style={{ padding: 40, color: '#ef4444' }}>Error loading dashboard: {error} <button className="rnd-btn" onClick={handleRefresh} style={{marginLeft: 16}}>Retry</button></div>;
 
   return (
     <div style={{ padding: '32px' }}>
-      <div className="rnd-header" style={{ padding: '0 0 24px 0', borderBottom: 'none', background: 'transparent' }}>
-        <h1 className="rnd-title">Laboratory Overview</h1>
-        <p className="rnd-subtitle">Formulation metrics, active trials, and system alerts.</p>
+      <div className="rnd-header" style={{ padding: '0 0 24px 0', borderBottom: 'none', background: 'transparent', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1 className="rnd-title">Laboratory Overview</h1>
+          <p className="rnd-subtitle">Formulation metrics, active trials, and system alerts.</p>
+        </div>
+        <button className="rnd-btn" onClick={handleRefresh}>🔄 Refresh Data</button>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20, marginBottom: 32 }}>

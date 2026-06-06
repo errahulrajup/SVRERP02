@@ -43,6 +43,7 @@ create or replace function touch_updated_at()
 returns trigger language plpgsql as $$
 begin new.updated_at = now(); return new; end; $$;
 
+drop trigger if exists products_touch_updated_at on products;
 create trigger products_touch_updated_at
   before update on products
   for each row execute procedure touch_updated_at();
@@ -268,6 +269,7 @@ create table if not exists blog_posts (
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
 );
+drop trigger if exists blog_touch_updated_at on blog_posts;
 create trigger blog_touch_updated_at
   before update on blog_posts
   for each row execute procedure touch_updated_at();

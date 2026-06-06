@@ -4,6 +4,7 @@ import { dispatchesApi, fgLotsApi, invoicesApi, stockLedgerApi } from '../../lib
 import { DispatchStatus, Dispatch, fmtINR, fmtDate } from '../../types/bos';
 import { useAuth } from '../../hooks';
 import { logAudit } from '../../lib/auditLogger';
+import { supabase } from '../../lib/supabase';
 
 export function DispatchLog() {
   const { items: dispatches, loading: dLoading, reload: reloadDO } = useDispatches();
@@ -59,26 +60,25 @@ export function DispatchLog() {
 
     setSaving(true);
     try {
-      await dispatchesApi.create({
-        do_no:       doNo,
-        invoice_id:  null,
-        batch_id:    lot.id,           // FK → fg_lots.id
-        batch_no:    lot.batch_no || null,
-        customer:    form.cust.trim(),
-        product:     lot.product,
-        quantity:    qty,
-        unit:        form.unit,
-        unit_rate:   rate,             // selling rate per unit
-        gst_pct:     gst,
-        gst_amt:     Math.round(sub * gst) / 100,
-        subtotal:    sub,
-        total,
-        vehicle_no:  form.veh.trim() || null,
-        lr_no:       form.lr.trim() || null,
-        status:      'DRAFT',
-        dispatched_at: null,
-        notes:       form.notes.trim() || null,
+      const { error } = await supabase.rpc('create_single_dispatch', {
+        p_do_no:       doNo,
+        p_batch_id:    lot.id,
+        p_batch_no:    lot.batch_no || null,
+        p_customer:    form.cust.trim(),
+        p_product:     lot.product,
+        p_quantity:    qty,
+        p_unit:        form.unit,
+        p_unit_rate:   rate,
+        p_gst_pct:     gst,
+        p_gst_amt:     Math.round(sub * gst) / 100,
+        p_subtotal:    sub,
+        p_total:       total,
+        p_vehicle_no:  form.veh.trim() || null,
+        p_lr_no:       form.lr.trim() || null,
+        p_notes:       form.notes.trim() || null,
+        p_user_id:     user?.id
       });
+      if (error) throw error;
 
       alert(`✅ DO ${doNo} created`);
       setIsModalOpen(false);
@@ -92,80 +92,26 @@ export function DispatchLog() {
   };
 
   const moveDO = async (id: string, next: DispatchStatus) => {
-    try {
-      const d = dispatches.find(x => x.id === id);
-      if (!d) return;
-
-      if (next === 'DISPATCHED') {
-        // ── QA HARD GATE ─────────────────────────────────────────────────────
-        // Block dispatch if FG lot has not been QC-cleared with a CoA
-        const lot = fgLots.find(l => l.id === d.batch_id);
-        if (!lot) return alert('FG lot not found. Cannot dispatch.');
-        
-        if (!lot.coa_issued && !lot.coa_no) {  // BUG-09: removed (as any) casts
-          return alert(
-            '🚫 QA GATE BLOCKED\n\n' +
-            `Batch "${d.product}" (${d.batch_no || lot.id}) has not received QC clearance.\n\n` +
-            'A Certificate of Analysis (CoA) must be issued by the QC team before dispatch.\n' +
-            'Go to Quality Control → Batch QC to clear this batch.'
-          );
-        }
-
-        // Check available stock
-        if ((lot.available_qty || 0) < d.quantity) {
-          return alert(`Cannot dispatch. Insufficient FG stock. (Available: ${lot.available_qty})`);
-        }
-
-        // Create stock ledger OUT transaction
-        await stockLedgerApi.create({
-          lot_id:           null,        // FG lot uses fg_lot_id below
-          fg_lot_id:        d.batch_id,
-          erp_product_id:   null,
-          transaction_type: 'OUT',
-          qty_change:       -d.quantity,
-          reference_id:     d.id,
-          notes:            `Dispatch Order: ${d.do_no}`,
-          created_by:       user?.id || null
-        });
-
-        await dispatchesApi.update(id, { status: next, dispatched_at: new Date().toISOString() });
-
-        // ── Auto-create invoice with real amounts ──────────────────────────
-        // Use selling_rate if stored, else fall back to FG lot unit_cost
-        const unitRate  = (d as any).unit_rate  ?? lot.unit_cost  ?? 0;
-        const gstPct    = (d as any).gst_pct    ?? 18;
-        const subtotal  = Math.round(d.quantity * unitRate * 100) / 100;
-        const gstAmt    = Math.round(subtotal * gstPct) / 100;
-        const invTotal  = Math.round((subtotal + gstAmt) * 100) / 100;
-        const invNo     = `INV-${Date.now().toString(36).toUpperCase()}`;
-
-        await invoicesApi.create({
-          invoice_no:   invNo,
-          customer:     d.customer,
-          dispatch_id:  d.id,
-          batch_id:     d.batch_id,
-          date:         new Date().toISOString().split('T')[0],
-          items:        [{ product: d.product, qty: d.quantity, unit: d.unit, rate: unitRate, amount: subtotal }],
-          subtotal,
-          gst_pct:      gstPct,
-          gst_amt:      gstAmt,
-          total:        invTotal,
-          paid_amt:     0,
-          status:       'PENDING',
-          payment_date: null,
-          paid_by:      null,
-          notes:        `Auto-created on dispatch of DO ${d.do_no}`
-        });
-
-        logAudit({ user_name: user?.name, action: 'APPROVE', module: 'Accounts', record_label: d.do_no, details: `Dispatched DO ${d.do_no} | Customer: ${d.customer} | Product: ${d.product} | Qty: ${d.quantity} | Invoice: ${invNo}` });
-        alert(`🚀 Dispatched! Stock deducted and Invoice ${invNo} auto-created (${invTotal > 0 ? fmtINR(invTotal) : 'amount TBD'}).`);
-      } else {
+    if (next !== 'DISPATCHED') {
+      try {
         await dispatchesApi.updateStatus(id, next);
         alert(`✅ DO ➔ ${next}`);
-      }
+        reloadDO();
+      } catch (e: any) { alert(`Error: ${e.message}`); }
+      return;
+    }
+    
+    try {
+      const { data, error } = await supabase.rpc('dispatch_do_and_create_invoice', {
+        p_do_id: id,
+        p_user_id: user?.id
+      });
+      if (error) throw error;
+      alert(`🚀 Dispatched! Invoice ${data.invoice_no} auto-created (${fmtINR(data.invoice_total)})`);
       reloadDO();
+      reloadFg();
     } catch (e: any) {
-      alert(`Error moving DO: ${e.message}`);
+      alert(`Error: ${e.message}`);
     }
   };
 

@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS work_centers (
 
 -- RLS
 ALTER TABLE work_centers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "authenticated_all" ON work_centers;
 CREATE POLICY "authenticated_all" ON work_centers FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
 -- ── 2. Equipment ─────────────────────────────────────────────────────────────
@@ -50,6 +51,7 @@ CREATE TABLE IF NOT EXISTS equipment (
 
 -- RLS
 ALTER TABLE equipment ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "authenticated_all" ON equipment;
 CREATE POLICY "authenticated_all" ON equipment FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
 -- Index for maintenance queries
@@ -92,6 +94,7 @@ CREATE TABLE IF NOT EXISTS daily_logs (
 
 -- RLS
 ALTER TABLE daily_logs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "authenticated_all" ON daily_logs;
 CREATE POLICY "authenticated_all" ON daily_logs FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
 -- Indexes

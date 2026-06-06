@@ -3,6 +3,7 @@ import { useGrns } from '../../hooks/useBos';
 import { grnsApi, lotsApi, expensesApi, stockLedgerApi } from '../../lib/bosApi';
 import { fmtINR, daysUntil, today, GrnStatus, Grn } from '../../types/bos';
 import { useAuth } from '../../hooks';
+import { supabase } from '../../lib/supabase';
 
 export function GrnQc() {
   const { items: grns, loading, reload } = useGrns();
@@ -29,61 +30,16 @@ export function GrnQc() {
 
   const approveGRN = async (g: Grn) => {
     if (processingId) return;
-    if (g.status !== 'QC_PENDING') return alert('GRN already processed');
     setProcessingId(g.id);
     try {
-      const grnRes = await grnsApi.update(g.id, { status: 'APPROVED' });
-      if (grnRes.error) throw new Error(grnRes.error.message);
+      const { error } = await supabase.rpc('approve_grn_and_create_lot', {
+        p_grn_id: g.id,
+        p_user_id: user?.id,
+        p_user_name: user?.name
+      });
       
-      // Auto create LOT
-      const lotRes = await lotsApi.create({
-        lot_no: g.grn_no,
-        grn_id: g.id,
-        material: g.material,
-        supplier: g.supplier,
-        quantity: g.quantity,
-        remaining_qty: g.quantity,   // ← full received qty; stock ledger tracks deductions
-        unit: g.unit,
-        unit_cost: g.unit_cost,
-        total_cost: g.total_cost,
-        mfg_date: g.mfg_date,
-        expiry_date: g.expiry_date,
-        qc_status: 'approved',
-        location: 'Store',
-        notes: null,
-        erp_product_id: g.erp_product_id || null
-      });
-      if (lotRes.error) throw new Error(lotRes.error.message);
-
-      if (lotRes.data) {
-        // Create initial stock ledger entry (IN)
-        // BUG-10: capture error and abort if ledger entry fails
-        const { error: ledgerErr } = await stockLedgerApi.create({
-          lot_id: lotRes.data.id,
-          fg_lot_id: null,
-          erp_product_id: lotRes.data.erp_product_id,
-          transaction_type: 'IN',
-          qty_change: g.quantity,
-          reference_id: g.id,
-          notes: `GRN Received: ${g.grn_no}`,
-          created_by: user?.id || null
-        });
-        if (ledgerErr) {
-          alert('Stock ledger entry failed: ' + ledgerErr.message);
-          return; // Do NOT proceed to expense creation
-        }
-      }
-
-      // Auto create Expense — only reached if stock ledger succeeded
-      await expensesApi.create({
-        date: today(),
-        category: 'Raw Material',
-        description: `GRN ${g.grn_no} — ${g.material} from ${g.supplier}`,
-        amount: g.total_cost,
-        recorded_by: user?.name || 'System',
-        notes: `Auto-created on GRN approval. Invoice: ${g.invoice_no || '—'}`
-      });
-
+      if (error) throw error;
+      
       alert(`✅ GRN approved — stock lot created, ${fmtINR(g.total_cost)} logged to P&L`);
       reload();
     } catch (e: any) {
@@ -97,13 +53,20 @@ export function GrnQc() {
     if (!rejectId || !rejectReason.trim()) return alert('Reason required');
     setProcessingId(rejectId);
     try {
-      const grnRes = await grnsApi.update(rejectId, { status: 'REJECTED', reject_reason: rejectReason });
-      if ((grnRes as any).error) throw new Error((grnRes as any).error.message);
+      const { error } = await supabase.rpc('reject_grn', {
+        p_grn_id: rejectId,
+        p_reject_reason: rejectReason,
+        p_user_id: user?.id
+      });
+      if (error) throw error;
       setRejectId(null);
       setRejectReason('');
       reload();
-    } catch(e:any) { alert(`Error rejecting: ${e.message}`); }
-    finally { setProcessingId(null); }
+    } catch(e:any) { 
+      alert(`Error rejecting: ${e.message}`); 
+    } finally { 
+      setProcessingId(null); 
+    }
   };
 
   if (loading) {

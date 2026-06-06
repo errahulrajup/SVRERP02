@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useDispatchOrders, useAuth } from '../../hooks';
-import { dispatchOrdersApi, dispatchLinesApi, logisticsPalletsApi, logisticsPalletItemsApi, fgLotsApi } from '../../lib/bosApi';
+import { dispatchOrdersApi, dispatchLinesApi, logisticsPalletsApi, logisticsPalletItemsApi, fgLotsApi, stockLedgerApi, invoicesApi } from '../../lib/bosApi';
 import { DispatchOrder, DispatchLine, DispatchOrderStatus, Pallet, FgLot, fmtINR } from '../../types/bos';
+import { supabase } from '../../lib/supabase';
 
 export function DispatchOrders() {
   const { items: dispatches, loading: dLoading, reload: reloadDO } = useDispatchOrders();
@@ -76,22 +77,21 @@ export function DispatchOrders() {
     try {
       const doCode = form.doCode.trim() || `DO-${Date.now().toString(36).toUpperCase()}`;
       
-      const newDORes = await dispatchOrdersApi.create({
-        org_id: 'ORG-SVR',
-        site_id: 'SITE-MAIN',
-        customer_id: form.customerId.trim(),
-        do_code: doCode,
-        status: 'DRAFT',
-        actual_ship_date: null,
-        challan_no: form.challanNo.trim() || null
+      const { data: newDORes, error } = await supabase.rpc('create_pallet_dispatch_order', {
+        p_customer_id: form.customerId.trim(),
+        p_do_code: doCode,
+        p_challan_no: form.challanNo.trim() || null,
+        p_notes: form.notes.trim() || null,
+        p_user_id: user?.id
       });
 
-      if (newDORes.error) throw new Error(newDORes.error.message);
+      if (error) throw new Error(error.message);
 
       alert(`✅ DO ${doCode} created`);
       setForm({ doCode: '', customerId: '', challanNo: '', notes: '' });
-      reloadDO();
-      setSelectedDO(newDORes.data);
+      await reloadDO();              // FIX: await so list refreshes before user acts
+      await loadDependencies();      // FIX-4: load lots/pallets so line-add works immediately
+      setSelectedDO(newDORes);
       setActiveTab('LIST');
     } catch (e: any) {
       alert(`Error creating DO: ${e.message}`);
@@ -111,7 +111,9 @@ export function DispatchOrders() {
         if (!palletItems || palletItems.length === 0) return alert('Pallet is empty');
         
         for (const pi of palletItems) {
+           // FIX-1/2: re-check lot from freshly loaded lots state; guard UNKNOWN
            const lot = lots.find(l => l.id === pi.fg_lot_id);
+           if (!lot) throw new Error(`Lot ${pi.fg_lot_id} not found in loaded FG lots. Please refresh and try again.`);
            const lineQty = pi.qty_packed;
            const rate = parseFloat(lineForm.rate) || 0;
            const gst = parseFloat(lineForm.gstPct) || 18;
@@ -119,7 +121,7 @@ export function DispatchOrders() {
            
            await dispatchLinesApi.create({
              dispatch_order_id: selectedDO.id,
-             item_id: lot?.product || 'UNKNOWN',
+             item_id: lot.product,
              lot_id: pi.fg_lot_id,
              qty: lineQty,
              rate,
@@ -128,8 +130,9 @@ export function DispatchOrders() {
            });
         }
         alert('✅ Pallet items added to DO');
+        await loadDependencies(); // FIX-1: refresh lots so subsequent adds see updated stock
         loadLines(selectedDO.id);
-        setLineForm({ itemId: '', lotId: '', qty: '', rate: '', gstPct: '18', palletId: '' });
+        setLineForm({ itemId: '', lotId: '', qty: '', rate: lineForm.rate, gstPct: lineForm.gstPct, palletId: '' });
       } catch (e: any) {
         alert('Error adding pallet: ' + e.message);
       }
@@ -169,7 +172,7 @@ export function DispatchOrders() {
     if (!confirm('Remove this line?')) return;
     try {
       await dispatchLinesApi.remove(lineId);
-      loadLines(selectedDO!.id);
+      if (selectedDO) loadLines(selectedDO.id); // FIX-6: safe null check, no ! assertion
     } catch (e: any) {
       alert(`Error removing line: ${e.message}`);
     }
@@ -185,11 +188,73 @@ export function DispatchOrders() {
         const myLines = myLinesRes.data;
         if (!myLines || myLines.length === 0) return alert('Cannot ship an empty DO.');
 
-        // Update DO
+        // FIX-3: Deduct FG stock on shipment — this is the critical inventory OUT event
+        for (const line of myLines) {
+          if (!line.lot_id) continue;
+
+          // 3a. Write OUT entry to stock ledger
+          await stockLedgerApi.create({
+            lot_id:           null,
+            fg_lot_id:        line.lot_id,
+            erp_product_id:   null,
+            transaction_type: 'OUT',
+            qty_change:       -Math.abs(line.qty),
+            reference_id:     d.id,
+            notes:            `DO ${d.do_code} — shipped to ${d.customer_id}`,
+            created_by:       user?.name || null,
+          });
+
+          // 3b. Decrement fg_lots.available_qty
+          const { data: fgLot } = await fgLotsApi.byId(line.lot_id);
+          if (fgLot) {
+            await fgLotsApi.update(line.lot_id, {
+              available_qty: Math.max(0, (fgLot.available_qty ?? fgLot.qty) - line.qty),
+            });
+          }
+        }
+
+        // 3c. Update DO status
         const updateRes = await dispatchOrdersApi.update(id, { status: next, actual_ship_date: new Date().toISOString() });
         if (updateRes.error) throw new Error(updateRes.error.message);
 
-        alert(`🚀 Dispatched! DO marked as SHIPPED.`);
+        // 3d. Auto-create invoice from dispatch lines total
+        const baseTotal   = myLines.reduce((s, l) => s + l.line_total, 0);
+        const gstTotal    = myLines.reduce((s, l) => s + l.line_total * (l.gst_pct / 100), 0);
+        const grandTotal  = Math.round((baseTotal + gstTotal) * 100) / 100;
+        const invoiceNo   = `INV-${d.do_code}-${Date.now().toString(36).toUpperCase()}`;
+
+        // Build invoice line items from dispatch lines
+        const invoiceItems = myLines.map(l => {
+          const lLot = lots.find(lot => lot.id === l.lot_id);
+          return {
+            product: l.item_id,
+            qty:     l.qty,
+            unit:    lLot?.unit || 'kg',
+            rate:    l.rate,
+            amount:  l.line_total,
+          };
+        });
+        const gstPct = myLines.length > 0 ? myLines[0].gst_pct : 18;
+
+        await invoicesApi.create({
+          invoice_no:   invoiceNo,
+          customer:     d.customer_id,
+          dispatch_id:  d.id,
+          batch_id:     null,
+          date:         new Date().toISOString().split('T')[0],
+          items:        invoiceItems,
+          subtotal:     Math.round(baseTotal * 100) / 100,
+          gst_pct:      gstPct,
+          gst_amt:      Math.round(gstTotal * 100) / 100,
+          total:        grandTotal,
+          paid_amt:     0,
+          status:       'PENDING',
+          payment_date: null,
+          paid_by:      null,
+          notes:        `Auto-generated on shipment of DO ${d.do_code}`,
+        });
+
+        alert(`🚀 Dispatched! Invoice ${invoiceNo} auto-created. Stock deducted.`);
       } else {
         const updateRes = await dispatchOrdersApi.update(id, { status: next });
         if (updateRes.error) throw new Error(updateRes.error.message);
@@ -197,7 +262,7 @@ export function DispatchOrders() {
       }
       
       if (selectedDO?.id === id) setSelectedDO(null);
-      reloadDO();
+      await reloadDO(); // FIX: await reload
     } catch (e: any) {
       alert(`Error moving DO: ${e.message}`);
     }
@@ -296,7 +361,7 @@ export function DispatchOrders() {
                     <div className="bos-form-grid" style={{ gridTemplateColumns: '1fr' }}>
                       <div className="bos-form-group">
                         <label className="bos-form-label">Add via Pallet</label>
-                        <select className="bos-form-field" value={lineForm.palletId} onChange={e=>setLineForm({...lineForm, palletId: e.target.value, lotId: ''})}>
+                        <select className="bos-form-field" value={lineForm.palletId} onChange={e => setLineForm({ itemId: '', lotId: '', qty: '', rate: lineForm.rate, gstPct: lineForm.gstPct, palletId: e.target.value })}>
                           <option value="">-- Choose Pallet --</option>
                           {pallets.filter(p => p.status === 'IN_CUSTODY' || p.status === 'STOWED').map(p => (
                             <option key={p.id} value={p.id}>{p.pallet_code}</option>

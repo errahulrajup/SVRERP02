@@ -55,7 +55,9 @@ create table if not exists dms_companies (
 -- RLS
 alter table documents    enable row level security;
 alter table dms_companies enable row level security;
+drop policy if exists "allow_all_documents" on documents;
 create policy "allow_all_documents"     on documents     for all using (true) with check (true);
+drop policy if exists "allow_all_dms_companies" on dms_companies;
 create policy "allow_all_dms_companies" on dms_companies for all using (true) with check (true);
 
 -- Indexes

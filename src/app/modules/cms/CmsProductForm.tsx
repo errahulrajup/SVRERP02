@@ -1,6 +1,7 @@
 import { useState, useEffect, type ChangeEvent } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { productsApi, activityApi, type Product } from '../../lib/supabase';
+import { productsApi, activityApi, supabase, type Product } from '../../lib/supabase';
+import { useAuth } from '../../hooks';
 import { ImageUpload } from '../../components/ImageUpload';
 
 const CATEGORIES = ['Spreads','Cooking Essentials','Condiments','Plant Protein','Frozen Vegetables','Wellness Drinks'];
@@ -19,15 +20,21 @@ export function CmsProductForm() {
   const navigate  = useNavigate();
   const { id }    = useParams<{ id: string }>();
   const isEdit    = !!id;
-  const [form,    setForm]    = useState<Omit<Product,'id'|'created_at'|'updated_at'>>(EMPTY);
+  const { user } = useAuth();
+  const [form,    setForm]    = useState<Omit<Product,'id'|'created_at'|'updated_at'> & { recipe_id?: string }>(EMPTY);
   const [tagsStr, setTagsStr] = useState('');
   const [bStr,    setBStr]    = useState('');
   const [saving,  setSaving]  = useState(false);
   const [error,   setError]   = useState('');
   const [saved,   setSaved]   = useState(false);
-  const [tab,     setTab]     = useState<'basic'|'details'|'seo'>('basic');
+  const [tab,     setTab]     = useState<'basic'|'details'|'fsms'|'seo'>('basic');
+  const [recipes, setRecipes] = useState<any[]>([]);
+  const [allergens, setAllergens] = useState<Record<string, {contains: boolean, may_contain: boolean}>>({});
+  const [changeReason, setChangeReason] = useState('');
 
   useEffect(() => {
+    supabase.from('recipes').select('id, name, version').eq('status', 'Active').then(({data}) => setRecipes(data || []));
+
     if (!isEdit) return;
     productsApi.byId(id).then(({ data, error: e }) => {
       if (e || !data) { setError('Product not found.'); return; }
@@ -35,6 +42,12 @@ export function CmsProductForm() {
       setForm(rest);
       setTagsStr((rest.tags ?? []).join(', '));
       setBStr((rest.benefits ?? []).join(', '));
+    });
+
+    supabase.from('product_allergens').select('*').eq('product_id', id).then(({data}) => {
+      const map: any = {};
+      data?.forEach(a => { map[a.allergen] = { contains: a.contains, may_contain: a.may_contain }; });
+      setAllergens(map);
     });
   }, [id, isEdit]);
 
@@ -54,29 +67,46 @@ export function CmsProductForm() {
     if (!form.name.trim()) return setError('Product name is required.');
     if (!form.slug.trim()) return setError('Slug is required.');
     if (!form.category)    return setError('Category is required.');
+    if (!form.recipe_id)   return setError('Recipe link required for traceability.');
+    if (isEdit && !changeReason.trim()) return setError('Reason for change required per 21 CFR Part 11.');
+
     setError(''); setSaving(true);
-    const payload: Omit<Product,'id'|'created_at'|'updated_at'> = {
+    
+    const allergenPayload = Object.entries(allergens).map(([allergen, v]) => ({
+      allergen, contains: v.contains || false, may_contain: v.may_contain || false
+    }));
+
+    const payload = {
       ...form,
-      tags:     tagsStr.split(',').map(s=>s.trim()).filter(Boolean),
+      tags: tagsStr.split(',').map(s=>s.trim()).filter(Boolean),
       benefits: bStr.split(',').map(s=>s.trim()).filter(Boolean),
     };
-    const { error: err, data: saved_data } = isEdit
-      ? await productsApi.update(id!, payload)
-      : await productsApi.create(payload);
+
+    const { data, error: err } = await supabase.rpc('upsert_product', {
+      p_id: isEdit ? id : null,
+      p_name: form.name,
+      p_slug: form.slug,
+      p_recipe_id: form.recipe_id,
+      p_allergens: allergenPayload,
+      p_data: payload,
+      p_reason: changeReason || 'Created via CMS',
+      p_user_id: user?.id
+    });
+
     setSaving(false);
     if (err) setError(err.message ?? 'Save failed.');
     else {
       await activityApi.log(
         isEdit ? 'updated' : 'created',
         'product',
-        saved_data?.id ?? id,
+        data ?? id,
         `${isEdit ? 'Updated' : 'Created'} product "${payload.name}"`,
       );
       setSaved(true); setTimeout(() => navigate('/admin/content/products'), 900);
     }
   };
 
-  const TABS = [{ k:'basic', l:'Basic Info' },{ k:'details', l:'Details & Usage' },{ k:'seo', l:'SEO' }] as const;
+  const TABS = [{ k:'basic', l:'Basic Info' },{ k:'details', l:'Details & Usage' },{ k:'fsms', l:'FSMS & Compliance' },{ k:'seo', l:'SEO' }] as const;
 
   return (
     <div style={{ padding:'40px 32px', maxWidth:860 }}>
@@ -202,6 +232,51 @@ export function CmsProductForm() {
                 <input className="field" type="number" min={0} value={form.sort_order} onChange={e => setForm(f => ({ ...f, sort_order: Number(e.target.value) }))} />
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ── FSMS ── */}
+        {tab === 'fsms' && (
+          <div style={{ display:'grid', gap:18 }}>
+            <div>
+              <label className="field-label">Linked Recipe * <span style={{color:'#F59E0B'}}>Required for Traceability</span></label>
+              <select className="field" value={form.recipe_id || ''} onChange={e => setForm(f => ({...f, recipe_id: e.target.value}))}>
+                <option value="">-- Select Active Recipe --</option>
+                {recipes.map(r => <option key={r.id} value={r.id}>{r.name} v{r.version}</option>)}
+              </select>
+              {!form.recipe_id && <p style={{fontSize:11, color:'#EF4444', marginTop:4}}>⚠️ Without recipe, batch traceability will fail</p>}
+            </div>
+
+            <div>
+              <label className="field-label">Allergen Declaration - FSMA Required</label>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(200px, 1fr))', gap:12, background:'var(--bg-card2)', padding:16, borderRadius:8 }}>
+                {['Milk','Egg','Fish','Shellfish','Tree Nuts','Peanuts','Wheat','Soy','Sesame'].map(a => (
+                  <div key={a}>
+                    <div style={{fontSize:12, fontWeight:600, marginBottom:6}}>{a}</div>
+                    <label style={{display:'flex', alignItems:'center', gap:6, fontSize:11}}>
+                      <input type="checkbox"
+                        checked={allergens[a]?.contains || false}
+                        onChange={e => setAllergens(prev => ({...prev, [a]: {...prev[a], contains: e.target.checked}}))}
+                      /> Contains
+                    </label>
+                    <label style={{display:'flex', alignItems:'center', gap:6, fontSize:11, marginTop:4}}>
+                      <input type="checkbox"
+                        checked={allergens[a]?.may_contain || false}
+                        onChange={e => setAllergens(prev => ({...prev, [a]: {...prev[a], may_contain: e.target.checked}}))}
+                      /> May Contain
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {isEdit && (
+              <div>
+                <label className="field-label">Reason for Change * <span style={{color:'#F59E0B'}}>21 CFR Part 11 Required</span></label>
+                <textarea className="field" rows={2} placeholder="e.g. Updated allergen info per supplier COA #12345"
+                  value={changeReason} onChange={e => setChangeReason(e.target.value)} style={{ resize:'vertical' }} />
+              </div>
+            )}
           </div>
         )}
 

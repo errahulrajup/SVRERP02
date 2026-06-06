@@ -5,11 +5,12 @@ export function FloorMonitor() {
   const { items: batches, loading } = useBatches();
 
   const activeBatches = useMemo(() => {
-    return batches.filter(b => b.status === 'PLANNED' || b.status === 'RUNNING' || b.status === 'QC_HOLD');
+    const ACTIVE_STATUSES = ['PLANNED', 'RUNNING', 'QC_HOLD'] as const;
+    return batches.filter(b => ACTIVE_STATUSES.includes(b.status as any));
   }, [batches]);
 
   const lines = useMemo(() => {
-    const uniqueLines = Array.from(new Set(activeBatches.map(b => (b as any).line || 'Unassigned')));
+    const uniqueLines = Array.from(new Set(activeBatches.map(b => (b as any).work_center || 'Unassigned')));
     // Sort lines alphabetically, but put 'Unassigned' at the end
     uniqueLines.sort((a, b) => {
       if (a === 'Unassigned') return 1;
@@ -20,7 +21,7 @@ export function FloorMonitor() {
   }, [activeBatches]);
 
   const stats = [
-    { label: 'Active Lines', val: lines.length, color: '#60A5FA' },
+    { label: 'Active Lines', val: lines.filter(l => l !== 'Unassigned').length, color: '#60A5FA' },
     { label: 'Running Batches', val: activeBatches.filter(b => b.status === 'RUNNING').length, color: '#4ADE80' },
     { label: 'Planned Batches', val: activeBatches.filter(b => b.status === 'PLANNED').length, color: '#D4A843' },
     { label: 'In QC Hold', val: activeBatches.filter(b => b.status === 'QC_HOLD').length, color: '#FACC15' },
@@ -47,9 +48,16 @@ export function FloorMonitor() {
       </div>
 
       <div style={{ flex: 1, overflowX: 'auto', marginTop: 24, paddingBottom: 24 }}>
-        <div style={{ display: 'flex', gap: 20, minWidth: 'min-content', height: '100%' }}>
-          {lines.map(line => {
-            const lineBatches = activeBatches.filter(b => ((b as any).line || 'Unassigned') === line);
+        {lines.length === 0 ? (
+          <div className="bos-empty" style={{ padding: 60, textAlign: 'center' }}>
+            <div style={{ fontSize: 40, marginBottom: 16 }}>🏭</div>
+            <div style={{ color: '#F0EDE6', fontSize: 16, fontWeight: 600 }}>No Active Batches</div>
+            <div style={{ color: '#9AAF96', fontSize: 13, marginTop: 4 }}>There are currently no planned, running, or hold batches on the floor.</div>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: 20, minWidth: 'min-content', height: '100%' }}>
+            {lines.map(line => {
+              const lineBatches = activeBatches.filter(b => ((b as any).work_center || 'Unassigned') === line);
             return (
               <div key={line} style={{ 
                 width: 320, 
@@ -101,13 +109,13 @@ export function FloorMonitor() {
                           
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#9AAF96', marginTop: 8 }}>
                             <span>Qty: {b.planned_qty} {b.unit}</span>
-                            <span>Op: {(b as any).operator || '—'}</span>
+                            <span>Op: {(b as any).operator_id || '—'}</span>
                           </div>
                           
-                          {isRunning && b.start_time && (
+                          {isRunning && b.created_at && (
                             <div style={{ marginTop: 10, fontSize: 11, color: '#88C096', display: 'flex', alignItems: 'center', gap: 6 }}>
                               <span className="bos-spinner" style={{ width: 10, height: 10, borderWidth: 2, borderColor: 'rgba(136,192,150,0.3)', borderTopColor: '#88C096' }} />
-                              Started: {new Date(b.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              Started: {new Date(b.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </div>
                           )}
                         </div>
@@ -119,6 +127,7 @@ export function FloorMonitor() {
             );
           })}
         </div>
+        )}
       </div>
     </div>
   );

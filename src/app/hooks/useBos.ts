@@ -66,6 +66,16 @@ export const useSops         = makeListHook<any>(() => sopApi.list());
 export const useTraining     = makeListHook<any>(() => trainingApi.list());
 export const useEmployees    = makeListHook<any>(() => hrEmployeesApi.list());
 export const useTrainingRecords = makeListHook<any>(() => hrTrainingRecordsApi.list());
+
+export const isOperatorTrained = (employeeId: string, sopNo: string, records: any[], sops: any[]) => {
+  const rec = records.find(r => {
+    const sop = sops.find(s => s.id === r.sop_id);
+    return r.employee_id === employeeId && sop?.sop_no === sopNo;
+  });
+  if (!rec) return false;
+  const expiry = rec.expiry_date ? new Date(rec.expiry_date) : new Date('2099-01-01');
+  return rec.status === 'PASSED' && expiry > new Date();
+};
 export const useAuditSchedules = makeListHook<any>(() => auditSchedulesApi.list());
 export const useRecipeFsmsCcp  = makeListHook<any>(() => recipeFsmsCcpApi.list());
 export const useRecipeFsmsPrp  = makeListHook<any>(() => recipeFsmsPrpApi.list());

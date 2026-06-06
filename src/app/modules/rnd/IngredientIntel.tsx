@@ -9,12 +9,12 @@ const EMPTY_INGREDIENT = {
   category: 'Hydrocolloid',
   functionality: '',
   supplier: '',
-  cost_per_kg: 0,
+  cost_per_kg: '',
   ph_min: '',
   ph_max: '',
   usage_min_pct: '',
   usage_max_pct: '',
-  heat_stability: 'High',
+  heat_stability: '',
   notes: '',
 };
 
@@ -37,7 +37,7 @@ export function IngredientIntel() {
         .join(' ')
         .toLowerCase()
         .includes(search.toLowerCase());
-      const matchesCategory = categoryFilter === 'ALL' || ingredient.category === categoryFilter;
+      const matchesCategory = categoryFilter === 'ALL' || (ingredient.category ?? 'Hydrocolloid') === categoryFilter;
       return matchesSearch && matchesCategory;
     });
   }, [categoryFilter, ingredients, search]);
@@ -59,12 +59,12 @@ export function IngredientIntel() {
       category: ingredient.category ?? 'Hydrocolloid',
       functionality: ingredient.functionality ?? '',
       supplier: ingredient.supplier ?? '',
-      cost_per_kg: ingredient.cost_per_kg,
+      cost_per_kg: ingredient.cost_per_kg?.toString() ?? '',
       ph_min: ingredient.ph_min?.toString() ?? '',
       ph_max: ingredient.ph_max?.toString() ?? '',
       usage_min_pct: ingredient.usage_min_pct?.toString() ?? '',
       usage_max_pct: ingredient.usage_max_pct?.toString() ?? '',
-      heat_stability: ingredient.heat_stability ?? 'High',
+      heat_stability: ingredient.heat_stability ?? '',
       notes: ingredient.notes ?? '',
     });
     setIsFormOpen(true);
@@ -76,6 +76,16 @@ export function IngredientIntel() {
       return;
     }
 
+    if (form.ph_min !== '' && form.ph_max !== '' && Number(form.ph_min) > Number(form.ph_max)) {
+      alert('pH Min cannot be greater than pH Max');
+      return;
+    }
+
+    if (form.usage_min_pct !== '' && form.usage_max_pct !== '' && Number(form.usage_min_pct) > Number(form.usage_max_pct)) {
+      alert('Usage Min % cannot be greater than Usage Max %');
+      return;
+    }
+
     setSaving(true);
     try {
       const payload = {
@@ -83,12 +93,12 @@ export function IngredientIntel() {
         category: form.category,
         functionality: form.functionality.trim() || null,
         supplier: form.supplier.trim() || null,
-        cost_per_kg: Number(form.cost_per_kg),
-        ph_min: form.ph_min ? Number(form.ph_min) : null,
-        ph_max: form.ph_max ? Number(form.ph_max) : null,
-        usage_min_pct: form.usage_min_pct ? Number(form.usage_min_pct) : null,
-        usage_max_pct: form.usage_max_pct ? Number(form.usage_max_pct) : null,
-        heat_stability: form.heat_stability,
+        cost_per_kg: form.cost_per_kg !== '' ? Number(form.cost_per_kg) : 0,
+        ph_min: form.ph_min !== '' ? Number(form.ph_min) : null,
+        ph_max: form.ph_max !== '' ? Number(form.ph_max) : null,
+        usage_min_pct: form.usage_min_pct !== '' ? Number(form.usage_min_pct) : null,
+        usage_max_pct: form.usage_max_pct !== '' ? Number(form.usage_max_pct) : null,
+        heat_stability: form.heat_stability || null,
         notes: form.notes.trim() || null,
         coa_url: null,
       };
@@ -104,7 +114,7 @@ export function IngredientIntel() {
 
       setIsFormOpen(false);
       resetForm();
-      reload();
+      await reload();
     } catch (e: any) {
       alert('Error: ' + e.message);
     } finally {
@@ -116,9 +126,13 @@ export function IngredientIntel() {
     if (!confirm('Delete this ingredient?')) return;
     try {
       await rndIngredientsApi.remove(id);
-      reload();
+      await reload();
     } catch (e: any) {
-      alert('Error: ' + e.message);
+      if (e.message?.toLowerCase().includes('foreign key constraint')) {
+        alert('Cannot delete: This ingredient is currently used in one or more formulations.');
+      } else {
+        alert('Error: ' + e.message);
+      }
     }
   };
 
@@ -163,7 +177,7 @@ export function IngredientIntel() {
             </div>
             <div>
               <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Cost / kg (₹)</label>
-              <input className="rnd-input" type="number" step="0.01" style={{ width: '100%' }} value={form.cost_per_kg} onChange={(e) => setForm({ ...form, cost_per_kg: Number(e.target.value) })} />
+              <input className="rnd-input" type="number" step="0.01" style={{ width: '100%' }} value={form.cost_per_kg} onChange={(e) => setForm({ ...form, cost_per_kg: e.target.value })} />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Functionality</label>
@@ -176,6 +190,7 @@ export function IngredientIntel() {
             <div>
               <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Heat Stability</label>
               <select className="rnd-input" style={{ width: '100%' }} value={form.heat_stability} onChange={(e) => setForm({ ...form, heat_stability: e.target.value })}>
+                <option value="">-- Select --</option>
                 {HEAT_STABILITY.map((value) => <option key={value}>{value}</option>)}
               </select>
             </div>

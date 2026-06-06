@@ -3,6 +3,7 @@ import { useExpenses } from '../../hooks/useBos';
 import { expensesApi } from '../../lib/bosApi';
 import { fmtINR } from '../../types/bos';
 import { useAuth } from '../../hooks';
+import { supabase } from '../../lib/supabase';
 
 const EXPENSE_CATS = [
   "Raw Material","Packaging","Labour","Electricity","Transport","Rent",
@@ -15,7 +16,7 @@ export function Expenses() {
   
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [eForm, setEForm] = useState({ cat: EXPENSE_CATS[0], date: new Date().toISOString().split('T')[0], desc: '', amt: '', paidBy: 'Bank', notes: '' });
+  const [eForm, setEForm] = useState({ cat: EXPENSE_CATS[0], date: new Date().toISOString().split('T')[0], desc: '', amt: '', notes: '' });
 
   const canEdit = user?.role === 'ADMIN' || user?.role === 'MANAGER';
 
@@ -26,17 +27,18 @@ export function Expenses() {
 
     setSaving(true);
     try {
-      await expensesApi.create({
-        category: eForm.cat,
-        date: eForm.date,
-        description: eForm.desc.trim(),
-        amount: amt,
-        notes: eForm.notes.trim() || null,
-        recorded_by: user?.name || null
+      const { error } = await supabase.rpc('record_expense', {
+        p_category: eForm.cat,
+        p_date: eForm.date,
+        p_description: eForm.desc.trim(),
+        p_amount: amt,
+        p_notes: eForm.notes.trim() || null,
+        p_user_id: user?.id
       });
+      if (error) throw error;
       alert(`✅ Expense ${fmtINR(amt)} recorded`);
       setIsExpenseModalOpen(false);
-      setEForm({ cat: EXPENSE_CATS[0], date: new Date().toISOString().split('T')[0], desc: '', amt: '', paidBy: 'Bank', notes: '' });
+      setEForm({ cat: EXPENSE_CATS[0], date: new Date().toISOString().split('T')[0], desc: '', amt: '', notes: '' });
       reloadExp();
     } catch (e: any) {
       alert(`Error saving expense: ${e.message}`);
@@ -49,7 +51,11 @@ export function Expenses() {
     if (user?.role !== 'ADMIN') return alert('Only ADMIN can delete expense entries');
     if (!confirm('Delete this expense?')) return;
     try {
-      await expensesApi.remove(id);
+      const { error } = await supabase.rpc('delete_expense', {
+        p_expense_id: id,
+        p_user_id: user?.id
+      });
+      if (error) throw error;
       reloadExp();
     } catch (e: any) { alert(`Error: ${e.message}`); }
   };

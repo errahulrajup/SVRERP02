@@ -8,7 +8,7 @@ export function LabNotebook() {
   const navigate = useNavigate();
   const { items: entries, loading: eLoad, reload } = useRndNotebooks();
   const { items: trials, loading: tLoad } = useRndTrials();
-  const { role } = useAuth();
+  const { user } = useAuth();
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -28,7 +28,7 @@ export function LabNotebook() {
         title: form.title.trim(),
         trial_id: form.trial_id || null,
         content: form.content.trim(),
-        author: role || 'Scientist',
+        author: user?.name || user?.email || 'Unknown',
         tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
         is_pinned: form.is_pinned
       });
@@ -44,7 +44,7 @@ export function LabNotebook() {
     setDeletingId(id);
     try {
       await rndNotebooksApi.remove(id);
-      reload();
+      await reload();
     } catch (e: any) { alert('Error: ' + e.message); }
     finally { setDeletingId(null); }
   };
@@ -74,7 +74,7 @@ export function LabNotebook() {
                 <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Link to Trial (Optional)</label>
                 <select className="rnd-input" style={{ width: '100%' }} value={form.trial_id} onChange={e => setForm({...form, trial_id: e.target.value})}>
                   <option value="">-- No Trial Linked --</option>
-                  {trials.map(t => <option key={t.id} value={t.id}>{t.trial_no} {t.formula ? `(${t.formula.formula_code})` : ''}</option>)}
+                  {trials.filter(t => t.status !== 'FAILED').map(t => <option key={t.id} value={t.id}>{t.trial_no} {t.formula ? `(${t.formula.formula_code})` : ''}</option>)}
                 </select>
               </div>
             </div>
@@ -95,7 +95,7 @@ export function LabNotebook() {
           </div>
           <div style={{ marginTop: 20, display: 'flex', gap: 12 }}>
             <button className="rnd-btn rnd-btn-primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : '💾 Save Entry'}</button>
-            <button className="rnd-btn" onClick={() => setIsFormOpen(false)}>Cancel</button>
+            <button className="rnd-btn" onClick={() => { setIsFormOpen(false); setForm({ title: '', trial_id: '', content: '', tags: '', is_pinned: false }); }}>Cancel</button>
           </div>
         </div>
       )}
@@ -104,7 +104,7 @@ export function LabNotebook() {
         {entries.length === 0 ? (
           <div style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>No entries in the notebook.</div>
         ) : (
-          entries.map(e => (
+          [...entries].sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0)).map(e => (
             <div key={e.id} className="rnd-card" style={e.is_pinned ? { borderLeft: '3px solid #f59e0b' } : {}}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, gap: 16 }}>
                 <div>
@@ -130,7 +130,7 @@ export function LabNotebook() {
                 {e.content}
               </div>
 
-              {e.tags && e.tags.length > 0 && (
+              {e.tags && Array.isArray(e.tags) && e.tags.length > 0 && (
                 <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
                   {e.tags.map(tag => (
                     <span key={tag} className="rnd-badge" style={{ background: '#1e293b', color: '#94a3b8', border: '1px solid #334155' }}>#{tag}</span>

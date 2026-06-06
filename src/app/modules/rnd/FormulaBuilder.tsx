@@ -33,34 +33,7 @@ const STATUS_OPTIONS: RndFormulaStatus[] = ['DRAFT','UNDER_TRIAL','APPROVED','LO
 
 const PHASE_PRESETS = ['Water Phase','Oil Phase','Dry Blend','Post-Addition','Heat Phase','Cooling Phase','Pre-Mix','Custom…'];
 
-const getParamCategory = (name: string): string => {
-  const n = name.toLowerCase();
-  if (n.includes('appearance') || n.includes('colour') || n.includes('odour') || n.includes('texture') || n.includes('particle')) {
-    return 'Physical';
-  }
-  if (n.includes('plate') || n.includes('yeast') || n.includes('mould') || n.includes('coli') || n.includes('salmonella') || n.includes('coliform') || n.includes('tpc') || n.includes('micro')) {
-    return 'Microbiological';
-  }
-  return 'Chemical';
-};
-
-const COMMON_PARAMS = [
-  { param_name: 'pH',              unit: '',      placeholder: '4.00' },
-  { param_name: 'Brix',           unit: '°Brix', placeholder: '12.5' },
-  { param_name: 'Specific Gravity',unit: '',     placeholder: '1.050' },
-  { param_name: 'Viscosity',      unit: 'cP',    placeholder: '500' },
-  { param_name: 'Moisture',       unit: '%',     placeholder: '5.0' },
-  { param_name: 'Melting Point',  unit: '°C',    placeholder: '37.0' },
-  { param_name: 'Saponification Value', unit: 'mg KOH/g', placeholder: '190' },
-  { param_name: 'Color Index',    unit: 'Lovibond', placeholder: '3.0' },
-  { param_name: 'FFA',            unit: '%',     placeholder: '0.05' },
-  { param_name: 'Peroxide Value', unit: 'meq/kg', placeholder: '1.0' },
-  { param_name: 'Total Ash',      unit: '%',     placeholder: '2.0' },
-  { param_name: 'Protein',        unit: '%',     placeholder: '8.0' },
-  { param_name: 'Fat',            unit: '%',     placeholder: '3.5' },
-  { param_name: 'Water Activity', unit: 'aw',    placeholder: '0.92' },
-  { param_name: 'TPC',            unit: 'CFU/g', placeholder: '<100' },
-];
+// Removed hardcoded COMMON_PARAMS and getParamCategory to ensure fully dynamic behavior
 
 function Toast({ msg, type, onClose }: { msg: string; type: 'success'|'error'; onClose: () => void }) {
   useEffect(() => { const t = setTimeout(onClose, 4000); return () => clearTimeout(t); }, [onClose]);
@@ -113,7 +86,7 @@ export function FormulaBuilder() {
   });
   const [addingItem, setAddingItem] = useState(false);
 
-  const handlePctChange = (pctStr: string) => {
+  const handlePctChange = useCallback((pctStr: string) => {
     const pct = parseFloat(pctStr);
     if (!isNaN(pct)) {
       const qty = (pct / 100) * batchScale;
@@ -121,9 +94,9 @@ export function FormulaBuilder() {
     } else {
       setNewItem(prev => ({ ...prev, percentage: pctStr, qty_kg: '' }));
     }
-  };
+  }, [batchScale]);
 
-  const handleQtyChange = (qtyStr: string) => {
+  const handleQtyChange = useCallback((qtyStr: string) => {
     const qty = parseFloat(qtyStr);
     if (!isNaN(qty)) {
       const pct = (qty / batchScale) * 100;
@@ -131,8 +104,14 @@ export function FormulaBuilder() {
     } else {
       setNewItem(prev => ({ ...prev, qty_kg: qtyStr, percentage: '' }));
     }
-  };
+  }, [batchScale]);
 
+  // FIX-4: Recalculate newItem quantities when batchScale changes
+  useEffect(() => {
+    if (newItem.percentage) {
+      handlePctChange(newItem.percentage);
+    }
+  }, [batchScale, handlePctChange]);
 
   /* ── New param form ── */
   const [showParamForm, setShowParamForm] = useState(false);
@@ -174,8 +153,9 @@ export function FormulaBuilder() {
         status: f.status,
       });
 
-      if (ingRes.data?.length && !newItem.ingredient_id) {
-        setNewItem(prev => ({ ...prev, ingredient_id: ingRes.data![0].id }));
+      // FIX-2: Safe functional update to avoid stale closure overriding existing selection
+      if (ingRes.data?.length) {
+        setNewItem(prev => prev.ingredient_id ? prev : ({ ...prev, ingredient_id: ingRes.data![0].id }));
       }
     } catch (e: any) {
       showToast('Error loading formula: ' + e.message, 'error');
@@ -196,12 +176,17 @@ export function FormulaBuilder() {
     if (!formula) return;
     setSavingMeta(true);
     try {
+      // FIX-5: Fetch fresh items to calculate the true cost before saving
+      const freshItemsRes = await rndFormulaItemsApi.byFormula(formula.id);
+      const freshItems = freshItemsRes.data || [];
+      const calculatedCost = freshItems.reduce((s, it) => s + (it.ingredient?.cost_per_kg || 0) * (Number(it.percentage) / 100), 0);
+
       const res = await rndFormulasApi.update(formula.id, {
         name: metaForm.name.trim(),
         description: metaForm.description.trim() || null,
         version: Number(metaForm.version) || 1,
         status: metaForm.status,
-        total_cost_per_kg: totalCostPerKg,
+        total_cost_per_kg: calculatedCost,
       });
       if (res.error) throw new Error(res.error.message);
       setFormula(res.data!);
@@ -280,11 +265,14 @@ export function FormulaBuilder() {
 
   /* ── Add dynamic parameter ── */
   const addParam = async () => {
+    // FIX-3: Prevent saving param if formula is not yet created/saved
+    if (!id || id === 'new') return showToast('Please save the formula first before adding QC parameters', 'error');
     if (!newParam.param_name.trim()) return showToast('Parameter name required', 'error');
+    
     setAddingParam(true);
     try {
       const payload = {
-        formula_id: id!,
+        formula_id: id,
         param_name: newParam.param_name.trim(),
         unit: newParam.unit.trim() || null,
         target_min:   newParam.target_min   ? parseFloat(newParam.target_min)   : null,
@@ -330,22 +318,6 @@ export function FormulaBuilder() {
     showToast('Parameter removed');
   };
 
-  /* ── Quick-add common param ── */
-  const quickAddParam = async (preset: typeof COMMON_PARAMS[number]) => {
-    if (!id) {
-      showToast('Please save the formula first before adding QC parameters', 'error');
-      return;
-    }
-    const exists = params.find(p => p.param_name === preset.param_name);
-    if (exists) return showToast(`${preset.param_name} already added`, 'error');
-    await rndFormulaParamsApi.create({
-      formula_id: id, param_name: preset.param_name, unit: preset.unit || null,
-      target_min: null, target_max: null, target_value: null,
-      test_method: null, notes: null, sort_order: params.length,
-    });
-    load();
-    showToast(`${preset.param_name} added — set targets now`);
-  };
 
   /* ── Submit for Validation ── */
   const submitForValidation = async () => {
@@ -697,21 +669,6 @@ export function FormulaBuilder() {
               )}
             </div>
 
-            {/* Quick-add presets */}
-            {!isLocked && !showParamForm && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 12 }}>
-                {COMMON_PARAMS.filter(cp => !params.find(p => p.param_name === cp.param_name)).slice(0,6).map(cp => (
-                  <button
-                    key={cp.param_name}
-                    className="bos-btn bos-btn-ghost bos-btn-sm"
-                    style={{ fontSize: 10 }}
-                    onClick={() => quickAddParam(cp)}
-                  >
-                    + {cp.param_name}
-                  </button>
-                ))}
-              </div>
-            )}
 
             {/* Add/Edit parameter form */}
             {showParamForm && !isLocked && (
@@ -723,11 +680,7 @@ export function FormulaBuilder() {
                     value={newParam.param_name}
                     onChange={e => setNewParam(p => ({ ...p, param_name: e.target.value }))}
                     placeholder="e.g. pH, Brix, Viscosity, Moisture %"
-                    list="param-presets"
                   />
-                  <datalist id="param-presets">
-                    {COMMON_PARAMS.map(cp => <option key={cp.param_name} value={cp.param_name}>{cp.unit ? `(${cp.unit})` : ''}</option>)}
-                  </datalist>
                 </div>
                 <div className="bos-form-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   <div className="bos-form-group">
