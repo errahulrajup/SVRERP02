@@ -42,6 +42,11 @@ export function FormulationManager() {
   const [statusFilter, setStatusFilter] = useState<'ALL' | RndFormulaStatus>('ALL');
   const [editingFormula, setEditingFormula] = useState<RndFormula | null>(null);
   const [form, setForm] = useState<FormulaForm>(EMPTY_FORMULA);
+  const [activeSpecs, setActiveSpecs] = useState({
+    ph: false,
+    brix: false,
+    sg: false,
+  });
 
   // New product creation state inside formulation manager
   const [isCreatingProduct, setIsCreatingProduct] = useState(false);
@@ -70,6 +75,11 @@ export function FormulationManager() {
     setForm(EMPTY_FORMULA);
     setEditingFormula(null);
     setIsCreatingProduct(false);
+    setActiveSpecs({
+      ph: false,
+      brix: false,
+      sg: false,
+    });
   };
 
   const openCreate = () => {
@@ -89,6 +99,11 @@ export function FormulationManager() {
       target_brix: formula.target_brix?.toString() ?? '',
       target_sg: formula.target_sg?.toString() ?? '',
       erp_product_id: formula.erp_product_id ?? '',
+    });
+    setActiveSpecs({
+      ph: formula.target_ph !== null && formula.target_ph !== undefined,
+      brix: formula.target_brix !== null && formula.target_brix !== undefined,
+      sg: formula.target_sg !== null && formula.target_sg !== undefined,
     });
     setIsFormOpen(true);
   };
@@ -151,9 +166,9 @@ export function FormulationManager() {
         name: form.name.trim(),
         description: form.description.trim() || null,
         version: Number(form.version) || 1,
-        target_ph: form.target_ph !== '' ? Number(form.target_ph) : null,
-        target_brix: form.target_brix !== '' ? Number(form.target_brix) : null,
-        target_sg: form.target_sg !== '' ? Number(form.target_sg) : null,
+        target_ph: (activeSpecs.ph && form.target_ph !== '') ? Number(form.target_ph) : null,
+        target_brix: (activeSpecs.brix && form.target_brix !== '') ? Number(form.target_brix) : null,
+        target_sg: (activeSpecs.sg && form.target_sg !== '') ? Number(form.target_sg) : null,
         erp_product_id: form.erp_product_id || null,
       };
 
@@ -298,11 +313,11 @@ export function FormulationManager() {
               </div>
             )}
 
-            <div>
+            <div style={{ gridColumn: 'span 3' }}>
               <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Formula Code *</label>
               <input className="rnd-input" style={{ width: '100%' }} placeholder="e.g. CR-001" value={form.formula_code} onChange={(e) => setForm({ ...form, formula_code: e.target.value })} />
             </div>
-            <div>
+            <div style={{ gridColumn: 'span 2' }}>
               <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Formula Name *</label>
               <input className="rnd-input" style={{ width: '100%' }} placeholder="e.g. Plant-Based Cooking Cream" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
@@ -314,18 +329,44 @@ export function FormulationManager() {
               <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Description / Objective</label>
               <input className="rnd-input" style={{ width: '100%' }} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Target pH</label>
-              <input className="rnd-input" type="number" step="0.1" style={{ width: '100%' }} value={form.target_ph} onChange={(e) => setForm({ ...form, target_ph: e.target.value })} />
+
+            {/* Target Specifications Selection Checklist */}
+            <div style={{ gridColumn: 'span 3', background: '#1e293b', padding: '12px 16px', borderRadius: 8, border: '1px solid #334155', marginTop: 8 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.05em' }}>Select Target Parameters for this Recipe:</div>
+              <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#f8fafc' }}>
+                  <input type="checkbox" checked={activeSpecs.ph} onChange={e => setActiveSpecs({ ...activeSpecs, ph: e.target.checked })} />
+                  Target pH
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#f8fafc' }}>
+                  <input type="checkbox" checked={activeSpecs.brix} onChange={e => setActiveSpecs({ ...activeSpecs, brix: e.target.checked })} />
+                  Target Brix (°Bx)
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#f8fafc' }}>
+                  <input type="checkbox" checked={activeSpecs.sg} onChange={e => setActiveSpecs({ ...activeSpecs, sg: e.target.checked })} />
+                  Target Specific Gravity
+                </label>
+              </div>
             </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Target Brix (°Bx)</label>
-              <input className="rnd-input" type="number" step="0.1" style={{ width: '100%' }} value={form.target_brix} onChange={(e) => setForm({ ...form, target_brix: e.target.value })} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Target Specific Gravity</label>
-              <input className="rnd-input" type="number" step="0.001" style={{ width: '100%' }} value={form.target_sg} onChange={(e) => setForm({ ...form, target_sg: e.target.value })} />
-            </div>
+
+            {activeSpecs.ph && (
+              <div>
+                <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Target pH</label>
+                <input className="rnd-input" type="number" step="0.1" style={{ width: '100%' }} value={form.target_ph} onChange={(e) => setForm({ ...form, target_ph: e.target.value })} />
+              </div>
+            )}
+            {activeSpecs.brix && (
+              <div>
+                <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Target Brix (°Bx)</label>
+                <input className="rnd-input" type="number" step="0.1" style={{ width: '100%' }} value={form.target_brix} onChange={(e) => setForm({ ...form, target_brix: e.target.value })} />
+              </div>
+            )}
+            {activeSpecs.sg && (
+              <div>
+                <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Target Specific Gravity</label>
+                <input className="rnd-input" type="number" step="0.001" style={{ width: '100%' }} value={form.target_sg} onChange={(e) => setForm({ ...form, target_sg: e.target.value })} />
+              </div>
+            )}
           </div>
           <div style={{ marginTop: 20, display: 'flex', gap: 12 }}>
             <button className="rnd-btn rnd-btn-primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : editingFormula ? '💾 Update Formula' : '🚀 Create Draft'}</button>

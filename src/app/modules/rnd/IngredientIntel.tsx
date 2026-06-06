@@ -27,8 +27,14 @@ export function IngredientIntel() {
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
-  const [editingIngredient, setEditingIngredient] = useState<RndIngredient | null>(null);
+    const [editingIngredient, setEditingIngredient] = useState<RndIngredient | null>(null);
   const [form, setForm] = useState(EMPTY_INGREDIENT);
+  const [activeParams, setActiveParams] = useState({
+    ph: false,
+    usage: false,
+    heat: false,
+    notes: false,
+  });
 
   const filteredIngredients = useMemo(() => {
     return ingredients.filter((ingredient) => {
@@ -45,6 +51,12 @@ export function IngredientIntel() {
   const resetForm = () => {
     setForm(EMPTY_INGREDIENT);
     setEditingIngredient(null);
+    setActiveParams({
+      ph: false,
+      usage: false,
+      heat: false,
+      notes: false,
+    });
   };
 
   const openCreate = () => {
@@ -67,6 +79,12 @@ export function IngredientIntel() {
       heat_stability: ingredient.heat_stability ?? '',
       notes: ingredient.notes ?? '',
     });
+    setActiveParams({
+      ph: ingredient.ph_min !== null || ingredient.ph_max !== null,
+      usage: ingredient.usage_min_pct !== null || ingredient.usage_max_pct !== null,
+      heat: ingredient.heat_stability !== null && ingredient.heat_stability !== '',
+      notes: ingredient.notes !== null && ingredient.notes !== '',
+    });
     setIsFormOpen(true);
   };
 
@@ -76,12 +94,12 @@ export function IngredientIntel() {
       return;
     }
 
-    if (form.ph_min !== '' && form.ph_max !== '' && Number(form.ph_min) > Number(form.ph_max)) {
+    if (activeParams.ph && form.ph_min !== '' && form.ph_max !== '' && Number(form.ph_min) > Number(form.ph_max)) {
       alert('pH Min cannot be greater than pH Max');
       return;
     }
 
-    if (form.usage_min_pct !== '' && form.usage_max_pct !== '' && Number(form.usage_min_pct) > Number(form.usage_max_pct)) {
+    if (activeParams.usage && form.usage_min_pct !== '' && form.usage_max_pct !== '' && Number(form.usage_min_pct) > Number(form.usage_max_pct)) {
       alert('Usage Min % cannot be greater than Usage Max %');
       return;
     }
@@ -94,12 +112,12 @@ export function IngredientIntel() {
         functionality: form.functionality.trim() || null,
         supplier: form.supplier.trim() || null,
         cost_per_kg: form.cost_per_kg !== '' ? Number(form.cost_per_kg) : 0,
-        ph_min: form.ph_min !== '' ? Number(form.ph_min) : null,
-        ph_max: form.ph_max !== '' ? Number(form.ph_max) : null,
-        usage_min_pct: form.usage_min_pct !== '' ? Number(form.usage_min_pct) : null,
-        usage_max_pct: form.usage_max_pct !== '' ? Number(form.usage_max_pct) : null,
-        heat_stability: form.heat_stability || null,
-        notes: form.notes.trim() || null,
+        ph_min: (activeParams.ph && form.ph_min !== '') ? Number(form.ph_min) : null,
+        ph_max: (activeParams.ph && form.ph_max !== '') ? Number(form.ph_max) : null,
+        usage_min_pct: (activeParams.usage && form.usage_min_pct !== '') ? Number(form.usage_min_pct) : null,
+        usage_max_pct: (activeParams.usage && form.usage_max_pct !== '') ? Number(form.usage_max_pct) : null,
+        heat_stability: (activeParams.heat && form.heat_stability) ? form.heat_stability : null,
+        notes: (activeParams.notes && form.notes.trim()) ? form.notes.trim() : null,
         coa_url: null,
       };
 
@@ -164,6 +182,29 @@ export function IngredientIntel() {
       {isFormOpen && (
         <div className="rnd-card" style={{ marginBottom: 24, borderLeft: '3px solid #0ea5e9' }}>
           <div className="rnd-card-header">{editingIngredient ? 'Update Raw Material Specification' : 'New Raw Material Specification'}</div>
+          {/* Parameter Selection Checklist */}
+          <div style={{ marginBottom: 16, background: '#1e293b', padding: '12px 16px', borderRadius: 8, border: '1px solid #334155' }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.05em' }}>Select Relevant Specs for this Material:</div>
+            <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#f8fafc' }}>
+                <input type="checkbox" checked={activeParams.ph} onChange={e => setActiveParams({ ...activeParams, ph: e.target.checked })} />
+                pH Range
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#f8fafc' }}>
+                <input type="checkbox" checked={activeParams.usage} onChange={e => setActiveParams({ ...activeParams, usage: e.target.checked })} />
+                Usage % Limits
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#f8fafc' }}>
+                <input type="checkbox" checked={activeParams.heat} onChange={e => setActiveParams({ ...activeParams, heat: e.target.checked })} />
+                Heat Stability
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#f8fafc' }}>
+                <input type="checkbox" checked={activeParams.notes} onChange={e => setActiveParams({ ...activeParams, notes: e.target.checked })} />
+                Notes / Synergies
+              </label>
+            </div>
+          </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
             <div>
               <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Material Name *</label>
@@ -187,31 +228,43 @@ export function IngredientIntel() {
               <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Supplier / Mfr</label>
               <input className="rnd-input" style={{ width: '100%' }} value={form.supplier} onChange={(e) => setForm({ ...form, supplier: e.target.value })} />
             </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Heat Stability</label>
-              <select className="rnd-input" style={{ width: '100%' }} value={form.heat_stability} onChange={(e) => setForm({ ...form, heat_stability: e.target.value })}>
-                <option value="">-- Select --</option>
-                {HEAT_STABILITY.map((value) => <option key={value}>{value}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>pH Range (Min - Max)</label>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input className="rnd-input" type="number" step="0.1" placeholder="Min" style={{ width: '50%' }} value={form.ph_min} onChange={(e) => setForm({ ...form, ph_min: e.target.value })} />
-                <input className="rnd-input" type="number" step="0.1" placeholder="Max" style={{ width: '50%' }} value={form.ph_max} onChange={(e) => setForm({ ...form, ph_max: e.target.value })} />
+
+            {activeParams.heat && (
+              <div>
+                <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Heat Stability</label>
+                <select className="rnd-input" style={{ width: '100%' }} value={form.heat_stability} onChange={(e) => setForm({ ...form, heat_stability: e.target.value })}>
+                  <option value="">-- Select --</option>
+                  {HEAT_STABILITY.map((value) => <option key={value}>{value}</option>)}
+                </select>
               </div>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Usage % (Min - Max)</label>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input className="rnd-input" type="number" step="0.01" placeholder="Min" style={{ width: '50%' }} value={form.usage_min_pct} onChange={(e) => setForm({ ...form, usage_min_pct: e.target.value })} />
-                <input className="rnd-input" type="number" step="0.01" placeholder="Max" style={{ width: '50%' }} value={form.usage_max_pct} onChange={(e) => setForm({ ...form, usage_max_pct: e.target.value })} />
+            )}
+
+            {activeParams.ph && (
+              <div>
+                <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>pH Range (Min - Max)</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input className="rnd-input" type="number" step="0.1" placeholder="Min" style={{ width: '50%' }} value={form.ph_min} onChange={(e) => setForm({ ...form, ph_min: e.target.value })} />
+                  <input className="rnd-input" type="number" step="0.1" placeholder="Max" style={{ width: '50%' }} value={form.ph_max} onChange={(e) => setForm({ ...form, ph_max: e.target.value })} />
+                </div>
               </div>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Notes / Synergies</label>
-              <input className="rnd-input" style={{ width: '100%' }} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
-            </div>
+            )}
+
+            {activeParams.usage && (
+              <div>
+                <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Usage % (Min - Max)</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input className="rnd-input" type="number" step="0.01" placeholder="Min" style={{ width: '50%' }} value={form.usage_min_pct} onChange={(e) => setForm({ ...form, usage_min_pct: e.target.value })} />
+                  <input className="rnd-input" type="number" step="0.01" placeholder="Max" style={{ width: '50%' }} value={form.usage_max_pct} onChange={(e) => setForm({ ...form, usage_max_pct: e.target.value })} />
+                </div>
+              </div>
+            )}
+
+            {activeParams.notes && (
+              <div style={{ gridColumn: 'span 3' }}>
+                <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Notes / Synergies</label>
+                <input className="rnd-input" style={{ width: '100%' }} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+              </div>
+            )}
           </div>
           <div style={{ marginTop: 20, display: 'flex', gap: 12 }}>
             <button className="rnd-btn rnd-btn-primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : editingIngredient ? '💾 Update Material' : '💾 Save Material'}</button>
