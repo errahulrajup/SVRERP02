@@ -50,7 +50,7 @@ export function Header() {
         .hdr-inner { max-width: var(--max-w); margin: 0 auto; height: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0 var(--pad); }
         .hdr-logo { display: flex; align-items: center; gap: 10px; background: none; border: none; cursor: pointer; padding: 0; }
         .hdr-logo:hover .hdr-brand { color: var(--gold); }
-        .hdr-brand { font-family: 'DM Sans',system-ui,sans-serif; font-size: 18px; font-weight: 700; color: #FFFFFF; transition: color 0.2s; letter-spacing: -0.01em; }
+        .hdr-brand { font-family: 'Playfair Display',Georgia,serif; font-size: 20px; font-weight: 700; color: #FFFFFF; transition: color 0.2s; letter-spacing: 0.02em; }
         .hdr-sub   { font-family: 'DM Sans',sans-serif; font-size: 8px; font-weight: 700; letter-spacing: 0.3em; color: rgba(255,193,7,0.6); text-transform: uppercase; margin-top: 2px; }
         .hdr-nav   { display: flex; align-items: center; gap: 2px; }
         .hdr-link  { background: none; border: none; cursor: pointer; padding: 7px 14px; font-family: 'DM Sans',sans-serif; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.55); border-radius: 8px; transition: color 0.2s, background 0.2s; border-bottom: 2px solid transparent; white-space: nowrap; }

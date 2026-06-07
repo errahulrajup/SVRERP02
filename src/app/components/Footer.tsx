@@ -116,7 +116,7 @@ export function Footer() {
                 <img src="/favicon.svg" alt="logo" width={34} height={34} style={{ objectFit: 'contain', display: 'block' }} />
               )}
               <div>
-                <div style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontSize: 22, fontWeight: 500, color: 'var(--text-1)', lineHeight: 1 }}>
+                <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 24, fontWeight: 700, color: 'var(--text-1)', lineHeight: 1, letterSpacing: '0.02em' }}>
                   {settings.site_name?.split(' ')[0] ?? 'Srivriddhi'}
                 </div>
                 <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.28em', color: 'var(--gold)', textTransform: 'uppercase', marginTop: 3 }}>
