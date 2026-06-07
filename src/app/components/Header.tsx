@@ -53,17 +53,17 @@ export function Header() {
   return (
     <>
       <style>{`
-        /* ── WARM CREAM HEADER ── */
+        /* ── VIBRANT YELLOW & NAVY HEADER ── */
         .hdr {
           position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
           height: var(--hdr-h);
           background: ${scrolled
-            ? 'rgba(255,251,242,0.97)'
-            : 'rgba(255,251,242,0.88)'
+            ? 'rgba(255, 254, 234, 0.98)'
+            : 'rgba(255, 254, 234, 0.88)'
           };
           backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-          border-bottom: 1px solid ${scrolled ? 'rgba(201,134,10,0.18)' : 'rgba(201,134,10,0.08)'};
-          box-shadow: ${scrolled ? '0 2px 32px rgba(120,80,20,0.08)' : 'none'};
+          border-bottom: 2px solid ${scrolled ? '#002D62' : 'rgba(0, 45, 98, 0.12)'};
+          box-shadow: ${scrolled ? '0 4px 20px rgba(0, 45, 98, 0.08)' : 'none'};
           transition: background 0.35s, border-color 0.35s, box-shadow 0.35s;
         }
         .hdr-inner {
@@ -81,14 +81,14 @@ export function Header() {
           width: 36px; height: 36px; object-fit: contain; display: block;
         }
         .hdr-brand {
-          font-family: 'Cormorant Garamond', Georgia, serif;
-          font-size: 22px; font-weight: 600; color: #1A150A;
-          transition: color 0.2s; letter-spacing: 0.01em; line-height: 1;
+          font-family: 'Outfit', sans-serif;
+          font-size: 24px; font-weight: 900; color: #002D62;
+          transition: color 0.2s; letter-spacing: -0.01em; line-height: 1;
         }
-        .hdr-logo:hover .hdr-brand { color: #C9860A; }
+        .hdr-logo:hover .hdr-brand { color: #00875A; }
         .hdr-sub {
-          font-family: 'DM Sans', sans-serif; font-size: 8px; font-weight: 700;
-          letter-spacing: 0.28em; color: #1A6B47;
+          font-family: 'Outfit', sans-serif; font-size: 9px; font-weight: 800;
+          letter-spacing: 0.2em; color: #00875A;
           text-transform: uppercase; margin-top: 3px; opacity: 0.9;
         }
 
@@ -97,33 +97,33 @@ export function Header() {
         .hdr-link {
           background: none; border: none; cursor: pointer;
           padding: 7px 14px;
-          font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 500;
-          color: #5A4A30;
+          font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700;
+          color: #002D62;
           border-radius: 8px; transition: color 0.2s, background 0.2s;
           position: relative; white-space: nowrap;
         }
         .hdr-link::after {
           content: ''; position: absolute; bottom: 3px; left: 14px; right: 14px;
-          height: 2px; background: #C9860A; border-radius: 1px;
+          height: 3px; background: #00875A; border-radius: 2px;
           transform: scaleX(0); transform-origin: center;
           transition: transform 0.22s cubic-bezier(0.4,0,0.2,1);
         }
-        .hdr-link:hover { color: #1A150A; }
+        .hdr-link:hover { color: #00875A; }
         .hdr-link:hover::after { transform: scaleX(1); }
-        .hdr-link.on { color: #C9860A; font-weight: 700; }
+        .hdr-link.on { color: #00875A; font-weight: 800; }
         .hdr-link.on::after { transform: scaleX(1); }
 
         /* CTA Button */
         .hdr-cta-btn {
           margin-left: 10px;
-          background: #1A6B47; color: #fff;
-          padding: 9px 22px; border-radius: 6px; border: none;
-          font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700;
-          letter-spacing: 0.04em; cursor: pointer;
+          background: #00875A; color: #fff;
+          padding: 10px 22px; border-radius: 8px; border: 2.5px solid #002D62;
+          font-family: 'Outfit', sans-serif; font-size: 13.5px; font-weight: 800;
+          letter-spacing: 0.02em; cursor: pointer;
           transition: all 0.22s ease;
-          box-shadow: 0 2px 12px rgba(26,107,71,0.25);
+          box-shadow: 2px 2px 0px #002D62;
         }
-        .hdr-cta-btn:hover { background: #155937; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(26,107,71,0.35); }
+        .hdr-cta-btn:hover { background: #006644; transform: translate(1px, 1px); box-shadow: 1px 1px 0px #002D62; }
 
         /* Burger */
         .hdr-burger {

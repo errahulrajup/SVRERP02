@@ -33,8 +33,8 @@ export function ProductsPage() {
       <style>{`
         /* ── PRODUCTS PAGE WARM THEME OVERRIDES ── */
         .prw-root {
-          background: #FFFBF2;
-          color: #1A150A;
+          background: #FFFEEA;
+          color: #002D62;
           font-family: 'DM Sans', sans-serif;
           min-height: 100vh;
           padding-top: var(--hdr-h);
@@ -43,55 +43,58 @@ export function ProductsPage() {
         /* Hero */
         .prw-hero {
           position: relative;
-          background: linear-gradient(135deg, #FFFBF0 0%, #FFF4D6 40%, #FFF9EC 100%);
+          background: linear-gradient(135deg, #FFFEEA 0%, #FFF3A8 50%, #FFC72C 100%);
           padding: 80px 0 60px;
           text-align: center;
           overflow: hidden;
-          border-bottom: 1px solid rgba(201,134,10,0.08);
+          border-bottom: 4px solid #002D62;
         }
         .prw-hero::before {
           content: '';
           position: absolute; top: -120px; right: -120px;
           width: 500px; height: 500px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(212,160,23,0.1) 0%, transparent 70%);
+          background: radial-gradient(circle, rgba(255,199,44,0.3) 0%, transparent 70%);
           pointer-events: none;
         }
         .prw-hero::after {
           content: '';
           position: absolute; bottom: -120px; left: -120px;
           width: 400px; height: 400px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(26,107,71,0.06) 0%, transparent 70%);
+          background: radial-gradient(circle, rgba(0,135,90,0.08) 0%, transparent 70%);
           pointer-events: none;
         }
 
         .prw-section-label {
           display: inline-block;
-          font-family: 'DM Sans', sans-serif;
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 0.2em;
+          font-family: 'Outfit', sans-serif;
+          font-size: 12px;
+          font-weight: 900;
+          letter-spacing: 0.16em;
           text-transform: uppercase;
-          color: #1A6B47;
+          color: #00875A;
           margin-bottom: 14px;
         }
 
         .prw-hero-h1 {
-          font-family: 'Cormorant Garamond', Georgia, serif;
-          font-size: clamp(32px, 5vw, 56px);
-          font-weight: 600;
-          line-height: 1.15;
-          color: #1A150A;
+          font-family: 'Outfit', sans-serif;
+          font-size: clamp(34px, 5.5vw, 60px);
+          font-weight: 900;
+          line-height: 1.1;
+          color: #002D62;
           margin-bottom: 18px;
         }
         .prw-hero-h1 em {
-          font-style: italic;
-          color: #C9860A;
+          font-style: normal;
+          color: #00875A;
+          text-decoration: underline;
+          text-decoration-color: #002D62;
+          text-decoration-thickness: 4px;
         }
 
         .prw-hero-lead {
           font-family: 'DM Sans', sans-serif;
-          font-size: 16px;
-          color: #5A4A30;
+          font-size: 16.5px;
+          color: #002D62;
           max-width: 600px;
           margin: 0 auto;
           line-height: 1.6;
@@ -102,10 +105,10 @@ export function ProductsPage() {
           position: sticky;
           top: var(--hdr-h);
           z-index: 10;
-          background: rgba(255, 251, 242, 0.95);
+          background: rgba(255, 254, 234, 0.95);
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
-          border-bottom: 1px solid rgba(201, 134, 10, 0.12);
+          border-bottom: 3px solid #002D62;
         }
         .prw-filter-inner {
           max-width: var(--max-w);
@@ -114,36 +117,36 @@ export function ProductsPage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 8px;
-          height: 60px;
+          gap: 10px;
+          height: 64px;
           overflow-x: auto;
           white-space: nowrap;
         }
         
         .prw-filter-btn {
-          background: none;
-          border: 1px solid rgba(201,134,10,0.18);
+          background: #FFFEEA;
+          border: 2.5px solid #002D62;
           border-radius: var(--radius-full);
-          padding: 8px 20px;
-          font-family: 'DM Sans', sans-serif;
-          font-size: 12px;
-          font-weight: 600;
-          letter-spacing: 0.04em;
-          text-transform: capitalize;
-          color: #5A4A30;
+          padding: 8px 22px;
+          font-family: 'Outfit', sans-serif;
+          font-size: 13px;
+          font-weight: 800;
+          letter-spacing: 0.02em;
+          color: #002D62;
           cursor: pointer;
-          transition: all 0.22s ease;
+          transition: all 0.2s;
+          box-shadow: 2px 2px 0px #002D62;
         }
         .prw-filter-btn:hover {
-          color: #1A150A;
-          border-color: #1A6B47;
-          background: rgba(26,107,71,0.03);
+          color: #00875A;
+          background: #fff;
+          transform: translateY(-1px);
         }
         .prw-filter-btn.on {
-          background: #1A6B47;
-          border-color: #1A6B47;
+          background: #00875A;
+          border-color: #002D62;
           color: #fff;
-          box-shadow: 0 4px 12px rgba(26,107,71,0.2);
+          box-shadow: 2px 2px 0px #002D62;
         }
 
         /* Grid */
@@ -166,16 +169,16 @@ export function ProductsPage() {
           border-radius: 20px;
           overflow: hidden;
           background: #fff;
-          border: 1.5px solid rgba(201,134,10,0.10);
-          transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          border: 3px solid #002D62;
+          transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
           cursor: pointer;
           display: flex;
           flex-direction: column;
+          box-shadow: 4px 4px 0px #FFC72C;
         }
         .prw-prod-card:hover {
-          transform: translateY(-8px);
-          box-shadow: 0 24px 60px rgba(120,80,20,0.12);
-          border-color: rgba(201,134,10,0.40);
+          transform: translateY(-6px);
+          box-shadow: 6px 6px 0px #00875A;
         }
         .prw-prod-img-wrap {
           position: relative;
@@ -186,7 +189,7 @@ export function ProductsPage() {
           align-items: center;
           justify-content: center;
           padding: 20px;
-          border-bottom: 1px solid rgba(201,134,10,0.06);
+          border-bottom: 3px solid #002D62;
         }
         .prw-prod-img {
           max-width: 100%;
@@ -204,29 +207,31 @@ export function ProductsPage() {
           flex-grow: 1;
         }
         .prw-prod-cat {
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Outfit', sans-serif;
           font-size: 10px;
-          font-weight: 700;
-          letter-spacing: 0.16em;
+          font-weight: 800;
+          letter-spacing: 0.12em;
           text-transform: uppercase;
-          color: #1A6B47;
+          color: #00875A;
           margin-bottom: 8px;
         }
         .prw-prod-name {
-          font-family: 'Cormorant Garamond', Georgia, serif;
-          font-size: 24px;
-          font-weight: 600;
-          color: #1A150A;
+          font-family: 'Outfit', sans-serif;
+          font-size: 22px;
+          font-weight: 800;
+          color: #002D62;
           margin-bottom: 8px;
           line-height: 1.2;
         }
         .prw-prod-tagline {
-          font-family: 'Cormorant Garamond', Georgia, serif;
-          font-size: 15px;
+          font-family: 'Outfit', sans-serif;
+          font-size: 14px;
           font-style: italic;
-          color: #C9860A;
+          font-weight: 600;
+          color: #002D62;
           margin-bottom: 12px;
           line-height: 1.4;
+          opacity: 0.9;
         }
         .prw-prod-desc {
           font-family: 'DM Sans', sans-serif;
@@ -245,31 +250,33 @@ export function ProductsPage() {
         .prw-prod-benefit {
           font-family: 'DM Sans', sans-serif;
           font-size: 11px;
-          font-weight: 500;
-          background: rgba(26,107,71,0.06);
-          color: #1A6B47;
-          border: 1px solid rgba(26,107,71,0.12);
+          font-weight: 700;
+          background: #FFFEEA;
+          color: #00875A;
+          border: 1.5px solid #002D62;
           border-radius: var(--radius-full);
-          padding: 3px 10px;
+          padding: 3px 12px;
+          box-shadow: 1px 1px 0px #002D62;
         }
         .prw-btn-detail {
           width: 100%;
           text-align: center;
           background: transparent;
-          color: #1A6B47;
-          border: 1.5px solid #1A6B47;
+          color: #002D62;
+          border: 2.5px solid #002D62;
           border-radius: 8px;
           padding: 10px 16px;
-          font-family: 'DM Sans', sans-serif;
-          font-size: 13px;
-          font-weight: 700;
+          font-family: 'Outfit', sans-serif;
+          font-size: 13.5px;
+          font-weight: 800;
           cursor: pointer;
-          transition: all 0.22s ease;
+          transition: all 0.2s ease;
         }
         .prw-prod-card:hover .prw-btn-detail {
-          background: #1A6B47;
+          background: #00875A;
           color: #fff;
-          box-shadow: 0 4px 12px rgba(26,107,71,0.2);
+          border-color: #002D62;
+          box-shadow: 2px 2px 0px #002D62;
         }
         
         .prw-badge-stock {
@@ -277,13 +284,14 @@ export function ProductsPage() {
           top: 14px; right: 14px;
           background: #D93838;
           color: #fff;
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Outfit', sans-serif;
           font-size: 10px;
-          font-weight: 700;
+          font-weight: 800;
           text-transform: uppercase;
           letter-spacing: 0.06em;
           padding: 4px 8px;
           border-radius: 4px;
+          border: 2px solid #002D62;
           z-index: 2;
         }
 
@@ -291,8 +299,8 @@ export function ProductsPage() {
         .prw-shimmer-card {
           height: 380px;
           border-radius: 20px;
-          background: #FFFBF2;
-          border: 1.5px solid rgba(201,134,10,0.08);
+          background: #FFFEEA;
+          border: 3px solid #002D62;
           position: relative;
           overflow: hidden;
         }
