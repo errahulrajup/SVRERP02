@@ -33,7 +33,7 @@ export function CmsProductForm() {
   const [changeReason, setChangeReason] = useState('');
 
   useEffect(() => {
-    supabase.from('recipes').select('id, name, version').eq('status', 'Active').then(({data}) => setRecipes(data || []));
+    supabase.from('recipes').select('id, name, version').eq('is_active', true).then(({data}) => setRecipes(data || []));
 
     if (!isEdit) return;
     productsApi.byId(id).then(({ data, error: e }) => {
