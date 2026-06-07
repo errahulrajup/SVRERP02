@@ -93,16 +93,16 @@ export function Footer() {
   const socials = getFooterSocials(settings);
 
   return (
-    <footer style={{ background: '#070707', borderTop: '1px solid var(--border-gold)' }}>
+    <footer style={{ background: 'var(--bg-second)', borderTop: '1px solid var(--border)' }}>
       <style>{`
-        .ftr { max-width: var(--max-w); margin: 0 auto; padding: 64px var(--pad) 32px; }
-        .ftr-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 56px; padding-bottom: 44px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .ftr { max-width: var(--max-w); margin: 0 auto; padding: 72px var(--pad) 44px; }
+        .ftr-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 56px; padding-bottom: 44px; border-bottom: 1px solid var(--border); }
         .ftr-bottom { padding-top: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
-        .ftr-nav-btn { display: block; background: none; border: none; cursor: pointer; font-family: 'DM Sans',sans-serif; font-size: 13px; color: rgba(255,255,255,0.38); padding: 4px 0; text-align: left; transition: color 0.2s; }
+        .ftr-nav-btn { display: block; background: none; border: none; cursor: pointer; font-family: 'DM Sans',sans-serif; font-size: 13px; color: var(--text-3); padding: 4px 0; text-align: left; transition: color 0.2s; }
         .ftr-nav-btn:hover { color: var(--gold); }
         .ftr-social { display: flex; gap: 10px; margin-top: 20px; }
-        .ftr-social-btn { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.38); transition: color 0.2s, border-color 0.2s, background 0.2s; text-decoration: none; }
-        .ftr-social-btn:hover { color: var(--gold); border-color: rgba(234,179,8,0.3); background: rgba(234,179,8,0.06); }
+        .ftr-social-btn { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.02); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text-3); transition: color 0.2s, border-color 0.2s, background 0.2s; text-decoration: none; }
+        .ftr-social-btn:hover { color: var(--gold); border-color: rgba(201,166,60,0.3); background: rgba(201,166,60,0.06); }
         @media (max-width: 768px) { .ftr-grid { grid-template-columns: 1fr; gap: 28px; } .ftr-bottom { flex-direction: column; align-items: flex-start; } }
       `}</style>
       <div className="ftr">
@@ -111,23 +111,23 @@ export function Footer() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
               {logoSrc ? (
                 <img src={logoSrc} width={34} height={34} alt="logo"
-                  style={{ objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(234,179,8,0.35))' }} />
+                  style={{ objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(201,166,60,0.35))' }} />
               ) : (
                 <img src="/favicon.svg" alt="logo" width={34} height={34} style={{ objectFit: 'contain', display: 'block' }} />
               )}
               <div>
-                <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 20, fontWeight: 700, color: '#fff', lineHeight: 1 }}>
+                <div style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontSize: 22, fontWeight: 500, color: 'var(--text-1)', lineHeight: 1 }}>
                   {settings.site_name?.split(' ')[0] ?? 'Srivriddhi'}
                 </div>
-                <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.28em', color: 'rgba(234,179,8,0.55)', textTransform: 'uppercase', marginTop: 3 }}>
+                <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.28em', color: 'var(--gold)', textTransform: 'uppercase', marginTop: 3 }}>
                   {settings.site_name?.split(' ').slice(1).join(' ') ?? 'Enterprise'}
                 </div>
               </div>
             </div>
-            <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: 'rgba(255,255,255,0.35)', lineHeight: 1.9, maxWidth: 280 }}>
+            <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: 'var(--text-3)', lineHeight: 1.9, maxWidth: 280 }}>
               {settings.footer_tagline ?? 'Premium plant-based foods from India — built around appetite, quality, and category ambition.'}
             </p>
-            <p style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontSize: 15, fontStyle: 'italic', color: 'rgba(255,255,255,0.28)', marginTop: 12, lineHeight: 1.4 }}>
+            <p style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontSize: 15, fontStyle: 'italic', color: 'var(--gold)', marginTop: 12, lineHeight: 1.4, opacity: 0.85 }}>
               PlantSmör — Spread The Change.
             </p>
             {socials.length > 0 && (
@@ -147,7 +147,7 @@ export function Footer() {
           </div>
           <div>
             <p className="t-label" style={{ marginBottom: 16 }}>Contact</p>
-            <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: 'rgba(255,255,255,0.38)', lineHeight: 2.1 }}>
+            <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: 'var(--text-3)', lineHeight: 2.1 }}>
               {settings.site_email ?? 'info@srivriddhi.com'}<br />
               {settings.site_phone ?? '+91 7565 000 365'}<br />
               {settings.site_address ?? 'Sagar, M.P. — India'}
@@ -155,12 +155,12 @@ export function Footer() {
           </div>
         </div>
         <div className="ftr-bottom">
-          <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: 'rgba(255,255,255,0.18)' }}>
+          <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: 'var(--text-3)', opacity: 0.7 }}>
             © {new Date().getFullYear()} {settings.site_name ?? 'Srivriddhi Enterprise'}. All rights reserved.
           </p>
           <button onClick={() => go('/admin')}
             style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: 'rgba(255,255,255,0.08)', fontFamily: "'DM Sans',sans-serif", padding: '2px 4px', transition: 'color 0.3s' }}
-            onMouseEnter={e => (e.currentTarget.style.color = 'rgba(234,179,8,0.3)')}
+            onMouseEnter={e => (e.currentTarget.style.color = 'rgba(201,166,60,0.3)')}
             onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.08)')}>
             ·
           </button>

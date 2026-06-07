@@ -8,9 +8,9 @@ export function NotFoundPage() {
       <div style={{ position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',width:480,height:480,opacity:0.025,pointerEvents:'none' }}>
         <img src="/images/logo.png" alt="" aria-hidden style={{ width:'100%',height:'100%',objectFit:'contain',filter:'drop-shadow(0px 0px 4px rgba(0,0,0,0.5))' }} />
       </div>
-      <div style={{ position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',width:600,height:600,background:'radial-gradient(circle,rgba(255,193,7,0.04) 0%,transparent 70%)',pointerEvents:'none' }} />
+      <div style={{ position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',width:600,height:600,background:'radial-gradient(circle,rgba(201,166,60,0.04) 0%,transparent 70%)',pointerEvents:'none' }} />
       <p className="t-label" style={{ marginBottom:20,position:'relative' }}>404 Error</p>
-      <h1 style={{ fontFamily:"'Bebas Neue',sans-serif",fontSize:'clamp(80px,18vw,180px)',fontWeight:400,lineHeight:0.85,color:'rgba(255,255,255,0.06)',letterSpacing:'0.04em',marginBottom:0,position:'relative',userSelect:'none' }}>404</h1>
+      <h1 style={{ fontFamily:"'Cormorant Garamond',Georgia,serif",fontSize:'clamp(80px,18vw,160px)',fontWeight:400,lineHeight:0.85,color:'rgba(255,255,255,0.04)',letterSpacing:'0.04em',marginBottom:0,position:'relative',userSelect:'none' }}>404</h1>
       <h2 className="t-display" style={{ marginTop:-8,marginBottom:14,position:'relative' }}>
         Page Not <span style={{ color:'var(--gold)' }}>Found.</span>
       </h2>

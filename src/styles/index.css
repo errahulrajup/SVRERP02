@@ -10,68 +10,68 @@
 html { scroll-behavior: smooth; font-size: 16px; }
 
 body {
-  background: #060D08;
-  color: #FFFFFF;
+  background: #0A1628;
+  color: #FAFAF8;
   font-family: 'DM Sans', 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
-  line-height: 1.6;
+  line-height: 1.8;
 }
 
 a, button { font: inherit; }
 img { max-width: 100%; display: block; }
 
 :root {
-  /* ── PLANTSMÖR Brand Theme — SVR ERP v7.0 ── */
+  /* ── PLANTSMÖR Brand Theme — Nordic Premium Rebranding ── */
   
-  /* 1. Primary Backgrounds — Deep Brand Navy Blue (~70% visual weight) */
-  --theme-forest-green:  #071526; /* Navy Blue background fallback */
-  --bg-main:             #071526; /* PLANTSMÖR Deep Navy Blue */
-  --bg-second:           #0C1D33; /* Darker navy panel tone */
-  --bg-card:             #112540; /* Navy Blue card base */
-  --bg-card2:            #162E4F;
-  --bg-elevated:         #1C3B61;
-  --bg-hover:            #214773;
+  /* 1. Primary Backgrounds — Deep Nordic Navy Blue (~40% visual weight) */
+  --theme-forest-green:  #0A1628; /* Navy Blue background fallback */
+  --bg-main:             #0A1628; /* Primary Navy */
+  --bg-second:           #132038; /* Secondary Navy */
+  --bg-card:             #1B2A44; /* Navy Blue card base */
+  --bg-card2:            #223555;
+  --bg-elevated:         #2A4066;
+  --bg-hover:            #334C77;
   
-  /* 2. Secondary Palette — Cream/Ivory & Pure White (~20% visual weight for high readability) */
-  --text-1:              #FFFFFF; /* Pure White */
-  --text-2:              #FAF8F5; /* Cream White / Ivory */
-  --theme-cream:         #FAF8F5;
-  --theme-ivory:         #FFFFF0;
+  /* 2. Secondary Palette — Warm Ivory & Off White (~50% visual weight for Nordic sophistication) */
+  --text-1:              #FAFAF8; /* Off White */
+  --text-2:              #F4EDD8; /* Warm Ivory */
+  --theme-cream:         #F4EDD8;
+  --theme-ivory:         #F4EDD8;
   
   /* Slate-blue midtones for subtexts & labels */
-  --text-3:              #A5B8D1; /* Slate blue-gray */
-  --text-4:              #4A607A;
-
-  /* 3. Accent Palette — Plantsmör Golden-Yellow (~10% visual weight for highlights) */
-  --gold:                #EAB308; /* PLANTSMÖR Golden-Yellow */
-  --gold-hover:          #CA8A04;
-  --gold-soft:           rgba(234,179,8,0.10);
-  --gold-glow:           rgba(234,179,8,0.22);
-  --gold-dim:            rgba(234,179,8,0.06);
-  --theme-yellow:        #FEF08A; /* Light Yellow Accent */
-
-  /* 4. Plant-Based / Vegetarian Accents — Leaf Green */
-  --theme-leaf:          #2E7D32;  /* Leaf Green veg symbol style */
-  --sage:                #4ADE80;  /* Bright Leaf Green */
-  --sage-soft:           rgba(74,222,128,0.08);
-  --sage-border:         rgba(74,222,128,0.20);
+  --text-3:              #A2B3C6; /* Slate blue-gray */
+  --text-4:              #4E637D;
+ 
+  /* 3. Accent Palette — Champagne Gold (~5% visual weight for subtle premium touch) */
+  --gold:                #C9A63C; /* Champagne Gold */
+  --gold-hover:          #B08F2D;
+  --gold-soft:           rgba(201,166,60,0.10);
+  --gold-glow:           rgba(201,166,60,0.22);
+  --gold-dim:            rgba(201,166,60,0.06);
+  --theme-yellow:        #EAD284;
+ 
+  /* 4. Plant-Based / Sustainability Accents — Botanical Green (~5% visual weight) */
+  --theme-leaf:          #1A6B47;  /* Botanical Green */
+  --sage:                #1A6B47;
+  --sage-soft:           rgba(26,107,71,0.08);
+  --sage-border:         rgba(26,107,71,0.20);
   
-  /* 5. Best Metals (Stainless Steel / Silver) — Glimmer & Borders */
-  --theme-silver:        #CBD5E1; /* Stainless Steel / Silver */
+  /* 5. Glimmer & Borders */
+  --theme-silver:        #CBD5E1;
   --theme-silver-soft:   rgba(203,213,225,0.12);
   --border-silver:       rgba(203,213,225,0.18);
-
-  /* Warning state (Soft Maroon — avoids harsh red-black combos) */
+ 
+  /* Warning state (Soft Maroon) */
   --theme-maroon:        #5C2525;
   --theme-maroon-text:   #FFB8B8;
   --theme-maroon-border: rgba(220,100,100,0.3);
-
+ 
   /* Borders */
-  --border:              rgba(165,184,209,0.08);
-  --border-light:        rgba(165,184,209,0.16);
-  --border-gold:         rgba(234,179,8,0.20);
+  --border:              rgba(244,237,216,0.08);
+  --border-light:        rgba(244,237,216,0.16);
+  --border-gold:         rgba(201,166,60,0.20);
 
   --radius-sm:  4px;
   --radius-md:  6px;
@@ -103,8 +103,8 @@ img { max-width: 100%; display: block; }
 
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: #060D08; }
-::-webkit-scrollbar-thumb { background: #2A2A2A; border-radius: 4px; }
+::-webkit-scrollbar-track { background: #0A1628; }
+::-webkit-scrollbar-thumb { background: #1F304B; border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
 ::selection { background: var(--gold); color: #0B0B0B; }
 :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 4px; }
@@ -113,13 +113,13 @@ img { max-width: 100%; display: block; }
 .wrap { max-width: var(--max-w); margin: 0 auto; padding: 0 var(--pad); width: 100%; }
 
 /* ── Typography ── */
-.t-hero    { font-family: 'Bebas Neue', sans-serif; font-size: var(--t-hero); line-height: 0.88; letter-spacing: 0.03em; color: var(--text-1); }
-.t-display { font-family: 'Playfair Display', Georgia, serif; font-size: var(--t-display); font-weight: 700; line-height: 1.1; color: var(--text-1); }
-.t-h2      { font-family: 'Playfair Display', Georgia, serif; font-size: var(--t-h2); font-weight: 700; line-height: 1.2; color: var(--text-1); }
-.t-h3      { font-family: 'Playfair Display', Georgia, serif; font-size: var(--t-h3); font-weight: 700; line-height: 1.25; color: var(--text-1); }
-.t-lead    { font-family: 'DM Sans', Georgia, sans-serif; font-size: clamp(1.1rem, 1.8vw, 1.45rem); line-height: 1.65; color: var(--text-2); }
-.t-body    { font-family: 'DM Sans', sans-serif; font-size: var(--t-body); line-height: 1.8; color: var(--text-2); }
-.t-sm      { font-family: 'DM Sans', sans-serif; font-size: var(--t-sm); line-height: 1.7; color: var(--text-2); }
+.t-hero    { font-family: 'Cormorant Garamond', Georgia, serif; font-size: var(--t-hero); font-weight: 400; line-height: 1.05; letter-spacing: 0.01em; color: var(--text-1); }
+.t-display { font-family: 'Cormorant Garamond', Georgia, serif; font-size: var(--t-display); font-weight: 400; line-height: 1.15; color: var(--text-1); }
+.t-h2      { font-family: 'Cormorant Garamond', Georgia, serif; font-size: var(--t-h2); font-weight: 500; line-height: 1.25; color: var(--text-1); }
+.t-h3      { font-family: 'Cormorant Garamond', Georgia, serif; font-size: var(--t-h3); font-weight: 500; line-height: 1.3; color: var(--text-1); }
+.t-lead    { font-family: 'DM Sans', Georgia, sans-serif; font-size: clamp(1.1rem, 1.8vw, 1.45rem); line-height: 1.75; color: var(--text-2); }
+.t-body    { font-family: 'DM Sans', sans-serif; font-size: var(--t-body); line-height: 1.85; color: var(--text-2); }
+.t-sm      { font-family: 'DM Sans', sans-serif; font-size: var(--t-sm); line-height: 1.75; color: var(--text-2); }
 .t-label   { font-family: 'DM Sans', sans-serif; font-size: var(--t-xs); font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); }
 .t-gold    { color: var(--gold); }
 .t-muted   { color: var(--text-2); }

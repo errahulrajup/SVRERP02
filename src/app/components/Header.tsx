@@ -41,27 +41,27 @@ export function Header() {
         .hdr {
           position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
           height: var(--hdr-h);
-          background: ${scrolled ? 'rgba(11,11,11,0.97)' : 'rgba(11,11,11,0.70)'};
+          background: ${scrolled ? 'rgba(10,22,40,0.97)' : 'rgba(10,22,40,0.70)'};
           backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
-          border-bottom: 1px solid ${scrolled ? 'rgba(234,179,8,0.13)' : 'rgba(255,255,255,0.04)'};
-          box-shadow: ${scrolled ? '0 4px 40px rgba(0,0,0,0.8)' : 'none'};
+          border-bottom: 1px solid ${scrolled ? 'var(--border-gold)' : 'var(--border)'};
+          box-shadow: ${scrolled ? '0 4px 40px rgba(0,0,0,0.5)' : 'none'};
           transition: background 0.35s, border-color 0.35s, box-shadow 0.35s;
         }
         .hdr-inner { max-width: var(--max-w); margin: 0 auto; height: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0 var(--pad); }
         .hdr-logo { display: flex; align-items: center; gap: 10px; background: none; border: none; cursor: pointer; padding: 0; }
         .hdr-logo:hover .hdr-brand { color: var(--gold); }
-        .hdr-brand { font-family: 'Playfair Display',Georgia,serif; font-size: 18px; font-weight: 700; color: #FFFFFF; transition: color 0.2s; letter-spacing: -0.01em; }
-        .hdr-sub   { font-family: 'DM Sans',sans-serif; font-size: 8px; font-weight: 700; letter-spacing: 0.3em; color: rgba(234,179,8,0.6); text-transform: uppercase; margin-top: 2px; }
+        .hdr-brand { font-family: 'Cormorant Garamond',Georgia,serif; font-size: 20px; font-weight: 500; color: var(--text-1); transition: color 0.2s; letter-spacing: 0.01em; }
+        .hdr-sub   { font-family: 'DM Sans',sans-serif; font-size: 8px; font-weight: 700; letter-spacing: 0.3em; color: var(--gold); text-transform: uppercase; margin-top: 2px; opacity: 0.85; }
         .hdr-nav   { display: flex; align-items: center; gap: 2px; }
-        .hdr-link  { background: none; border: none; cursor: pointer; padding: 7px 14px; font-family: 'DM Sans',sans-serif; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.55); border-radius: 8px; transition: color 0.2s, background 0.2s; border-bottom: 2px solid transparent; white-space: nowrap; }
-        .hdr-link:hover { color: #fff; background: rgba(255,255,255,0.04); }
+        .hdr-link  { background: none; border: none; cursor: pointer; padding: 7px 14px; font-family: 'DM Sans',sans-serif; font-size: 13px; font-weight: 500; color: var(--text-3); border-radius: 8px; transition: color 0.2s, background 0.2s; border-bottom: 2px solid transparent; white-space: nowrap; }
+        .hdr-link:hover { color: var(--text-1); background: rgba(255,255,255,0.03); }
         .hdr-link.on { color: var(--gold); font-weight: 600; border-bottom-color: var(--gold); }
         .hdr-cta { margin-left: 14px; }
         .hdr-burger { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 6px; }
-        .hdr-mob { display: none; position: absolute; top: var(--hdr-h); left: 0; right: 0; background: rgba(11,11,11,0.98); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(234,179,8,0.1); padding: 16px 20px 28px; flex-direction: column; gap: 2px; }
+        .hdr-mob { display: none; position: absolute; top: var(--hdr-h); left: 0; right: 0; background: rgba(10,22,40,0.98); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-gold); padding: 16px 20px 28px; flex-direction: column; gap: 2px; }
         .hdr-mob.open { display: flex; }
-        .mob-link { background: none; border: none; cursor: pointer; padding: 13px 0; font-family: 'DM Sans',sans-serif; font-size: 15px; font-weight: 500; color: rgba(255,255,255,0.6); text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); transition: color 0.2s; width: 100%; }
-        .mob-link:hover { color: #fff; }
+        .mob-link { background: none; border: none; cursor: pointer; padding: 13px 0; font-family: 'DM Sans',sans-serif; font-size: 15px; font-weight: 500; color: var(--text-3); text-align: left; border-bottom: 1px solid var(--border); transition: color 0.2s; width: 100%; }
+        .mob-link:hover { color: var(--text-1); }
         .mob-link.on { color: var(--gold); }
         @media (max-width: 768px) { .hdr-nav { display: none; } .hdr-burger { display: flex !important; } }
       `}</style>
