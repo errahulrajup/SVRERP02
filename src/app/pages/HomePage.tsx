@@ -40,7 +40,19 @@ export function HomePage() {
         .hp-hero-title em { font-style:normal; color:var(--gold); text-shadow:0 0 48px rgba(255,193,7,0.4); }
         .hp-bottom-glow { position:absolute; bottom:0; left:0; right:0; height:220px; background:linear-gradient(to top,rgba(255,193,7,0.06),transparent); pointer-events:none; z-index:1; }
         .hp-ticker-bar { overflow:hidden; background:#080808; border-top:1px solid rgba(255,193,7,0.1); border-bottom:1px solid rgba(255,193,7,0.1); }
+        .hp-prod-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+        .hp-teaser-grid { display:grid; grid-template-columns:1fr 1fr; gap:72px; align-items:center; }
+        .hp-test-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+        @media (max-width:960px) {
+          .hp-prod-grid { grid-template-columns:repeat(2,1fr); gap:16px; }
+          .hp-teaser-grid { grid-template-columns:1fr; gap:36px; }
+          .hp-test-grid { grid-template-columns:repeat(2,1fr); gap:16px; }
+        }
         @media (max-width:768px) { .hp-hero{height:100dvh;min-height:560px;} .hp-content{padding:0 var(--pad) 60px;} .hp-wm{display:none;} .hp-hero-title{font-size:clamp(40px,11vw,72px);} }
+        @media (max-width:600px) {
+          .hp-prod-grid { grid-template-columns:1fr; gap:16px; }
+          .hp-test-grid { grid-template-columns:1fr; gap:16px; }
+        }
       `}</style>
 
       {/* ═══ HERO ══════════════════════════════════════════════════════════ */}
@@ -107,12 +119,12 @@ export function HomePage() {
             <button className="btn btn-outline btn-lg" onClick={() => go('/products')}>View All →</button>
           </div>
           {!products?.length ? (
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:24 }}>
+            <div className="hp-prod-grid">
               {[1,2,3].map(i => <div key={i} className="shimmer" style={{ height:320, borderRadius:'var(--radius-xl)' }} />)}
             </div>
           ) : (
             <motion.div
-              style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:24 }}
+              className="hp-prod-grid"
               initial="hidden" whileInView="show" viewport={{ once:true, amount:0.15 }} variants={FC}>
               {products.map(p => (
                 <motion.article key={p.id} variants={FI} transition={{ duration:0.5 }}
@@ -139,7 +151,7 @@ export function HomePage() {
         <section className="sec sec-alt" style={{ borderBottom:'1px solid var(--border)' }}>
           <div className="wrap">
             <motion.div initial="hidden" whileInView="show" viewport={{ once:true, amount:0.3 }} variants={FC}
-              style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:72, alignItems:'center' }}>
+              className="hp-teaser-grid">
               <motion.div variants={FI} transition={{ duration:0.6 }}>
                 <p className="t-label" style={{ marginBottom:14 }}>Our Standard</p>
                 <h2 className="t-display" style={{ marginBottom:20 }}>{teaser?.title ?? 'Plant-Based. Premium. Purposeful.'}</h2>
@@ -184,7 +196,7 @@ export function HomePage() {
               <div className="sec-divider" style={{ margin:'14px auto 0' }} />
             </div>
             <motion.div
-              style={{ display:'grid', gridTemplateColumns:`repeat(${Math.min(testimonials.length,3)},1fr)`, gap:24 }}
+              className="hp-test-grid"
               initial="hidden" whileInView="show" viewport={{ once:true, amount:0.2 }} variants={FC}>
               {testimonials.slice(0,3).map(t => (
                 <motion.div key={t.id} variants={FI} transition={{ duration:0.5 }}

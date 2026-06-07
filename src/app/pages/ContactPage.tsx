@@ -61,8 +61,12 @@ export function ContactPage() {
         .ct-info-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:20px; margin-bottom:12px; display:flex; align-items:center; gap:14px; transition:border-color 0.25s; }
         .ct-info-card:hover { border-color:var(--border-gold); }
         .ct-form-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-xl); padding:36px; }
+        .ct-steps-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:28px; }
+        .ct-form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
         @media (max-width:1024px) { .ct-grid{grid-template-columns:1fr; gap:36px;} .ct-hero{height:60vh;min-height:400px;} }
+        @media (max-width:900px) { .ct-steps-grid { grid-template-columns:1fr; gap:20px; } }
         @media (max-width:768px) { .ct-content{padding:0 var(--pad) 56px;} .ct-form-card{padding:24px 20px;} }
+        @media (max-width:600px) { .ct-form-row { grid-template-columns:1fr; } }
       `}</style>
 
       <div style={{ background:'var(--bg-main)' }}>
@@ -82,7 +86,7 @@ export function ContactPage() {
         {/* Process steps */}
         <div style={{ background:'var(--bg-second)', borderBottom:'1px solid var(--border)', padding:'48px 0' }}>
           <div className="wrap">
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:28 }}>
+            <div className="ct-steps-grid">
               {STEPS.map(s => (
                 <div key={s.n} style={{ display:'flex', gap:16, alignItems:'flex-start' }}>
                   <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:36, color:'var(--gold)', lineHeight:1, flexShrink:0, opacity:0.75 }}>{s.n}</span>
@@ -155,7 +159,7 @@ export function ContactPage() {
                 </motion.div>
               ) : (
                 <div className="ct-form-card">
-                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:14 }}>
+                  <div className="ct-form-row">
                     <div><label className="field-label">Name *</label><input className="field" placeholder="Your name" value={form.name} onChange={upd('name')} /></div>
                     <div><label className="field-label">Phone</label><input className="field" type="tel" placeholder="+91 XXXXX XXXXX" value={form.phone} onChange={upd('phone')} /></div>
                   </div>

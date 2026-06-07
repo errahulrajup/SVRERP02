@@ -53,8 +53,15 @@ export function ProductDetail() {
         .pd-thumb { width:56px; height:56px; object-fit:cover; border-radius:var(--radius-sm); border:1.5px solid var(--border); cursor:pointer; transition:border-color 0.2s; }
         .pd-thumb:hover, .pd-thumb.on { border-color:var(--gold); }
         .pd-info { padding:60px 48px; display:flex; flex-direction:column; justify-content:center; }
+        .pd-usage-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:28px; }
+        .pd-related-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
         @media (max-width:1024px) { .pd-main{grid-template-columns:1fr;} .pd-img-panel{padding:40px 32px;} .pd-info{padding:40px 32px;} }
+        @media (max-width:900px) { .pd-related-grid { grid-template-columns:repeat(2,1fr); gap:16px; } }
         @media (max-width:768px) { .pd-img-panel{padding:32px 20px;} .pd-info{padding:32px 20px;} }
+        @media (max-width:600px) {
+          .pd-usage-grid { grid-template-columns:1fr; }
+          .pd-related-grid { grid-template-columns:1fr; gap:16px; }
+        }
       `}</style>
 
       <div className="pd-root">
@@ -113,7 +120,7 @@ export function ProductDetail() {
 
             {/* Usage */}
             {(product.usage_home || product.usage_pro) && (
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:28 }}>
+              <div className="pd-usage-grid">
                 {product.usage_home && (
                   <div style={{ background:'var(--bg-card)', border:'1px solid var(--border)', borderRadius:'var(--radius-md)', padding:'16px 18px', transition:'border-color 0.2s' }}
                     onMouseEnter={e => (e.currentTarget.style.borderColor='var(--border-gold)')}
@@ -170,7 +177,7 @@ export function ProductDetail() {
               <p className="t-label" style={{ marginBottom:10 }}>Related</p>
               <h2 className="t-h2" style={{ marginBottom:0 }}>You May Also Like</h2>
               <div style={{ width:40,height:2,background:'linear-gradient(90deg,var(--gold),transparent)',margin:'12px 0 32px' }} />
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:24 }}>
+              <div className="pd-related-grid">
                 {related.map(r => (
                   <article key={r.id} className="prod-card" onClick={() => go(`/products/${r.slug}`)} style={{ cursor:'pointer' }}>
                     <div style={{ overflow:'hidden' }}>
