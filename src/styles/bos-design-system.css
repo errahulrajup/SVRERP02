@@ -19,11 +19,11 @@
   --bos-bg4:          #1C3322;
   --bos-hover:        #213E28;
 
-  --bos-gold:         #D4A843; /* Gold (72%) */
-  --bos-gold2:        #A07828;
-  --bos-gold-soft:    rgba(212,168,67,0.09);
-  --bos-gold-border:  rgba(212,168,67,0.22);
-  --bos-gold-glow:    rgba(212,168,67,0.14);
+  --bos-gold:         #EAB308; /* Yellow Accent (75%) */
+  --bos-gold2:        #CA8A04;
+  --bos-gold-soft:    rgba(234,179,8,0.09);
+  --bos-gold-border:  rgba(234,179,8,0.22);
+  --bos-gold-glow:    rgba(234,179,8,0.14);
 
   --bos-sage:         #7BA97B; /* Light Green (88%) */
   --bos-border:       rgba(123,169,123,0.10);
