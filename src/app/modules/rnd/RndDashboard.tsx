@@ -36,82 +36,92 @@ export function RndDashboard() {
     [...(formulas || [])].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5), 
   [formulas]);
 
-  if (loading) return <div style={{ padding: 40, color: '#94a3b8' }}>Loading Dashboard Data...</div>;
-  if (error) return <div style={{ padding: 40, color: '#ef4444' }}>Error loading dashboard: {error} <button className="rnd-btn" onClick={handleRefresh} style={{marginLeft: 16}}>Retry</button></div>;
+  if (loading) return <div className="bos-page"><div className="bos-loading"><div className="bos-spinner"/>Loading Dashboard Data...</div></div>;
+  if (error) return <div className="bos-page"><div className="bos-alert bos-alert-danger">Error loading dashboard: {error} <button className="bos-btn bos-btn-ghost bos-btn-sm" onClick={handleRefresh} style={{marginLeft: 16}}>Retry</button></div></div>;
 
   return (
-    <div style={{ padding: '32px' }}>
-      <div className="rnd-header" style={{ padding: '0 0 24px 0', borderBottom: 'none', background: 'transparent', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h1 className="rnd-title">Laboratory Overview</h1>
-          <p className="rnd-subtitle">Formulation metrics, active trials, and system alerts.</p>
-        </div>
-        <div style={{ display: 'flex', gap: 12 }}>
-          <button className="rnd-btn" onClick={() => window.location.href = '/rnd/settings'}>⚙️ Settings</button>
-          <button className="rnd-btn" onClick={handleRefresh}>🔄 Refresh Data</button>
-        </div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20, marginBottom: 32 }}>
-        <div className="rnd-card" style={{ borderTop: '3px solid #0ea5e9' }}>
-          <div style={{ color: '#94a3b8', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Active Trials</div>
-          <div style={{ fontSize: 36, fontWeight: 700, color: '#f8fafc', marginTop: 8 }}>{stats.activeTrials}</div>
-        </div>
-        <div className="rnd-card" style={{ borderTop: '3px solid #ef4444' }}>
-          <div style={{ color: '#94a3b8', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Failed Batches (30d)</div>
-          <div style={{ fontSize: 36, fontWeight: 700, color: '#f8fafc', marginTop: 8 }}>{stats.failedBatches}</div>
-        </div>
-        <div className="rnd-card" style={{ borderTop: '3px solid #22c55e' }}>
-          <div style={{ color: '#94a3b8', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Approved Formulas</div>
-          <div style={{ fontSize: 36, fontWeight: 700, color: '#f8fafc', marginTop: 8 }}>{stats.approvedFormulas}</div>
-        </div>
-        <div className="rnd-card" style={{ borderTop: '3px solid #f59e0b' }}>
-          <div style={{ color: '#94a3b8', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Formulas in Draft</div>
-          <div style={{ fontSize: 36, fontWeight: 700, color: '#f8fafc', marginTop: 8 }}>{stats.draftFormulas}</div>
+    <div className="bos-page">
+      <div className="bos-page-header">
+        <div className="bos-flex-between">
+          <div>
+            <h1 className="bos-page-title">Laboratory Overview</h1>
+            <p className="bos-page-sub">Formulation metrics, active trials, and system alerts.</p>
+          </div>
+          <div className="bos-flex" style={{ gap: 12 }}>
+            <button className="bos-btn bos-btn-dark bos-btn-sm" onClick={() => window.location.href = '/rnd/settings'}>⚙️ Settings</button>
+            <button className="bos-btn bos-btn-dark bos-btn-sm" onClick={handleRefresh}>🔄 Refresh Data</button>
+          </div>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 24 }}>
-        <div className="rnd-card" style={{ padding: 0 }}>
-          <div className="rnd-card-header" style={{ padding: '20px 20px 0', borderBottom: 'none' }}>Recent Trials</div>
-          <table className="rnd-table">
-            <thead><tr><th>Trial No</th><th>Formula</th><th>Status</th><th>Date</th></tr></thead>
-            <tbody>
-              {recentTrials.length === 0 ? <tr><td colSpan={4} style={{ textAlign: 'center' }}>No trials logged</td></tr> : recentTrials.map(t => (
-                <tr key={t.id}>
-                  <td style={{ fontWeight: 600, color: '#e2e8f0' }}>{t.trial_no}</td>
-                  <td>{t.formula?.formula_code || 'Unknown'}</td>
-                  <td>
-                    <span className={`rnd-badge rnd-badge-${t.status === 'FAILED' ? 'failed' : t.status === 'COMPLETED' ? 'success' : 'draft'}`}>
-                      {t.status}
-                    </span>
-                  </td>
-                  <td style={{ fontSize: 12, color: '#94a3b8' }}>{fmtDate(t.created_at)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="bos-kpi-grid" style={{ marginBottom: 16 }}>
+        <div className="bos-kpi-card" style={{ '--_kpi-color': 'var(--bos-blue)' } as any}>
+          <div className="bos-kpi-label">Active Trials</div>
+          <div className="bos-kpi-val">{stats.activeTrials}</div>
+        </div>
+        <div className="bos-kpi-card" style={{ '--_kpi-color': 'var(--bos-red)' } as any}>
+          <div className="bos-kpi-label">Failed Batches (30d)</div>
+          <div className="bos-kpi-val">{stats.failedBatches}</div>
+        </div>
+        <div className="bos-kpi-card" style={{ '--_kpi-color': 'var(--bos-green)' } as any}>
+          <div className="bos-kpi-label">Approved Formulas</div>
+          <div className="bos-kpi-val">{stats.approvedFormulas}</div>
+        </div>
+        <div className="bos-kpi-card" style={{ '--_kpi-color': 'var(--bos-gold)' } as any}>
+          <div className="bos-kpi-label">Formulas in Draft</div>
+          <div className="bos-kpi-val">{stats.draftFormulas}</div>
+        </div>
+      </div>
+
+      <div className="bos-card-grid">
+        <div className="bos-card" style={{ padding: 0 }}>
+          <div className="bos-card-header" style={{ padding: '10px 12px' }}>
+            <div className="bos-card-title" style={{ margin: 0, border: 'none', padding: 0 }}>Recent Trials</div>
+          </div>
+          <div className="bos-tbl-wrap">
+            <table className="bos-tbl">
+              <thead><tr><th>Trial No</th><th>Formula</th><th>Status</th><th>Date</th></tr></thead>
+              <tbody>
+                {recentTrials.length === 0 ? <tr><td colSpan={4} style={{ textAlign: 'center' }}>No trials logged</td></tr> : recentTrials.map(t => (
+                  <tr key={t.id}>
+                    <td className="bos-tbl-primary">{t.trial_no}</td>
+                    <td className="bos-tbl-mono">{t.formula?.formula_code || 'Unknown'}</td>
+                    <td>
+                      <span className={`bos-badge bos-badge-${t.status === 'FAILED' ? 'red' : t.status === 'COMPLETED' ? 'green' : t.status === 'IN_PROGRESS' ? 'blue' : 'gray'}`}>
+                        {t.status}
+                      </span>
+                    </td>
+                    <td className="bos-text-muted">{fmtDate(t.created_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <div className="rnd-card" style={{ padding: 0 }}>
-          <div className="rnd-card-header" style={{ padding: '20px 20px 0', borderBottom: 'none' }}>Latest Formulations</div>
-          <table className="rnd-table">
-            <thead><tr><th>Code</th><th>Name</th><th>Version</th><th>Status</th></tr></thead>
-            <tbody>
-              {recentFormulas.length === 0 ? <tr><td colSpan={4} style={{ textAlign: 'center' }}>No formulas created</td></tr> : recentFormulas.map(f => (
-                <tr key={f.id}>
-                  <td style={{ fontWeight: 600, color: '#e2e8f0' }}>{f.formula_code}</td>
-                  <td>{f.name}</td>
-                  <td>v{(f.version ?? 1).toFixed(1)}</td>
-                  <td>
-                    <span className={`rnd-badge rnd-badge-${f.status === 'LOCKED' ? 'locked' : f.status === 'APPROVED' ? 'success' : 'draft'}`}>
-                      {f.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="bos-card" style={{ padding: 0 }}>
+          <div className="bos-card-header" style={{ padding: '10px 12px' }}>
+            <div className="bos-card-title" style={{ margin: 0, border: 'none', padding: 0 }}>Latest Formulations</div>
+          </div>
+          <div className="bos-tbl-wrap">
+            <table className="bos-tbl">
+              <thead><tr><th>Code</th><th>Name</th><th>Version</th><th>Status</th></tr></thead>
+              <tbody>
+                {recentFormulas.length === 0 ? <tr><td colSpan={4} style={{ textAlign: 'center' }}>No formulas created</td></tr> : recentFormulas.map(f => (
+                  <tr key={f.id}>
+                    <td className="bos-tbl-mono">{f.formula_code}</td>
+                    <td className="bos-tbl-primary">{f.name}</td>
+                    <td>v{(f.version ?? 1).toFixed(1)}</td>
+                    <td>
+                      <span className={`bos-badge bos-badge-${f.status === 'LOCKED' ? 'gold' : f.status === 'APPROVED' ? 'green' : 'gray'}`}>
+                        {f.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

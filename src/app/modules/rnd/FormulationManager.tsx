@@ -215,49 +215,51 @@ export function FormulationManager() {
     }
   };
 
-  if (loading) return <div style={{ padding: 40, color: '#94a3b8' }}>Loading Formulations...</div>;
+  if (loading) return <div className="bos-page"><div className="bos-loading"><div className="bos-spinner"/>Loading Formulations...</div></div>;
 
   return (
-    <div style={{ padding: '32px' }}>
-      <div className="rnd-header" style={{ padding: '0 0 24px 0', borderBottom: 'none', background: 'transparent', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
-        <div>
-          <h1 className="rnd-title">Formulation Intelligence</h1>
-          <p className="rnd-subtitle">Recipe versioning, target specs, and draft management.</p>
-        </div>
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          <input
-            className="rnd-input"
-            placeholder="Search formulas"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{ minWidth: 240 }}
-          />
-          <select className="rnd-input" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as 'ALL' | RndFormulaStatus)}>
-            {FILTERS.map((value) => (
-              <option key={value} value={value}>{value === 'ALL' ? 'All statuses' : value}</option>
-            ))}
-          </select>
-          <button className="rnd-btn rnd-btn-primary" onClick={openCreate}>+ New Formulation</button>
+    <div className="bos-page">
+      <div className="bos-page-header">
+        <div className="bos-flex-between">
+          <div>
+            <h1 className="bos-page-title">Formulation Intelligence</h1>
+            <p className="bos-page-sub">Recipe versioning, target specs, and draft management.</p>
+          </div>
+          <div className="bos-flex" style={{ gap: 12, flexWrap: 'wrap' }}>
+            <input
+              className="bos-form-field"
+              placeholder="Search formulas"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ minWidth: 200, width: 'auto' }}
+            />
+            <select className="bos-form-field" style={{ width: 'auto' }} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as 'ALL' | RndFormulaStatus)}>
+              {FILTERS.map((value) => (
+                <option key={value} value={value}>{value === 'ALL' ? 'All statuses' : value}</option>
+              ))}
+            </select>
+            <button className="bos-btn bos-btn-primary" onClick={openCreate}>+ New Formulation</button>
+          </div>
         </div>
       </div>
 
       {error && (
-        <div className="rnd-card" style={{ marginBottom: 20, borderLeft: '3px solid #f97316', color: '#fed7aa' }}>
+        <div className="bos-alert bos-alert-danger" style={{ marginBottom: 20 }}>
           Unable to load formulation data: {error}
         </div>
       )}
 
       {isFormOpen && (
-        <div className="rnd-card" style={{ marginBottom: 24, borderLeft: '3px solid #0ea5e9' }}>
-          <div className="rnd-card-header">{editingFormula ? 'Update Formula Metadata' : 'Initialize New Formula'}</div>
+        <div className="bos-card" style={{ marginBottom: 24, borderLeft: '3.5px solid var(--bos-blue)' }}>
+          <div className="bos-card-title">{editingFormula ? 'Update Formula Metadata' : 'Initialize New Formula'}</div>
           
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr', gap: 16 }}>
+          <div className="bos-form-grid" style={{ gap: 16 }}>
             {/* Catalog finished product linkage */}
-            <div style={{ gridColumn: 'span 3', display: 'flex', gap: 12, alignItems: 'flex-end', background: '#1e293b', padding: 12, borderRadius: '6px', border: '1px solid #334155' }}>
+            <div className="bos-form-span2" style={{ display: 'flex', gap: 12, alignItems: 'flex-end', background: 'var(--bos-bg3)', padding: 12, borderRadius: '6px', border: '1px solid var(--bos-border2)' }}>
               <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Link to ERP Finished Product Catalog *</label>
+                <label className="bos-form-label">Link to ERP Finished Product Catalog *</label>
                 <select
-                  className="rnd-input"
+                  className="bos-form-field"
                   style={{ width: '100%', fontSize: 13 }}
                   value={form.erp_product_id}
                   onChange={(e) => {
@@ -274,9 +276,9 @@ export function FormulationManager() {
               {!editingFormula && (
                 <button
                   type="button"
-                  className="rnd-btn"
+                  className="bos-btn bos-btn-ghost bos-btn-sm"
                   onClick={() => setIsCreatingProduct(p => !p)}
-                  style={{ fontSize: 12, padding: '8px 12px', whiteSpace: 'nowrap' }}
+                  style={{ whiteSpace: 'nowrap', height: 'fit-content' }}
                 >
                   {isCreatingProduct ? '✕ Cancel' : '+ Create New Product'}
                 </button>
@@ -285,59 +287,59 @@ export function FormulationManager() {
 
             {/* New Product Inline Creation Wizard */}
             {isCreatingProduct && !editingFormula && (
-              <div style={{ gridColumn: 'span 3', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', gap: 12, background: 'rgba(212,168,67,0.03)', padding: 16, borderRadius: '6px', border: '1px solid #451a03' }}>
+              <div className="bos-form-span2" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', gap: 12, background: 'var(--bos-gold-soft)', padding: 16, borderRadius: '6px', border: '1px solid var(--bos-gold-border)' }}>
                 <div style={{ gridColumn: 'span 2' }}>
-                  <label style={{ display: 'block', fontSize: 10, color: '#cbd5e1', marginBottom: 4 }}>New Product Name *</label>
-                  <input className="rnd-input" style={{ width: '100%', fontSize: 12 }} placeholder="e.g. Premium Margarine" value={newProductForm.name} onChange={e => setNewProductForm({ ...newProductForm, name: e.target.value })} />
+                  <label className="bos-form-label" style={{ color: 'var(--bos-text2)' }}>New Product Name *</label>
+                  <input className="bos-form-field" style={{ width: '100%', fontSize: 12 }} placeholder="e.g. Premium Margarine" value={newProductForm.name} onChange={e => setNewProductForm({ ...newProductForm, name: e.target.value })} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 10, color: '#cbd5e1', marginBottom: 4 }}>SKU Code *</label>
-                  <input className="rnd-input" style={{ width: '100%', fontSize: 12 }} placeholder="e.g. SKU-MARG-PREM" value={newProductForm.sku_code} onChange={e => setNewProductForm({ ...newProductForm, sku_code: e.target.value })} />
+                  <label className="bos-form-label" style={{ color: 'var(--bos-text2)' }}>SKU Code *</label>
+                  <input className="bos-form-field" style={{ width: '100%', fontSize: 12 }} placeholder="e.g. SKU-MARG-PREM" value={newProductForm.sku_code} onChange={e => setNewProductForm({ ...newProductForm, sku_code: e.target.value })} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 10, color: '#cbd5e1', marginBottom: 4 }}>Category</label>
-                  <input className="rnd-input" style={{ width: '100%', fontSize: 12 }} placeholder="Spreads" value={newProductForm.category} onChange={e => setNewProductForm({ ...newProductForm, category: e.target.value })} />
+                  <label className="bos-form-label" style={{ color: 'var(--bos-text2)' }}>Category</label>
+                  <input className="bos-form-field" style={{ width: '100%', fontSize: 12 }} placeholder="Spreads" value={newProductForm.category} onChange={e => setNewProductForm({ ...newProductForm, category: e.target.value })} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 10, color: '#cbd5e1', marginBottom: 4 }}>Unit</label>
-                  <input className="rnd-input" style={{ width: '100%', fontSize: 12 }} placeholder="kg" value={newProductForm.unit} onChange={e => setNewProductForm({ ...newProductForm, unit: e.target.value })} />
+                  <label className="bos-form-label" style={{ color: 'var(--bos-text2)' }}>Unit</label>
+                  <input className="bos-form-field" style={{ width: '100%', fontSize: 12 }} placeholder="kg" value={newProductForm.unit} onChange={e => setNewProductForm({ ...newProductForm, unit: e.target.value })} />
                 </div>
                 <div style={{ gridColumn: 'span 2' }}>
-                  <label style={{ display: 'block', fontSize: 10, color: '#cbd5e1', marginBottom: 4 }}>GST %</label>
-                  <input className="rnd-input" type="number" style={{ width: '100%', fontSize: 12 }} value={newProductForm.gst_pct} onChange={e => setNewProductForm({ ...newProductForm, gst_pct: Number(e.target.value) })} />
+                  <label className="bos-form-label" style={{ color: 'var(--bos-text2)' }}>GST %</label>
+                  <input className="bos-form-field" type="number" style={{ width: '100%', fontSize: 12 }} value={newProductForm.gst_pct} onChange={e => setNewProductForm({ ...newProductForm, gst_pct: Number(e.target.value) })} />
                 </div>
                 <div style={{ gridColumn: 'span 3', display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end' }}>
-                  <button type="button" className="rnd-btn rnd-btn-primary" style={{ padding: '6px 12px', fontSize: 11 }} onClick={handleCreateProduct} disabled={productSaving}>
-                    {productSaving ? 'Saving...' : 'Save & Select Product'}
+                  <button type="button" className="bos-btn bos-btn-primary bos-btn-sm" onClick={handleCreateProduct} disabled={productSaving}>
+                    {productSaving ? 'Saving...' : 'Save & Select'}
                   </button>
                 </div>
               </div>
             )}
 
-            <div style={{ gridColumn: 'span 3' }}>
-              <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Formula Code *</label>
-              <input className="rnd-input" style={{ width: '100%' }} placeholder="e.g. CR-001" value={form.formula_code} onChange={(e) => setForm({ ...form, formula_code: e.target.value })} />
-            </div>
-            <div style={{ gridColumn: 'span 2' }}>
-              <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Formula Name *</label>
-              <input className="rnd-input" style={{ width: '100%' }} placeholder="e.g. Plant-Based Cooking Cream" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            <div className="bos-form-span2">
+              <label className="bos-form-label">Formula Code *</label>
+              <input className="bos-form-field" style={{ width: '100%' }} placeholder="e.g. CR-001" value={form.formula_code} onChange={(e) => setForm({ ...form, formula_code: e.target.value })} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Version</label>
-              <input className="rnd-input" type="number" step="0.1" style={{ width: '100%' }} value={form.version} onChange={(e) => setForm({ ...form, version: Number(e.target.value) })} />
+              <label className="bos-form-label">Formula Name *</label>
+              <input className="bos-form-field" style={{ width: '100%' }} placeholder="e.g. Plant-Based Cooking Cream" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
-            <div style={{ gridColumn: 'span 3' }}>
-              <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Description / Objective</label>
-              <input className="rnd-input" style={{ width: '100%' }} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            <div>
+              <label className="bos-form-label">Version</label>
+              <input className="bos-form-field" type="number" step="0.1" style={{ width: '100%' }} value={form.version} onChange={(e) => setForm({ ...form, version: Number(e.target.value) })} />
+            </div>
+            <div className="bos-form-span2">
+              <label className="bos-form-label">Description / Objective</label>
+              <input className="bos-form-field" style={{ width: '100%' }} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             </div>
 
             {/* Target Specifications Selection Checklist */}
             {!editingFormula ? (
-              <div style={{ gridColumn: 'span 3', background: '#1e293b', padding: '12px 16px', borderRadius: 8, border: '1px solid #334155', marginTop: 8 }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.05em' }}>Select Initial Target Parameters for this Recipe:</div>
+              <div className="bos-form-span2" style={{ background: 'var(--bos-bg3)', padding: '12px 16px', borderRadius: 8, border: '1px solid var(--bos-border2)', marginTop: 8 }}>
+                <div className="bos-form-label" style={{ marginBottom: 8 }}>Select Initial Target Parameters for this Recipe:</div>
                 <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
                   {masterParams.map(mp => (
-                    <label key={mp.id} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#f8fafc' }}>
+                    <label key={mp.id} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: 'var(--bos-text2)' }}>
                       <input 
                         type="checkbox" 
                         checked={selectedParams[mp.name]?.active || false} 
@@ -349,7 +351,7 @@ export function FormulationManager() {
                       {mp.name} {mp.default_unit ? `(${mp.default_unit})` : ''}
                     </label>
                   ))}
-                  {masterParams.length === 0 && <span style={{ color: '#64748b', fontSize: 12 }}>No master parameters configured. Manage them in Settings.</span>}
+                  {masterParams.length === 0 && <span style={{ color: 'var(--bos-text4)', fontSize: 12 }}>No master parameters configured. Manage them in Settings.</span>}
                 </div>
                 
                 {/* Inputs for selected params */}
@@ -357,9 +359,9 @@ export function FormulationManager() {
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginTop: 16 }}>
                     {Object.entries(selectedParams).filter(([_, p]) => p.active).map(([name, p]) => (
                       <div key={name}>
-                        <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Target {name}</label>
+                        <label className="bos-form-label">Target {name}</label>
                         <input 
-                          className="rnd-input" 
+                          className="bos-form-field" 
                           type="number" 
                           step="any" 
                           style={{ width: '100%' }} 
@@ -373,66 +375,68 @@ export function FormulationManager() {
                 )}
               </div>
             ) : (
-              <div style={{ gridColumn: 'span 3', padding: '12px 16px', background: 'rgba(56, 189, 248, 0.05)', borderRadius: 8, border: '1px dashed #0ea5e9' }}>
-                <span style={{ fontSize: 12, color: '#38bdf8' }}>ℹ️ Target parameters for existing formulas can be managed inside the <b>Formula Builder</b>.</span>
+              <div className="bos-form-span2" style={{ padding: '12px 16px', background: 'var(--bos-blue-bg)', borderRadius: 8, border: '1px dashed var(--bos-blue-border)' }}>
+                <span style={{ fontSize: 12, color: 'var(--bos-blue)' }}>ℹ️ Target parameters for existing formulas can be managed inside the <b>Formula Builder</b>.</span>
               </div>
             )}
           </div>
           <div style={{ marginTop: 20, display: 'flex', gap: 12 }}>
-            <button className="rnd-btn rnd-btn-primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : editingFormula ? '💾 Update Formula' : '🚀 Create Draft'}</button>
-            <button className="rnd-btn" onClick={() => setIsFormOpen(false)}>Cancel</button>
+            <button className="bos-btn bos-btn-primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : editingFormula ? '💾 Update Formula' : '🚀 Create Draft'}</button>
+            <button className="bos-btn bos-btn-ghost" onClick={() => setIsFormOpen(false)}>Cancel</button>
           </div>
         </div>
       )}
 
-      <div className="rnd-card" style={{ padding: 0 }}>
+      <div className="bos-card" style={{ padding: 0 }}>
         {filteredFormulas.length === 0 ? (
-          <div style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>No formulations match the current filters.</div>
+          <div className="bos-empty">No formulations match the current filters.</div>
         ) : (
-          <table className="rnd-table">
-            <thead>
-              <tr>
-                <th>Code</th>
-                <th>Name / Description</th>
-                <th>Version</th>
-                <th>Target Specs</th>
-                <th>Est. Cost/kg</th>
-                <th>Status</th>
-                <th>Created</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredFormulas.map((f) => (
-                <tr key={f.id}>
-                  <td style={{ fontWeight: 600, color: '#f8fafc', fontFamily: 'monospace' }}>{f.formula_code}</td>
-                  <td>
-                    <div style={{ fontWeight: 500, color: '#f8fafc' }}>{f.name}</div>
-                    {f.description && <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{f.description}</div>}
-                  </td>
-                  <td>v{(f.version ?? 1).toFixed(1)}</td>
-                  <td style={{ fontSize: 11, color: '#cbd5e1' }}>
-                    {f.target_ph ? `pH: ${f.target_ph}` : ''}
-                    {f.target_brix ? ` | Bx: ${f.target_brix}` : ''}
-                    {f.target_sg ? ` | SG: ${f.target_sg}` : ''}
-                    {!f.target_ph && !f.target_brix && !f.target_sg && '—'}
-                  </td>
-                  <td style={{ color: '#fbbf24', fontWeight: 500 }}>{fmtCost(f.total_cost_per_kg)}</td>
-                  <td>
-                    <span className={`rnd-badge rnd-badge-${f.status === 'LOCKED' ? 'locked' : f.status === 'APPROVED' ? 'success' : 'draft'}`}>{f.status}</span>
-                  </td>
-                  <td style={{ fontSize: 12, color: '#64748b' }}>{fmtDate(f.created_at)}</td>
-                  <td>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <button className="rnd-btn rnd-btn-primary" style={{ padding: '4px 8px', fontSize: 11 }} onClick={() => navigate(`/rnd/formulations/${f.id}`)}>Build →</button>
-                      <button className="rnd-btn" style={{ padding: '4px 8px', fontSize: 11 }} onClick={() => openEdit(f)}>Edit</button>
-                      {f.status === 'DRAFT' && <button className="rnd-btn" style={{ padding: '4px 8px', fontSize: 11 }} onClick={() => handleDelete(f.id)}>Del</button>}
-                    </div>
-                  </td>
+          <div className="bos-tbl-wrap">
+            <table className="bos-tbl">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Name / Description</th>
+                  <th>Version</th>
+                  <th>Target Specs</th>
+                  <th>Est. Cost/kg</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th>Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filteredFormulas.map((f) => (
+                  <tr key={f.id}>
+                    <td className="bos-tbl-mono">{f.formula_code}</td>
+                    <td>
+                      <div className="bos-tbl-primary">{f.name}</div>
+                      {f.description && <div className="bos-text-muted" style={{ fontSize: 11, marginTop: 2 }}>{f.description}</div>}
+                    </td>
+                    <td>v{(f.version ?? 1).toFixed(1)}</td>
+                    <td style={{ fontSize: 11, color: 'var(--bos-text2)' }}>
+                      {f.target_ph ? `pH: ${f.target_ph}` : ''}
+                      {f.target_brix ? ` | Bx: ${f.target_brix}` : ''}
+                      {f.target_sg ? ` | SG: ${f.target_sg}` : ''}
+                      {!f.target_ph && !f.target_brix && !f.target_sg && '—'}
+                    </td>
+                    <td className="bos-text-gold" style={{ fontWeight: 500 }}>{fmtCost(f.total_cost_per_kg)}</td>
+                    <td>
+                      <span className={`bos-badge bos-badge-${f.status === 'LOCKED' ? 'gold' : f.status === 'APPROVED' ? 'green' : f.status === 'DRAFT' ? 'gray' : f.status === 'UNDER_TRIAL' ? 'blue' : 'orange'}`}>{f.status}</span>
+                    </td>
+                    <td className="bos-text-muted">{fmtDate(f.created_at)}</td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button className="bos-btn bos-btn-primary bos-btn-sm" onClick={() => navigate(`/rnd/formulations/${f.id}`)}>Build →</button>
+                        <button className="bos-btn bos-btn-ghost bos-btn-sm" onClick={() => openEdit(f)}>Edit</button>
+                        {f.status === 'DRAFT' && <button className="bos-btn bos-btn-danger bos-btn-sm" onClick={() => handleDelete(f.id)}>Del</button>}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

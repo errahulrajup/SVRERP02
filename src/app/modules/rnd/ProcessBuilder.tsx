@@ -111,111 +111,115 @@ export function ProcessBuilder() {
     } catch (e: any) { alert('Error: ' + e.message); }
   };
 
-  if (fLoad) return <div style={{ padding: 40, color: '#94a3b8' }}>Loading Formulations...</div>;
+  if (fLoad) return <div className="bos-page"><div className="bos-loading"><div className="bos-spinner"/>Loading Formulations...</div></div>;
 
   const selectedFormulaInfo = formulas.find((formula) => formula.id === selectedFormula);
 
   return (
-    <div style={{ padding: '32px' }}>
-      <div className="rnd-header" style={{ padding: '0 0 24px 0', borderBottom: 'none', background: 'transparent', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
-        <div>
-          <h1 className="rnd-title">Process &amp; SOP Builder</h1>
-          <p className="rnd-subtitle">Standard operating procedures and process mapping.</p>
-          {selectedFormulaInfo && (
-            <div style={{ marginTop: 12, color: '#cbd5e1', fontSize: 13 }}>
-              Linked formula: <span style={{ color: '#38bdf8', fontWeight: 600 }}>{selectedFormulaInfo.formula_code}</span> — {selectedFormulaInfo.name}
-            </div>
-          )}
-        </div>
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          {selectedFormula && (
-            <button className="rnd-btn" onClick={() => navigate(`/rnd/formulations/${selectedFormula}`)}>🔬 Open Formula Builder</button>
-          )}
-          <button className="rnd-btn" onClick={() => navigate('/rnd/trials')}>📊 Open Trial Logs</button>
+    <div className="bos-page">
+      <div className="bos-page-header">
+        <div className="bos-flex-between">
+          <div>
+            <h1 className="bos-page-title">Process &amp; SOP Builder</h1>
+            <p className="bos-page-sub">Standard operating procedures and process mapping.</p>
+            {selectedFormulaInfo && (
+              <div style={{ marginTop: 12, color: 'var(--bos-text2)', fontSize: 13 }}>
+                Linked formula: <span style={{ color: 'var(--bos-blue)', fontWeight: 600 }}>{selectedFormulaInfo.formula_code}</span> — {selectedFormulaInfo.name}
+              </div>
+            )}
+          </div>
+          <div className="bos-flex" style={{ gap: 12, flexWrap: 'wrap' }}>
+            {selectedFormula && (
+              <button className="bos-btn bos-btn-ghost bos-btn-sm" onClick={() => navigate(`/rnd/formulations/${selectedFormula}`)}>🔬 Open Formula Builder</button>
+            )}
+            <button className="bos-btn bos-btn-ghost bos-btn-sm" onClick={() => navigate('/rnd/trials')}>📊 Open Trial Logs</button>
+          </div>
         </div>
       </div>
 
       <div style={{ marginBottom: 24 }}>
-        <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Select Formula</label>
-        <select className="rnd-input" style={{ width: '400px', fontSize: 14 }} value={selectedFormula} onChange={e => setSelectedFormula(e.target.value)}>
+        <label className="bos-form-label">Select Formula</label>
+        <select className="bos-form-field" style={{ maxWidth: '400px', fontSize: 14 }} value={selectedFormula} onChange={e => setSelectedFormula(e.target.value)}>
           <option value="">-- Choose Formulation to Build Process --</option>
           {formulas.map(f => <option key={f.id} value={f.id}>{f.formula_code} : {f.name}</option>)}
         </select>
       </div>
 
       {selectedFormula && (
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 24, alignItems: 'flex-start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24, alignItems: 'flex-start' }}>
           
-          <div className="rnd-card" style={{ padding: 0 }}>
-            <div className="rnd-card-header" style={{ padding: '20px 20px 0', borderBottom: 'none' }}>Process Sequence</div>
-            {pLoad ? <div style={{ padding: 20 }}>Loading steps...</div> : steps.length === 0 ? <div style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>No steps defined. Add the first step.</div> : (
-              <table className="rnd-table">
-                <thead><tr><th>#</th><th>Type</th><th>Description</th><th>Parameters</th><th>CCP</th><th>Action</th></tr></thead>
-                <tbody>
-                  {steps.map(s => (
-                    <tr key={s.id} style={s.ccp ? { background: 'rgba(239, 68, 68, 0.05)' } : {}}>
-                      <td style={{ fontWeight: 700, color: '#64748b' }}>{s.step_no}</td>
-                      <td><span className="rnd-badge rnd-badge-locked">{s.step_type}</span></td>
-                      <td style={{ color: '#f8fafc', maxWidth: 200 }}>{s.description}</td>
-                      <td style={{ fontSize: 11, color: '#94a3b8' }}>
-                        {s.duration_min ? <div>⏱ {s.duration_min} min</div> : null}
-                        {s.temp_c ? <div>🌡 {s.temp_c}°C</div> : null}
-                        {s.rpm ? <div>⚙️ {s.rpm} RPM</div> : null}
-                        {s.pressure_bar ? <div>💨 {s.pressure_bar} Bar</div> : null}
-                        {s.machine ? <div style={{ color: '#38bdf8', fontWeight: 600, marginTop: 4 }}>🛠 {s.machine}</div> : null}
-                      </td>
-                      <td>{s.ccp ? <span className="rnd-badge rnd-badge-failed">CCP</span> : '—'}</td>
-                      <td><button className="rnd-btn" style={{ padding: '4px 8px', fontSize: 11 }} onClick={() => handleDelete(s.id)}>Del</button></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <div className="bos-card" style={{ padding: 0 }}>
+            <div className="bos-card-title" style={{ padding: '10px 12px', margin: 0, borderBottom: 'none' }}>Process Sequence</div>
+            {pLoad ? <div style={{ padding: 20 }} className="bos-text-muted">Loading steps...</div> : steps.length === 0 ? <div className="bos-empty">No steps defined. Add the first step.</div> : (
+              <div className="bos-tbl-wrap">
+                <table className="bos-tbl">
+                  <thead><tr><th>#</th><th>Type</th><th>Description</th><th>Parameters</th><th>CCP</th><th>Action</th></tr></thead>
+                  <tbody>
+                    {steps.map(s => (
+                      <tr key={s.id} style={s.ccp ? { background: 'var(--bos-red-bg)' } : {}}>
+                        <td style={{ fontWeight: 700, color: 'var(--bos-text3)' }}>{s.step_no}</td>
+                        <td><span className="bos-badge bos-badge-gold">{s.step_type}</span></td>
+                        <td style={{ color: 'var(--bos-text2)', maxWidth: 200, whiteSpace: 'normal', wordBreak: 'break-word' }}>{s.description}</td>
+                        <td style={{ fontSize: 11, color: 'var(--bos-text3)' }}>
+                          {s.duration_min ? <div>⏱ {s.duration_min} min</div> : null}
+                          {s.temp_c ? <div>🌡 {s.temp_c}°C</div> : null}
+                          {s.rpm ? <div>⚙️ {s.rpm} RPM</div> : null}
+                          {s.pressure_bar ? <div>💨 {s.pressure_bar} Bar</div> : null}
+                          {s.machine ? <div style={{ color: 'var(--bos-blue)', fontWeight: 600, marginTop: 4 }}>🛠 {s.machine}</div> : null}
+                        </td>
+                        <td>{s.ccp ? <span className="bos-badge bos-badge-red">CCP</span> : '—'}</td>
+                        <td><button className="bos-btn bos-btn-danger bos-btn-sm" onClick={() => handleDelete(s.id)}>Del</button></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
 
-          <div className="rnd-card" style={{ borderTop: '3px solid #0ea5e9' }}>
-            <div className="rnd-card-header">Add Process Step</div>
+          <div className="bos-card" style={{ borderTop: '3.5px solid var(--bos-blue)' }}>
+            <div className="bos-card-title">Add Process Step</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ display: 'flex', gap: 12 }}>
-                <div style={{ width: '60px' }}>
-                  <label style={{ display: 'block', fontSize: 10, color: '#94a3b8' }}>Step #</label>
-                  <input className="rnd-input" type="number" style={{ width: '100%' }} value={form.step_no} onChange={e => setForm({...form, step_no: Number(e.target.value)})} />
+                <div style={{ width: '70px' }}>
+                  <label className="bos-form-label">Step #</label>
+                  <input className="bos-form-field" type="number" style={{ width: '100%' }} value={form.step_no} onChange={e => setForm({...form, step_no: Number(e.target.value)})} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: 10, color: '#94a3b8' }}>Type</label>
-                  <select className="rnd-input" style={{ width: '100%' }} value={form.step_type} onChange={e => setForm({...form, step_type: e.target.value})}>
+                  <label className="bos-form-label">Type</label>
+                  <select className="bos-form-field" style={{ width: '100%' }} value={form.step_type} onChange={e => setForm({...form, step_type: e.target.value})}>
                     {stepTypes.map(t => <option key={t}>{t}</option>)}
                   </select>
                 </div>
               </div>
               
               <div>
-                <label style={{ display: 'block', fontSize: 10, color: '#94a3b8' }}>Instructions / Description *</label>
-                <textarea className="rnd-input" style={{ width: '100%', height: '60px', resize: 'none' }} value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
+                <label className="bos-form-label">Instructions / Description *</label>
+                <textarea className="bos-form-field" style={{ width: '100%', height: '60px', resize: 'none' }} value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 10, color: '#94a3b8' }}>Duration (min)</label>
-                  <input className="rnd-input" type="number" style={{ width: '100%' }} value={form.duration_min} onChange={e => setForm({...form, duration_min: e.target.value})} />
+                  <label className="bos-form-label">Duration (min)</label>
+                  <input className="bos-form-field" type="number" style={{ width: '100%' }} value={form.duration_min} onChange={e => setForm({...form, duration_min: e.target.value})} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 10, color: '#94a3b8' }}>Temp (°C)</label>
-                  <input className="rnd-input" type="number" step="0.1" style={{ width: '100%' }} value={form.temp_c} onChange={e => setForm({...form, temp_c: e.target.value})} />
+                  <label className="bos-form-label">Temp (°C)</label>
+                  <input className="bos-form-field" type="number" step="0.1" style={{ width: '100%' }} value={form.temp_c} onChange={e => setForm({...form, temp_c: e.target.value})} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 10, color: '#94a3b8' }}>Mixer (RPM)</label>
-                  <input className="rnd-input" type="number" style={{ width: '100%' }} value={form.rpm} onChange={e => setForm({...form, rpm: e.target.value})} />
+                  <label className="bos-form-label">Mixer (RPM)</label>
+                  <input className="bos-form-field" type="number" style={{ width: '100%' }} value={form.rpm} onChange={e => setForm({...form, rpm: e.target.value})} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 10, color: '#94a3b8' }}>Pressure (Bar)</label>
-                  <input className="rnd-input" type="number" step="0.1" style={{ width: '100%' }} value={form.pressure_bar} onChange={e => setForm({...form, pressure_bar: e.target.value})} />
+                  <label className="bos-form-label">Pressure (Bar)</label>
+                  <input className="bos-form-field" type="number" step="0.1" style={{ width: '100%' }} value={form.pressure_bar} onChange={e => setForm({...form, pressure_bar: e.target.value})} />
                 </div>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 10, color: '#94a3b8', marginBottom: 4 }}>Machine / Equipment Mapping</label>
-                <select className="rnd-input" style={{ width: '100%' }} value={form.machine} onChange={e => setForm({...form, machine: e.target.value})}>
+                <label className="bos-form-label">Machine / Equipment Mapping</label>
+                <select className="bos-form-field" style={{ width: '100%' }} value={form.machine} onChange={e => setForm({...form, machine: e.target.value})}>
                   <option value="">-- No Machine / Manual Step --</option>
                   {equipment.map(eq => (
                     <option key={eq.id} value={`${eq.name} (${eq.asset_code})`}>
@@ -225,12 +229,12 @@ export function ProcessBuilder() {
                 </select>
               </div>
 
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#f8fafc', marginTop: 8 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--bos-text2)', marginTop: 8, cursor: 'pointer' }}>
                 <input type="checkbox" checked={form.ccp} onChange={e => setForm({...form, ccp: e.target.checked})} />
                 Mark as Critical Control Point (CCP)
               </label>
 
-              <button className="rnd-btn rnd-btn-primary" style={{ marginTop: 8 }} onClick={handleSave} disabled={saving}>{saving ? 'Adding...' : '+ Add Step'}</button>
+              <button className="bos-btn bos-btn-primary" style={{ marginTop: 8 }} onClick={handleSave} disabled={saving}>{saving ? 'Adding...' : '+ Add Step'}</button>
             </div>
           </div>
         </div>

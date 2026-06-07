@@ -154,85 +154,87 @@ export function IngredientIntel() {
     }
   };
 
-  if (loading) return <div style={{ padding: 40, color: '#94a3b8' }}>Loading Database...</div>;
+  if (loading) return <div className="bos-page"><div className="bos-loading"><div className="bos-spinner"/>Loading Database...</div></div>;
 
   return (
-    <div style={{ padding: '32px' }}>
-      <div className="rnd-header" style={{ padding: '0 0 24px 0', borderBottom: 'none', background: 'transparent', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
-        <div>
-          <h1 className="rnd-title">Ingredient Intelligence</h1>
-          <p className="rnd-subtitle">Technical specifications, cost tracking, and functionality database.</p>
-        </div>
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          <input className="rnd-input" placeholder="Search ingredients" value={search} onChange={(e) => setSearch(e.target.value)} style={{ minWidth: 240 }} />
-          <select className="rnd-input" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
-            <option value="ALL">All categories</option>
-            {CATEGORIES.map((category) => <option key={category}>{category}</option>)}
-          </select>
-          <button className="rnd-btn rnd-btn-primary" onClick={openCreate}>+ Add Ingredient</button>
+    <div className="bos-page">
+      <div className="bos-page-header">
+        <div className="bos-flex-between">
+          <div>
+            <h1 className="bos-page-title">Ingredient Intelligence</h1>
+            <p className="bos-page-sub">Technical specifications, cost tracking, and functionality database.</p>
+          </div>
+          <div className="bos-flex" style={{ gap: 12, flexWrap: 'wrap' }}>
+            <input className="bos-form-field" placeholder="Search ingredients" value={search} onChange={(e) => setSearch(e.target.value)} style={{ minWidth: 200, width: 'auto' }} />
+            <select className="bos-form-field" style={{ width: 'auto' }} value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+              <option value="ALL">All categories</option>
+              {CATEGORIES.map((category) => <option key={category}>{category}</option>)}
+            </select>
+            <button className="bos-btn bos-btn-primary" onClick={openCreate}>+ Add Ingredient</button>
+          </div>
         </div>
       </div>
 
       {error && (
-        <div className="rnd-card" style={{ marginBottom: 20, borderLeft: '3px solid #f97316', color: '#fed7aa' }}>
+        <div className="bos-alert bos-alert-danger" style={{ marginBottom: 20 }}>
           Unable to load ingredients: {error}
         </div>
       )}
 
       {isFormOpen && (
-        <div className="rnd-card" style={{ marginBottom: 24, borderLeft: '3px solid #0ea5e9' }}>
-          <div className="rnd-card-header">{editingIngredient ? 'Update Raw Material Specification' : 'New Raw Material Specification'}</div>
+        <div className="bos-card" style={{ marginBottom: 24, borderLeft: '3.5px solid var(--bos-blue)' }}>
+          <div className="bos-card-title">{editingIngredient ? 'Update Raw Material Specification' : 'New Raw Material Specification'}</div>
           {/* Parameter Selection Checklist */}
-          <div style={{ marginBottom: 16, background: '#1e293b', padding: '12px 16px', borderRadius: 8, border: '1px solid #334155' }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.05em' }}>Select Relevant Specs for this Material:</div>
+          <div style={{ marginBottom: 16, background: 'var(--bos-bg3)', padding: '12px 16px', borderRadius: 8, border: '1px solid var(--bos-border2)' }}>
+            <div className="bos-form-label" style={{ marginBottom: 8 }}>Select Relevant Specs for this Material:</div>
             <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#f8fafc' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: 'var(--bos-text2)' }}>
                 <input type="checkbox" checked={activeParams.ph} onChange={e => setActiveParams({ ...activeParams, ph: e.target.checked })} />
                 pH Range
               </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#f8fafc' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: 'var(--bos-text2)' }}>
                 <input type="checkbox" checked={activeParams.usage} onChange={e => setActiveParams({ ...activeParams, usage: e.target.checked })} />
                 Usage % Limits
               </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#f8fafc' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: 'var(--bos-text2)' }}>
                 <input type="checkbox" checked={activeParams.heat} onChange={e => setActiveParams({ ...activeParams, heat: e.target.checked })} />
                 Heat Stability
               </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#f8fafc' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: 'var(--bos-text2)' }}>
                 <input type="checkbox" checked={activeParams.notes} onChange={e => setActiveParams({ ...activeParams, notes: e.target.checked })} />
                 Notes / Synergies
               </label>
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+          <div className="bos-form-grid" style={{ gap: 16 }}>
             <div>
-              <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Material Name *</label>
-              <input className="rnd-input" style={{ width: '100%' }} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <label className="bos-form-label">Material Name *</label>
+              <input className="bos-form-field" style={{ width: '100%' }} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Category</label>
-              <select className="rnd-input" style={{ width: '100%' }} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+              <label className="bos-form-label">Category</label>
+              <select className="bos-form-field" style={{ width: '100%' }} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
                 {CATEGORIES.map((category) => <option key={category}>{category}</option>)}
               </select>
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Cost / kg (₹)</label>
-              <input className="rnd-input" type="number" step="0.01" style={{ width: '100%' }} value={form.cost_per_kg} onChange={(e) => setForm({ ...form, cost_per_kg: e.target.value })} />
+              <label className="bos-form-label">Cost / kg (₹)</label>
+              <input className="bos-form-field" type="number" step="0.01" style={{ width: '100%' }} value={form.cost_per_kg} onChange={(e) => setForm({ ...form, cost_per_kg: e.target.value })} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Functionality</label>
-              <input className="rnd-input" style={{ width: '100%' }} placeholder="e.g. Thickener, Emulsifier" value={form.functionality} onChange={(e) => setForm({ ...form, functionality: e.target.value })} />
+              <label className="bos-form-label">Functionality</label>
+              <input className="bos-form-field" style={{ width: '100%' }} placeholder="e.g. Thickener, Emulsifier" value={form.functionality} onChange={(e) => setForm({ ...form, functionality: e.target.value })} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Supplier / Mfr</label>
-              <input className="rnd-input" style={{ width: '100%' }} value={form.supplier} onChange={(e) => setForm({ ...form, supplier: e.target.value })} />
+              <label className="bos-form-label">Supplier / Mfr</label>
+              <input className="bos-form-field" style={{ width: '100%' }} value={form.supplier} onChange={(e) => setForm({ ...form, supplier: e.target.value })} />
             </div>
 
             {activeParams.heat && (
               <div>
-                <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Heat Stability</label>
-                <select className="rnd-input" style={{ width: '100%' }} value={form.heat_stability} onChange={(e) => setForm({ ...form, heat_stability: e.target.value })}>
+                <label className="bos-form-label">Heat Stability</label>
+                <select className="bos-form-field" style={{ width: '100%' }} value={form.heat_stability} onChange={(e) => setForm({ ...form, heat_stability: e.target.value })}>
                   <option value="">-- Select --</option>
                   {HEAT_STABILITY.map((value) => <option key={value}>{value}</option>)}
                 </select>
@@ -241,80 +243,82 @@ export function IngredientIntel() {
 
             {activeParams.ph && (
               <div>
-                <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>pH Range (Min - Max)</label>
+                <label className="bos-form-label">pH Range (Min - Max)</label>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <input className="rnd-input" type="number" step="0.1" placeholder="Min" style={{ width: '50%' }} value={form.ph_min} onChange={(e) => setForm({ ...form, ph_min: e.target.value })} />
-                  <input className="rnd-input" type="number" step="0.1" placeholder="Max" style={{ width: '50%' }} value={form.ph_max} onChange={(e) => setForm({ ...form, ph_max: e.target.value })} />
+                  <input className="bos-form-field" type="number" step="0.1" placeholder="Min" style={{ width: '50%' }} value={form.ph_min} onChange={(e) => setForm({ ...form, ph_min: e.target.value })} />
+                  <input className="bos-form-field" type="number" step="0.1" placeholder="Max" style={{ width: '50%' }} value={form.ph_max} onChange={(e) => setForm({ ...form, ph_max: e.target.value })} />
                 </div>
               </div>
             )}
 
             {activeParams.usage && (
               <div>
-                <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Usage % (Min - Max)</label>
+                <label className="bos-form-label">Usage % (Min - Max)</label>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <input className="rnd-input" type="number" step="0.01" placeholder="Min" style={{ width: '50%' }} value={form.usage_min_pct} onChange={(e) => setForm({ ...form, usage_min_pct: e.target.value })} />
-                  <input className="rnd-input" type="number" step="0.01" placeholder="Max" style={{ width: '50%' }} value={form.usage_max_pct} onChange={(e) => setForm({ ...form, usage_max_pct: e.target.value })} />
+                  <input className="bos-form-field" type="number" step="0.01" placeholder="Min" style={{ width: '50%' }} value={form.usage_min_pct} onChange={(e) => setForm({ ...form, usage_min_pct: e.target.value })} />
+                  <input className="bos-form-field" type="number" step="0.01" placeholder="Max" style={{ width: '50%' }} value={form.usage_max_pct} onChange={(e) => setForm({ ...form, usage_max_pct: e.target.value })} />
                 </div>
               </div>
             )}
 
             {activeParams.notes && (
-              <div style={{ gridColumn: 'span 3' }}>
-                <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Notes / Synergies</label>
-                <input className="rnd-input" style={{ width: '100%' }} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+              <div className="bos-form-span2">
+                <label className="bos-form-label">Notes / Synergies</label>
+                <input className="bos-form-field" style={{ width: '100%' }} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
               </div>
             )}
           </div>
           <div style={{ marginTop: 20, display: 'flex', gap: 12 }}>
-            <button className="rnd-btn rnd-btn-primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : editingIngredient ? '💾 Update Material' : '💾 Save Material'}</button>
-            <button className="rnd-btn" onClick={() => setIsFormOpen(false)}>Cancel</button>
+            <button className="bos-btn bos-btn-primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : editingIngredient ? '💾 Update Material' : '💾 Save Material'}</button>
+            <button className="bos-btn bos-btn-ghost" onClick={() => setIsFormOpen(false)}>Cancel</button>
           </div>
         </div>
       )}
 
-      <div className="rnd-card" style={{ padding: 0 }}>
+      <div className="bos-card" style={{ padding: 0 }}>
         {filteredIngredients.length === 0 ? (
-          <div style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>No ingredients match the current filters.</div>
+          <div className="bos-empty">No ingredients match the current filters.</div>
         ) : (
-          <table className="rnd-table">
-            <thead>
-              <tr>
-                <th>Material</th>
-                <th>Category</th>
-                <th>Supplier</th>
-                <th>Cost/kg</th>
-                <th>pH Range</th>
-                <th>Usage Range</th>
-                <th>Heat Stb.</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredIngredients.map((ingredient) => (
-                <tr key={ingredient.id}>
-                  <td style={{ fontWeight: 600, color: '#f8fafc' }}>
-                    {ingredient.name}
-                    {ingredient.functionality && <div style={{ fontSize: 11, color: '#64748b', fontWeight: 400, marginTop: 2 }}>{ingredient.functionality}</div>}
-                  </td>
-                  <td>{ingredient.category}</td>
-                  <td>{ingredient.supplier || '—'}</td>
-                  <td style={{ color: '#fbbf24', fontWeight: 500 }}>{fmtCost(ingredient.cost_per_kg)}</td>
-                  <td>{(ingredient.ph_min || ingredient.ph_max) ? `${ingredient.ph_min || '?'} - ${ingredient.ph_max || '?'}` : '—'}</td>
-                  <td>{(ingredient.usage_min_pct || ingredient.usage_max_pct) ? `${ingredient.usage_min_pct || 0}% - ${ingredient.usage_max_pct || '?'}%` : '—'}</td>
-                  <td>
-                    <span className={`rnd-badge ${ingredient.heat_stability === 'High' ? 'rnd-badge-success' : ingredient.heat_stability === 'Low' ? 'rnd-badge-failed' : 'rnd-badge-draft'}`}>{ingredient.heat_stability || 'Unknown'}</span>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <button className="rnd-btn" style={{ padding: '4px 8px', fontSize: 11 }} onClick={() => openEdit(ingredient)}>Edit</button>
-                      <button className="rnd-btn" style={{ padding: '4px 8px', fontSize: 11 }} onClick={() => handleDelete(ingredient.id)}>Del</button>
-                    </div>
-                  </td>
+          <div className="bos-tbl-wrap">
+            <table className="bos-tbl">
+              <thead>
+                <tr>
+                  <th>Material</th>
+                  <th>Category</th>
+                  <th>Supplier</th>
+                  <th>Cost/kg</th>
+                  <th>pH Range</th>
+                  <th>Usage Range</th>
+                  <th>Heat Stb.</th>
+                  <th>Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filteredIngredients.map((ingredient) => (
+                  <tr key={ingredient.id}>
+                    <td className="bos-tbl-primary">
+                      {ingredient.name}
+                      {ingredient.functionality && <div className="bos-text-muted" style={{ fontSize: 11, fontWeight: 400, marginTop: 2 }}>{ingredient.functionality}</div>}
+                    </td>
+                    <td>{ingredient.category}</td>
+                    <td>{ingredient.supplier || '—'}</td>
+                    <td className="bos-text-gold" style={{ fontWeight: 500 }}>{fmtCost(ingredient.cost_per_kg)}</td>
+                    <td>{(ingredient.ph_min || ingredient.ph_max) ? `${ingredient.ph_min || '?'} - ${ingredient.ph_max || '?'}` : '—'}</td>
+                    <td>{(ingredient.usage_min_pct || ingredient.usage_max_pct) ? `${ingredient.usage_min_pct || 0}% - ${ingredient.usage_max_pct || '?'}%` : '—'}</td>
+                    <td>
+                      <span className={`bos-badge bos-badge-${ingredient.heat_stability === 'High' ? 'green' : ingredient.heat_stability === 'Low' ? 'red' : 'gray'}`}>{ingredient.heat_stability || 'Unknown'}</span>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button className="bos-btn bos-btn-ghost bos-btn-sm" onClick={() => openEdit(ingredient)}>Edit</button>
+                        <button className="bos-btn bos-btn-danger bos-btn-sm" onClick={() => handleDelete(ingredient.id)}>Del</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
