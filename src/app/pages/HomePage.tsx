@@ -60,15 +60,28 @@ export function HomePage() {
         .hp-hero-title em { font-style:normal; color:var(--gold); text-shadow:0 0 48px rgba(255,193,7,0.4); }
         .hp-bottom-glow { position:absolute; bottom:0; left:0; right:0; height:220px; background:linear-gradient(to top,rgba(255,193,7,0.06),transparent); pointer-events:none; z-index:1; }
         .hp-ticker-bar { overflow:hidden; background:#080808; border-top:1px solid rgba(255,193,7,0.1); border-bottom:1px solid rgba(255,193,7,0.1); }
+        /* Scroll indicator */
+        .hp-scroll-hint { position:absolute; bottom:108px; left:50%; transform:translateX(-50%); z-index:3; display:flex; flex-direction:column; align-items:center; gap:6px; opacity:0.5; animation:scrollBounce 1.8s ease-in-out infinite; pointer-events:none; }
+        .hp-scroll-hint span { font-family:'DM Sans',sans-serif; font-size:9px; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; color:rgba(255,255,255,0.5); }
+        @keyframes scrollBounce { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(6px)} }
+        /* Product cards — fixed aspect ratio */
+        .prod-card__img { width:100%; aspect-ratio:4/3; object-fit:cover; display:block; transition:transform 0.5s ease; }
+        .prod-card:hover .prod-card__img { transform:scale(1.04); }
         .hp-prod-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+        /* About teaser cards — pure CSS hover (no React re-render) */
+        .hp-teaser-card { display:flex; align-items:center; gap:24px; padding:20px 24px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); transition:border-color 0.25s, box-shadow 0.25s; }
+        .hp-teaser-card:hover { border-color:var(--border-gold); box-shadow:0 0 20px rgba(255,193,7,0.07); }
         .hp-teaser-grid { display:grid; grid-template-columns:1fr 1fr; gap:72px; align-items:center; }
         .hp-test-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+        /* Testimonial cards — pure CSS hover */
+        .hp-test-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-xl); padding:32px; transition:border-color 0.25s, box-shadow 0.25s; }
+        .hp-test-card:hover { border-color:var(--border-gold); box-shadow:0 0 20px rgba(255,193,7,0.07); }
         @media (max-width:960px) {
           .hp-prod-grid { grid-template-columns:repeat(2,1fr); gap:16px; }
           .hp-teaser-grid { grid-template-columns:1fr; gap:36px; }
           .hp-test-grid { grid-template-columns:repeat(2,1fr); gap:16px; }
         }
-        @media (max-width:768px) { .hp-hero{height:100dvh;min-height:560px;} .hp-content{padding:0 var(--pad) 60px;} .hp-wm{display:none;} .hp-hero-title{font-size:clamp(40px,11vw,72px);} }
+        @media (max-width:768px) { .hp-hero{height:100dvh;min-height:560px;} .hp-content{padding:0 var(--pad) 60px;} .hp-wm{display:none;} .hp-hero-title{font-size:clamp(40px,11vw,72px);} .hp-scroll-hint{display:none;} }
         @media (max-width:600px) {
           .hp-prod-grid { grid-template-columns:1fr; gap:16px; }
           .hp-test-grid { grid-template-columns:1fr; gap:16px; }
@@ -131,51 +144,6 @@ export function HomePage() {
             padding-bottom: 44px !important;
           }
         }
-        
-        .hp-b2b-card {
-          display: flex;
-          align-items: center;
-          gap: 24px;
-          padding: 20px 24px;
-          background: var(--bg-card);
-          border: 1px solid var(--border);
-          border-radius: var(--radius-md);
-          transition: border-color 0.25s, box-shadow 0.25s;
-        }
-        .hp-b2b-card:hover {
-          border-color: var(--border-gold) !important;
-          box-shadow: 0 0 20px rgba(255,193,7,0.07) !important;
-        }
-        .prod-card__img {
-          aspect-ratio: 4/3 !important;
-          object-fit: cover !important;
-        }
-
-        .hp-scroll-indicator {
-          position: absolute;
-          bottom: 20px;
-          left: 50%;
-          transform: translateX(-50%);
-          z-index: 10;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          pointer-events: none;
-        }
-        .hp-scroll-indicator span {
-          display: block;
-          width: 10px;
-          height: 10px;
-          border-bottom: 2.5px solid rgba(255,255,255,0.4);
-          border-right: 2.5px solid rgba(255,255,255,0.4);
-          transform: rotate(45deg);
-          animation: scrollArrow 1.8s infinite;
-        }
-        @keyframes scrollArrow {
-          0% { opacity: 0; transform: rotate(45deg) translateY(-8px); }
-          50% { opacity: 1; }
-          100% { opacity: 0; transform: rotate(45deg) translateY(8px); }
-        }
       `}</style>
 
       {/* ═══ HERO & TICKER (FOLD 1) ═══════════════════════════════════════ */}
@@ -202,6 +170,13 @@ export function HomePage() {
             <img src="/images/logo.png" alt="" aria-hidden style={{ width:'100%',height:'100%',objectFit:'contain',filter:'drop-shadow(0px 0px 4px rgba(0,0,0,0.5))' }} />
           </div>
           <div className="hp-bottom-glow" />
+          {/* Scroll indicator */}
+          <div className="hp-scroll-hint" aria-hidden="true">
+            <span>Scroll</span>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 3v10M8 13l-4-4M8 13l4-4" stroke="rgba(255,193,7,0.6)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
           <div className="hp-content">
             <motion.div initial="hidden" animate="show" variants={FC}>
               <motion.p variants={FI} transition={{ duration: 0.6 }} className="t-label" style={{ marginBottom: 18 }}>
@@ -232,9 +207,6 @@ export function HomePage() {
                 </button>
               </motion.div>
             </motion.div>
-          </div>
-          <div className="hp-scroll-indicator">
-            <span />
           </div>
         </section>
 
@@ -313,7 +285,7 @@ export function HomePage() {
                   { n:'100%',  l:'Plant-Based',   s:'No dairy. No compromise.' },
                   { n:'24h',   l:'Response Time', s:'Direct team access' },
                 ].map(s => (
-                  <div key={s.l} className="hp-b2b-card">
+                  <div key={s.l} className="hp-teaser-card">
                     <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:44, color:'var(--gold)', lineHeight:1, minWidth:72, letterSpacing:'0.02em' }}>{s.n}</span>
                     <div>
                       <span style={{ display:'block', fontFamily:"'DM Sans',sans-serif", fontSize:13, fontWeight:700, color:'#fff', letterSpacing:'0.04em' }}>{s.l}</span>
@@ -341,9 +313,7 @@ export function HomePage() {
               initial="hidden" whileInView="show" viewport={{ once:true, amount:0.2 }} variants={FC}>
               {testimonials.slice(0,3).map(t => (
                 <motion.div key={t.id} variants={FI} transition={{ duration:0.5 }}
-                  style={{ background:'var(--bg-card)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:32, transition:'border-color 0.25s, box-shadow 0.25s' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor='var(--border-gold)'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor='var(--border)'; }}>
+                  className="hp-test-card">
                   <div style={{ color:'var(--gold)', fontSize:28, lineHeight:1, marginBottom:16 }}>"</div>
                   <p style={{ fontFamily:"'Cormorant Garamond',Georgia,serif", fontSize:'clamp(1rem,1.4vw,1.2rem)', fontStyle:'italic', lineHeight:1.75, color:'rgba(255,255,255,0.6)', marginBottom:24 }}>
                     {t.quote}

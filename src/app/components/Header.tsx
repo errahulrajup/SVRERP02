@@ -50,30 +50,36 @@ export function Header() {
         .hdr-inner { max-width: var(--max-w); margin: 0 auto; height: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0 var(--pad); }
         .hdr-logo { display: flex; align-items: center; gap: 10px; background: none; border: none; cursor: pointer; padding: 0; }
         .hdr-logo:hover .hdr-brand { color: var(--gold); }
-        .hdr-brand { font-family: 'Bebas Neue',sans-serif; font-size: 20px; font-weight: 700; color: #FFFFFF; transition: color 0.2s; letter-spacing: 0.04em; }
+        .hdr-brand { font-family: 'DM Sans',system-ui,sans-serif; font-size: 18px; font-weight: 700; color: #FFFFFF; transition: color 0.2s; letter-spacing: -0.01em; }
         .hdr-sub   { font-family: 'DM Sans',sans-serif; font-size: 8px; font-weight: 700; letter-spacing: 0.3em; color: rgba(255,193,7,0.6); text-transform: uppercase; margin-top: 2px; }
         .hdr-nav   { display: flex; align-items: center; gap: 2px; }
         .hdr-link  { background: none; border: none; cursor: pointer; padding: 7px 14px; font-family: 'DM Sans',sans-serif; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.55); border-radius: 8px; transition: color 0.2s, background 0.2s; border-bottom: 2px solid transparent; white-space: nowrap; }
         .hdr-link:hover { color: #fff; background: rgba(255,255,255,0.04); }
         .hdr-link.on { color: var(--gold); font-weight: 600; border-bottom-color: var(--gold); }
         .hdr-cta { margin-left: 14px; }
-        .hdr-burger { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 6px; }
+        .hdr-burger { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 8px; min-width: 44px; min-height: 44px; align-items: center; justify-content: center; }
+        /* Mobile menu — smooth slide-down + fade */
         .hdr-mob {
-          display: none; position: absolute; top: var(--hdr-h); left: 0; right: 0;
-          background: rgba(11,11,11,0.98); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-          border-bottom: 1px solid rgba(255,193,7,0.1); padding: 16px 20px 28px; flex-direction: column; gap: 2px;
-          transform: translateY(-20px); opacity: 0; pointer-events: none;
-          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+          display: flex;
+          position: absolute; top: var(--hdr-h); left: 0; right: 0;
+          background: rgba(11,11,11,0.98); backdrop-filter: blur(20px);
+          border-bottom: 1px solid rgba(255,193,7,0.1);
+          padding: 16px 20px 28px; flex-direction: column; gap: 2px;
+          /* Animation state — closed by default */
+          transform: translateY(-12px);
+          opacity: 0;
+          pointer-events: none;
+          transition: transform 0.28s cubic-bezier(0.4,0,0.2,1), opacity 0.22s ease;
         }
-        .hdr-mob.open { transform: translateY(0); opacity: 1; pointer-events: auto; }
-        .mob-link { background: none; border: none; cursor: pointer; padding: 13px 0; font-family: 'DM Sans',sans-serif; font-size: 15px; font-weight: 500; color: rgba(255,255,255,0.6); text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); transition: color 0.2s; width: 100%; }
+        .hdr-mob.open {
+          transform: translateY(0);
+          opacity: 1;
+          pointer-events: auto;
+        }
+        .mob-link { background: none; border: none; cursor: pointer; padding: 13px 0; font-family: 'DM Sans',sans-serif; font-size: 15px; font-weight: 500; color: rgba(255,255,255,0.6); text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); transition: color 0.2s; width: 100%; min-height: 44px; display: flex; align-items: center; }
         .mob-link:hover { color: #fff; }
         .mob-link.on { color: var(--gold); }
-        @media (max-width: 768px) {
-          .hdr-nav { display: none; }
-          .hdr-burger { display: flex !important; }
-          .hdr-mob { display: flex; }
-        }
+        @media (max-width: 768px) { .hdr-nav { display: none; } .hdr-burger { display: flex !important; } }
       `}</style>
 
       <nav className="hdr">

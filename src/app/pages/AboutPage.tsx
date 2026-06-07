@@ -7,59 +7,6 @@ import { SEO } from '../components/SEO';
 const FI = { hidden: { opacity: 0, y: 24 }, show: { opacity: 1, y: 0 } };
 const FC = { hidden: {}, show: { transition: { staggerChildren: 0.12 } } };
 
-const SVGS = {
-  scale: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom:14 }}>
-      <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-    </svg>
-  ),
-  kitchen: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom:14 }}>
-      <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-    </svg>
-  ),
-  plant: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom:14 }}>
-      <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 3.5 1 8a7 7 0 0 1-9 10Z" />
-      <path d="M9 22v-4" />
-    </svg>
-  ),
-  india: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom:14 }}>
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-      <path d="M2 12h20" />
-    </svg>
-  ),
-  trophy: (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-      <path d="M4 22h16" />
-      <path d="M10 14.66V17c0 .55-.45 1-1 1H4v2h16v-2h-5c-.55 0-1-.45-1-1v-2.34" />
-      <path d="M12 2a6 6 0 0 0-6 6v3.5a6 6 0 0 0 12 0V8a6 6 0 0 0-6-6Z" />
-    </svg>
-  ),
-  pot: (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 2v3M5 5h14M4 11h16M4 11c0 5 4 9 8 9s8-4 8-9M9 22h6" />
-    </svg>
-  ),
-  chart: (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 3v18h18" />
-      <path d="m19 9-5 5-4-4-3 3" />
-    </svg>
-  ),
-  leaf: (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 3.5 1 8a7 7 0 0 1-9 10Z" />
-      <path d="M9 22v-4" />
-    </svg>
-  )
-};
-
 export function AboutPage() {
   const navigate = useNavigate();
   const { content, loading } = useAboutContent();
@@ -68,19 +15,39 @@ export function AboutPage() {
   const go = (p: string) => { navigate(p); window.scrollTo(0, 0); };
   const aboutImg = settings.img_about_hero ?? '/images/about.webp';
 
+  // Premium SVG icons — replace emojis for professional brand feel
+  const VALUE_ICONS = [
+    // Trophy → Award star
+    <svg key="award" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 15a7 7 0 1 0 0-14 7 7 0 0 0 0 14Z"/><path d="m8.21 13.89-1.96 5.92L12 17l5.75 2.81-1.96-5.93"/></svg>,
+    // India flag → Lotus / leaf
+    <svg key="leaf" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22V12"/><path d="M5 12a7 7 0 0 1 7-7 7 7 0 0 1 7 7"/><path d="M5 12c0 4 2.5 6.5 7 7"/><path d="M19 12c0 4-2.5 6.5-7 7"/></svg>,
+    // Chart up → Trend arrow
+    <svg key="trend" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
+  ];
+
+  const PILLAR_ICONS = [
+    // Scale / expand
+    <svg key="scale" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>,
+    // B2B / handshake
+    <svg key="b2b" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 7.65l1.06 1.06L12 21.23l7.36-7.94 1.06-1.06a5.4 5.4 0 0 0 0-7.65z"/></svg>,
+    // Plant leaf
+    <svg key="plant" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22V12"/><path d="M5 12a7 7 0 0 1 7-7 7 7 0 0 1 7 7"/><path d="M5 12c0 4 2.5 6.5 7 7"/><path d="M19 12c0 4-2.5 6.5-7 7"/></svg>,
+    // India / location pin
+    <svg key="india" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a8 8 0 0 0-8 8c0 5.5 8 13 8 13s8-7.5 8-13a8 8 0 0 0-8-8Z"/><circle cx="12" cy="10" r="2.5"/></svg>,
+  ];
   // Pillars — CMS-driven via about_content keys pillar_1..4, fallback to defaults
   const PILLARS = [
-    { icon: SVGS.scale, h: content.pillar_1?.title ?? 'Built for Scale',    p: content.pillar_1?.body ?? 'Distribution is the strategy, not the afterthought.' },
-    { icon: SVGS.kitchen, h: content.pillar_2?.title ?? 'B2B & HoReCa Ready', p: content.pillar_2?.body ?? 'Bulk supply, trade terms, kitchen-grade formats.' },
-    { icon: SVGS.plant, h: content.pillar_3?.title ?? '100% Plant-Based',   p: content.pillar_3?.body ?? 'No dairy. No compromise on taste or texture.' },
-    { icon: SVGS.india, h: content.pillar_4?.title ?? 'India-Focused',      p: content.pillar_4?.body ?? 'Familiar formats, better execution, local roots.' },
+    { icon: PILLAR_ICONS[0], h: content.pillar_1?.title ?? 'Built for Scale',    p: content.pillar_1?.body ?? 'Distribution is the strategy, not the afterthought.' },
+    { icon: PILLAR_ICONS[1], h: content.pillar_2?.title ?? 'B2B & HoReCa Ready', p: content.pillar_2?.body ?? 'Bulk supply, trade terms, kitchen-grade formats.' },
+    { icon: PILLAR_ICONS[2], h: content.pillar_3?.title ?? '100% Plant-Based',   p: content.pillar_3?.body ?? 'No dairy. No compromise on taste or texture.' },
+    { icon: PILLAR_ICONS[3], h: content.pillar_4?.title ?? 'India-Focused',      p: content.pillar_4?.body ?? 'Familiar formats, better execution, local roots.' },
   ];
 
   // Values — CMS-driven via about_content keys value_1..3, fallback to defaults
   const VALUES = [
-    { icon: content.value_1?.image_url ? <img src={content.value_1.image_url} alt="" style={{ width:28, height:28 }} /> : SVGS.trophy, h: content.value_1?.title ?? 'Taste Wins First',           p: content.value_1?.body ?? 'If it doesn\'t taste better, it doesn\'t matter. Taste is the only entry point to repeat demand.' },
-    { icon: content.value_2?.image_url ? <img src={content.value_2.image_url} alt="" style={{ width:28, height:28 }} /> : SVGS.pot, h: content.value_2?.title ?? 'Built for Indian Kitchens', p: content.value_2?.body ?? 'Familiar formats. Better execution. Designed around the way India actually cooks and eats.' },
-    { icon: content.value_3?.image_url ? <img src={content.value_3.image_url} alt="" style={{ width:28, height:28 }} /> : SVGS.chart, h: content.value_3?.title ?? 'Scale Matters',              p: content.value_3?.body ?? 'Distribution is the strategy. A great product without reach is a missed opportunity.' },
+    { icon: VALUE_ICONS[0], h: content.value_1?.title ?? 'Taste Wins First',           p: content.value_1?.body ?? 'If it doesn\'t taste better, it doesn\'t matter. Taste is the only entry point to repeat demand.' },
+    { icon: VALUE_ICONS[1], h: content.value_2?.title ?? 'Built for Indian Kitchens', p: content.value_2?.body ?? 'Familiar formats. Better execution. Designed around the way India actually cooks and eats.' },
+    { icon: VALUE_ICONS[2], h: content.value_3?.title ?? 'Scale Matters',              p: content.value_3?.body ?? 'Distribution is the strategy. A great product without reach is a missed opportunity.' },
   ];
 
   return (
@@ -88,17 +55,20 @@ export function AboutPage() {
       <SEO title={seo?.title ?? 'About — Srivriddhi Enterprise'} description={seo?.description ?? undefined} />
       <style>{`
         .ab-hero { position:relative; width:100%; height:100vh; min-height:580px; overflow:hidden; display:flex; align-items:flex-end; }
-        .ab-bg { position:absolute; inset:0; background-color: var(--bg-main); background-image:url('${aboutImg}'); background-size:cover; background-position:center 20%; }
+        .ab-bg { position:absolute; inset:0; background-image:url('${aboutImg}'), linear-gradient(135deg,#0A0A0A 0%,#1A1000 100%); background-size:cover; background-position:center 20%; }
         .ab-grad { position:absolute; inset:0; background:linear-gradient(to top, rgba(5,5,5,0.97) 0%, rgba(5,5,5,0.60) 38%, rgba(5,5,5,0.20) 65%, rgba(5,5,5,0.05) 100%); }
         .ab-content { position:relative; z-index:2; width:100%; max-width:var(--max-w); margin:0 auto; padding:0 var(--pad) 88px; }
         .ab-pillars { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:36px; }
-        .ab-pillar-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px 20px; transition:border-color 0.25s, box-shadow 0.25s; }
-        .ab-pillar-card:hover { border-color:var(--border-gold) !important; box-shadow:0 0 20px rgba(255,193,7,0.07) !important; }
         .ab-values { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; margin-top:36px; }
-        .ab-value-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-xl); padding:32px 24px; text-align:center; transition:border-color 0.28s, transform 0.28s, box-shadow 0.28s; position:relative; overflow:hidden; }
-        .ab-value-card:hover { transform:translateY(-6px); border-color:var(--border-gold) !important; box-shadow:var(--shadow-glow) !important; }
         .ab-timeline { display:flex; flex-direction:column; gap:0; margin-top:36px; }
         .ab-tl-row { display:grid; grid-template-columns:120px 1fr; gap:28px; padding:24px 0; border-bottom:1px solid var(--border); }
+        /* Pure CSS hover — no React re-renders */
+        .ab-pillar-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px 20px; transition:border-color 0.25s, box-shadow 0.25s; }
+        .ab-pillar-card:hover { border-color:var(--border-gold); box-shadow:0 0 20px rgba(255,193,7,0.07); }
+        .ab-value-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-xl); padding:32px 24px; text-align:center; transition:border-color 0.28s, transform 0.28s, box-shadow 0.28s; position:relative; overflow:hidden; }
+        .ab-value-card:hover { transform:translateY(-6px); border-color:var(--border-gold); box-shadow:var(--shadow-glow); }
+        .ab-value-icon { width:64px; height:64px; border-radius:50%; background:var(--gold-soft); border:1.5px solid var(--border-gold); display:flex; align-items:center; justify-content:center; margin:0 auto 18px; transition:box-shadow 0.3s; }
+        .ab-value-card:hover .ab-value-icon { box-shadow:0 0 20px rgba(255,193,7,0.18); }
         @media (max-width:768px) { .ab-hero{height:100dvh;min-height:520px;} .ab-content{padding:0 var(--pad) 60px;} .ab-pillars{grid-template-columns:1fr 1fr;} .ab-values{grid-template-columns:1fr;} .ab-tl-row{grid-template-columns:80px 1fr; gap:16px;} }
         @media (max-width:480px) { .ab-pillars{grid-template-columns:1fr;} }
       `}</style>
@@ -139,8 +109,11 @@ export function AboutPage() {
             <div style={{ width:40,height:2,background:'linear-gradient(90deg,var(--gold),transparent)',margin:'12px 0' }} />
             <motion.div className="ab-pillars" initial="hidden" whileInView="show" viewport={{ once:true }} variants={FC}>
               {PILLARS.map(p => (
-                <motion.div key={p.h} variants={FI} transition={{ duration:0.45 }} className="ab-pillar-card">
-                  {p.icon}
+                <motion.div key={p.h} variants={FI} transition={{ duration:0.45 }}
+                  className="ab-pillar-card">
+                  <div style={{ width:36,height:36,borderRadius:'var(--radius-md)',background:'var(--gold-soft)',border:'1px solid var(--border-gold)',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:14 }}>
+                    {p.icon}
+                  </div>
                   <h3 className="t-h3" style={{ marginBottom:8 }}>{p.h}</h3>
                   <p className="t-sm">{p.p}</p>
                 </motion.div>
@@ -157,8 +130,9 @@ export function AboutPage() {
             <div style={{ width:40,height:2,background:'linear-gradient(90deg,var(--gold),transparent)',margin:'12px 0' }} />
             <motion.div className="ab-values" initial="hidden" whileInView="show" viewport={{ once:true }} variants={FC}>
               {VALUES.map(v => (
-                <motion.div key={v.h} variants={FI} transition={{ duration:0.45 }} className="ab-value-card">
-                  <div style={{ width:64,height:64,borderRadius:'50%',background:'var(--gold-soft)',border:'1.5px solid var(--border-gold)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 18px',fontSize:26,transition:'box-shadow 0.3s' }}>
+                <motion.div key={v.h} variants={FI} transition={{ duration:0.45 }}
+                  className="ab-value-card">
+                  <div className="ab-value-icon">
                     {v.icon}
                   </div>
                   <h3 className="t-h3" style={{ marginBottom:10 }}>{v.h}</h3>
@@ -180,11 +154,13 @@ export function AboutPage() {
                 style={{ display:'flex', alignItems:'flex-start', gap:32, flexWrap:'wrap' }}>
                 <motion.div variants={FI} transition={{ duration:0.5 }}
                   style={{ width:72,height:72,borderRadius:'50%',background:'var(--gold-soft)',border:'2px solid var(--border-gold)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
-                  {SVGS.leaf}
+                  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+                  </svg>
                 </motion.div>
                 <motion.div variants={FI} transition={{ duration:0.5 }} style={{ flex:1, minWidth:260 }}>
                   {content.founder?.title && (
-                    <h3 style={{ fontFamily:"'Playfair Display',Georgia,serif", fontSize:'clamp(18px,2.5vw,24px)', fontWeight:700, color:'#fff', marginBottom:4 }}>
+                    <h3 style={{ fontFamily:"'DM Sans',system-ui,sans-serif", fontSize:'clamp(18px,2.5vw,24px)', fontWeight:700, color:'#fff', marginBottom:4 }}>
                       {content.founder.title}
                     </h3>
                   )}

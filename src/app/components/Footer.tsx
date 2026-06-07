@@ -100,8 +100,8 @@ export function Footer() {
         .ftr-bottom { padding-top: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
         .ftr-nav-btn { display: block; background: none; border: none; cursor: pointer; font-family: 'DM Sans',sans-serif; font-size: 13px; color: var(--text-3); padding: 4px 0; text-align: left; transition: color 0.2s; }
         .ftr-nav-btn:hover { color: var(--gold); }
-        .ftr-social { display: flex; gap: 10px; margin-top: 20px; }
-        .ftr-social-btn { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.02); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text-3); transition: color 0.2s, border-color 0.2s, background 0.2s; text-decoration: none; }
+        .ftr-social { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+        .ftr-social-btn { width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.02); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text-3); transition: color 0.2s, border-color 0.2s, background 0.2s; text-decoration: none; }
         .ftr-social-btn:hover { color: var(--gold); border-color: rgba(201,166,60,0.3); background: rgba(201,166,60,0.06); }
         @media (max-width: 768px) { .ftr-grid { grid-template-columns: 1fr; gap: 28px; } .ftr-bottom { flex-direction: column; align-items: flex-start; } }
       `}</style>
@@ -116,7 +116,7 @@ export function Footer() {
                 <img src="/favicon.svg" alt="logo" width={34} height={34} style={{ objectFit: 'contain', display: 'block' }} />
               )}
               <div>
-                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 26, fontWeight: 700, color: 'var(--text-1)', lineHeight: 1, letterSpacing: '0.04em' }}>
+                <div style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontSize: 22, fontWeight: 500, color: 'var(--text-1)', lineHeight: 1 }}>
                   {settings.site_name?.split(' ')[0] ?? 'Srivriddhi'}
                 </div>
                 <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.28em', color: 'var(--gold)', textTransform: 'uppercase', marginTop: 3 }}>
