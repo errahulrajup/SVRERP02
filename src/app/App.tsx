@@ -123,6 +123,7 @@ const CmsMediaLibrary = lazy(() => import('./modules/cms/CmsPages').then(m => ({
 const CmsInquiries    = lazy(() => import('./modules/cms/CmsPages').then(m => ({ default: m.CmsInquiries })));
 const CmsSEO          = lazy(() => import('./modules/cms/CmsPages').then(m => ({ default: m.CmsSEO })));
 const CmsAnalytics    = lazy(() => import('./modules/cms/CmsPages').then(m => ({ default: m.CmsAnalytics })));
+const CmsSettings     = lazy(() => import('./modules/cms/CmsPages').then(m => ({ default: m.AdminSettings })));
 
 // ── Loading fallback ──────────────────────────────────────────
 function AdminLoader() {
@@ -239,6 +240,7 @@ export function App() {
         <Route path="inquiries"        element={<RoleRoute minRole="MANAGER"><S><CmsInquiries /></S></RoleRoute>} />
         <Route path="seo"              element={<RoleRoute minRole="MANAGER"><S><CmsSEO /></S></RoleRoute>} />
         <Route path="analytics"        element={<RoleRoute minRole="MANAGER"><S><CmsAnalytics /></S></RoleRoute>} />
+        <Route path="settings"         element={<RoleRoute minRole="MANAGER"><S><CmsSettings /></S></RoleRoute>} />
         <Route path="users"        element={<RoleRoute minRole="ADMIN"><S><AdminUsers /></S></RoleRoute>} />
       </Route>
 

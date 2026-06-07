@@ -704,12 +704,37 @@ export function AdminSettings() {
     setImgUploading(prev => ({ ...prev, [key]: true }));
     const url = await storageApi.upload('site-assets', file);
     if (url) {
-      await settingsApi.set(key, url);
-      setSettings(prev => ({ ...prev, [key]: { label: key, value: url, group: 'images' } }));
+      if (key === 'img_home_hero') {
+        const currentVal = settings.img_home_hero?.value || '';
+        const slides = currentVal.split(',').map(s => s.trim()).filter(Boolean);
+        slides.push(url);
+        const newVal = slides.join(',');
+        await settingsApi.set(key, newVal);
+        setSettings(prev => ({ ...prev, [key]: { label: 'Homepage Hero', value: newVal, group: 'images' } }));
+      } else {
+        await settingsApi.set(key, url);
+        setSettings(prev => ({ ...prev, [key]: { label: key, value: url, group: 'images' } }));
+      }
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     }
     setImgUploading(prev => ({ ...prev, [key]: false }));
+  };
+
+  const handleDeleteSlide = async (url: string) => {
+    if (!window.confirm('Are you sure you want to delete this slide?')) return;
+    const currentVal = settings.img_home_hero?.value || '';
+    const slides = currentVal.split(',').map(s => s.trim()).filter(Boolean);
+    const newSlides = slides.filter(s => s !== url);
+    const newVal = newSlides.join(',');
+    
+    await settingsApi.set('img_home_hero', newVal);
+    setSettings(prev => ({
+      ...prev,
+      img_home_hero: { label: 'Homepage Hero', value: newVal, group: 'images' }
+    }));
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
   };
 
   const IMAGE_KEYS = new Set(PAGE_IMAGES.map(i => i.key));
@@ -755,13 +780,56 @@ export function AdminSettings() {
         {/* ── Page Images Card ── */}
         <div style={{ background:'var(--bg-card)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:28, marginBottom:14 }}>
           <h3 style={{ fontFamily:"'Playfair Display',Georgia,serif", fontSize:16, fontWeight:700, color:'#fff', marginBottom:20 }}>Page Hero Images</h3>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(280px,1fr))', gap:16 }}>
-            {PAGE_IMAGES.map(({ key, label, fallback }) => {
+          
+          {/* Homepage Hero Slideshow Upload Panel */}
+          <div style={{ borderBottom:'1px solid var(--border)', paddingBottom:24, marginBottom:24 }}>
+            <h4 style={{ fontFamily:"'Playfair Display',Georgia,serif", fontSize:14, fontWeight:700, color:'var(--gold)', marginBottom:12 }}>Homepage Hero Slideshow</h4>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(200px, 1fr))', gap:16, marginBottom:16 }}>
+              {(() => {
+                const currentVal = settings.img_home_hero?.value || '';
+                const slides = currentVal.split(',').map(s => s.trim()).filter(Boolean);
+                if (slides.length === 0) {
+                  return (
+                    <div style={{ background:'var(--bg-elevated)', border:'1px dashed var(--border)', borderRadius:10, padding:'24px 16px', textAlign:'center', color:'rgba(255,255,255,0.35)', fontSize:12, gridColumn:'1/-1' }}>
+                      No slides uploaded yet. The default hero image is active.
+                    </div>
+                  );
+                }
+                return slides.map((slideUrl, idx) => (
+                  <div key={idx} style={{ background:'var(--bg-elevated)', border:'1px solid var(--border)', borderRadius:10, overflow:'hidden', position:'relative' }}>
+                    <div style={{ height:100, overflow:'hidden', position:'relative' }}>
+                      <img src={slideUrl} alt={`Slide ${idx + 1}`} style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} onError={e => { (e.target as HTMLImageElement).src = '/images/hero.webp'; }} />
+                      <div style={{ position:'absolute', top:6, right:6 }}>
+                        <button className="btn-danger" onClick={() => handleDeleteSlide(slideUrl)} style={{ padding:'3px 6px', fontSize:9, borderRadius:4 }}>✕ Delete</button>
+                      </div>
+                      <div style={{ position:'absolute', bottom:6, left:6, background:'rgba(0,0,0,0.6)', padding:'2px 6px', borderRadius:3, fontSize:10, color:'#fff' }}>
+                        Slide {idx + 1}
+                      </div>
+                    </div>
+                  </div>
+                ));
+              })()}
+            </div>
+            <div>
+              <label style={{ display:'inline-block', cursor:'pointer' }}>
+                <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" style={{ display:'none' }}
+                  onChange={e => handlePageImageUpload('img_home_hero', e)} disabled={imgUploading['img_home_hero']} />
+                <span className="btn btn-gold btn-sm" style={{ pointerEvents: imgUploading['img_home_hero'] ? 'none' : 'auto', opacity: imgUploading['img_home_hero'] ? 0.6 : 1 }}>
+                  {imgUploading['img_home_hero'] ? 'Uploading…' : '📤 Add New Slide'}
+                </span>
+              </label>
+            </div>
+          </div>
+
+          {/* Other Page Hero Images */}
+          <h4 style={{ fontFamily:"'Playfair Display',Georgia,serif", fontSize:14, fontWeight:700, color:'#fff', marginBottom:12 }}>Other Page Heroes</h4>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(240px,1fr))', gap:16 }}>
+            {PAGE_IMAGES.filter(p => p.key !== 'img_home_hero').map(({ key, label, fallback }) => {
               const currentUrl = settings[key]?.value || fallback;
               const uploading  = imgUploading[key] ?? false;
               return (
                 <div key={key} style={{ background:'var(--bg-elevated)', border:'1px solid var(--border)', borderRadius:10, overflow:'hidden' }}>
-                  <div style={{ height:120, overflow:'hidden', position:'relative' }}>
+                  <div style={{ height:110, overflow:'hidden', position:'relative' }}>
                     <img src={currentUrl} alt={label}
                       style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }}
                       onError={e => { (e.target as HTMLImageElement).src = fallback; }} />

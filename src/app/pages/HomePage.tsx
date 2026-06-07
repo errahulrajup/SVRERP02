@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'framer-motion';
 import { useProducts, useTestimonials, useHomepageSections, usePageSeo, useSiteSettings } from '../hooks';
@@ -22,7 +23,19 @@ export function HomePage() {
   const teaser = sections?.find(s => s.key === 'about_teaser');
   const cta    = sections?.find(s => s.key === 'cta_band');
 
-  const heroImg = settings.img_home_hero ?? '/images/hero.webp';
+  const heroImgString = settings.img_home_hero ?? '/images/hero.webp';
+  const heroImages = heroImgString.split(',').map(s => s.trim()).filter(Boolean);
+  if (heroImages.length === 0) heroImages.push('/images/hero.webp');
+
+  const [activeSlide, setActiveSlide] = useState(0);
+
+  useEffect(() => {
+    if (heroImages.length <= 1) return;
+    const interval = setInterval(() => {
+      setActiveSlide(curr => (curr + 1) % heroImages.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [heroImages.length]);
 
   return (
     <>
@@ -30,8 +43,7 @@ export function HomePage() {
         schema={{ "@context":"https://schema.org","@type":"WebSite","name":"Srivriddhi Enterprise","url":"https://www.srivriddhi.com" }} />
       <style>{`
         .hp-hero { position:relative; width:100%; height:100vh; min-height:600px; overflow:hidden; display:flex; align-items:flex-end; background:var(--bg-main); }
-        .hp-bg   { position:absolute; inset:0; background-image:url('${heroImg}'); background-size:cover; background-position:center 20%; transform:scale(1.04); transition:transform 8s ease; }
-        .hp-hero:hover .hp-bg { transform:scale(1.07); }
+        .hp-bg-slide { position:absolute; inset:0; background-size:cover; background-position:center 20%; pointer-events:none; }
         .hp-grad { position:absolute; inset:0; background:linear-gradient(to top, rgba(5,5,5,0.97) 0%, rgba(5,5,5,0.60) 35%, rgba(5,5,5,0.18) 65%, rgba(5,5,5,0.04) 100%); }
         .hp-wm   { position:absolute; top:50%; right:7%; transform:translateY(-50%); width:min(400px,42vw); height:min(400px,42vw); opacity:0.05; pointer-events:none; animation:wmPulse 4s ease-in-out infinite alternate; }
         @keyframes wmPulse { from{opacity:0.03;transform:translateY(-50%) scale(0.97)} to{opacity:0.08;transform:translateY(-50%) scale(1.03)} }
@@ -57,7 +69,22 @@ export function HomePage() {
 
       {/* ═══ HERO ══════════════════════════════════════════════════════════ */}
       <section className="hp-hero">
-        <div className="hp-bg" />
+        {heroImages.map((imgUrl, idx) => (
+          <motion.div
+            key={imgUrl}
+            className="hp-bg-slide"
+            style={{ backgroundImage: `url('${imgUrl}')` }}
+            initial={{ opacity: 0, scale: 1.04 }}
+            animate={{ 
+              opacity: idx === activeSlide ? 1 : 0,
+              scale: idx === activeSlide ? 1.06 : 1.04
+            }}
+            transition={{ 
+              opacity: { duration: 1.5, ease: 'easeInOut' },
+              scale: { duration: 7, ease: 'easeOut' }
+            }}
+          />
+        ))}
         <div className="hp-grad" />
         <div className="hp-wm">
           <img src="/images/logo.png" alt="" aria-hidden style={{ width:'100%',height:'100%',objectFit:'contain',filter:'drop-shadow(0px 0px 4px rgba(0,0,0,0.5))' }} />

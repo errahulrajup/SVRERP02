@@ -38,7 +38,7 @@ export function CmsLayout() {
     { path: '/cms/inquiries',    label: 'Inquiries',          icon: CmsIcons.inquiries,    badge: unread > 0 ? unread : null, minRole: 'MANAGER' },
     { path: '/cms/seo',          label: 'SEO Manager',        icon: CmsIcons.seo,          minRole: 'MANAGER' },
     { path: '/cms/analytics',    label: 'Analytics',          icon: CmsIcons.analytics,    minRole: 'MANAGER' },
-    { path: '/admin/settings',   label: 'Site & Social',      icon: CmsIcons.settings,     minRole: 'MANAGER' },
+    { path: '/cms/settings',     label: 'Site & Social',      icon: CmsIcons.settings,     minRole: 'MANAGER' },
     { path: '/dms',              label: 'Document Pro (DMS)', icon: CmsIcons.dms },
   ];
 
