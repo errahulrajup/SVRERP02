@@ -66,23 +66,23 @@ export function CmsLayout() {
       <aside className={`adm-sidebar${open ? ' open' : ''}`}>
 
         {/* Brand */}
-        <div style={{ padding: '18px 16px 14px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ padding: '12px 10px 8px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{
-              width: 32, height: 32, borderRadius: 8,
+              width: 24, height: 24, borderRadius: 6,
               background: 'rgba(255,193,7,0.1)', border: '1px solid rgba(255,193,7,0.22)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               {logoSrc ? (
-                <img src={logoSrc} width={20} height={20}
+                <img src={logoSrc} width={16} height={16}
                   style={{ objectFit: 'contain' }} />
               ) : (
-                <img src="/favicon.svg" width={20} height={20} alt="Logo" />
+                <img src="/favicon.svg" width={16} height={16} alt="Logo" />
               )}
             </div>
             <div>
-              <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 13, fontWeight: 700, color: '#fff', lineHeight: 1 }}>SVR20</div>
-              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.25em', color: 'rgba(255,193,7,0.45)', textTransform: 'uppercase', marginTop: 2 }}>
+              <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 12.5, fontWeight: 700, color: '#fff', lineHeight: 1 }}>SVR20</div>
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 7.5, fontWeight: 700, letterSpacing: '0.25em', color: 'rgba(255,193,7,0.45)', textTransform: 'uppercase', marginTop: 1 }}>
                 CMS · {role ?? 'NO ROLE'}
               </div>
             </div>
@@ -90,7 +90,7 @@ export function CmsLayout() {
         </div>
 
         {/* Dashboard button */}
-        <div style={{ padding: '10px 8px 2px', flexShrink: 0 }}>
+        <div style={{ padding: '6px 4px 1px', flexShrink: 0 }}>
           <button
             className={`adm-nav-link${location.pathname === '/cms' ? ' active' : ''}`}
             onClick={() => go('/cms')}
@@ -101,18 +101,18 @@ export function CmsLayout() {
         </div>
 
         {/* Nav sections */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px 12px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '0 4px 8px' }}>
           {(() => {
             const roleRank: Record<string, number> = { EDITOR: 1, MANAGER: 2, ADMIN: 3 };
             const userRoleRank = roleRank[role as string] ?? 0;
             return NAV.map(({ section, minRole, items }) => {
               if (minRole && userRoleRank < (roleRank[minRole] ?? 0)) return null;
               return (
-            <div key={section} style={{ marginTop: 18 }}>
+            <div key={section} style={{ marginTop: 10 }}>
               <p style={{
-                fontFamily: "'DM Sans',sans-serif", fontSize: 8.5, fontWeight: 700,
+                fontFamily: "'DM Sans',sans-serif", fontSize: 7.5, fontWeight: 700,
                 letterSpacing: '0.22em', textTransform: 'uppercase',
-                color: 'rgba(255,255,255,0.18)', padding: '0 12px', marginBottom: 3,
+                color: 'rgba(255,255,255,0.18)', padding: '0 10px', marginBottom: 1,
               }}>
                 {section}
               </p>
@@ -141,8 +141,8 @@ export function CmsLayout() {
           })()}
 
           {/* BOS + DMS links */}
-          <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
-            <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 8.5, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.18)', padding: '0 12px', marginBottom: 3 }}>
+          <div style={{ marginTop: 12, paddingTop: 8, borderTop: '1px solid var(--border)' }}>
+            <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 7.5, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.18)', padding: '0 10px', marginBottom: 1 }}>
               Business OS
             </p>
             <button className="adm-nav-link" onClick={() => window.open('/login', '_blank')}>

@@ -59,11 +59,9 @@ export function BosModuleLayout({ module: mod, nav, children }: Props) {
   const go = (path: string) => { navigate(path); setOpen(false); };
 
   const CSS = `
-    .bml-shell { display:flex; min-height:100vh; background:${BG0}; color:${TEXT1}; font-family:'DM Sans','Inter',system-ui,sans-serif; }
-
-    /* ── Sidebar ── */
+    .bml-shell { display:flex; min-height:100vh; background:${BG0}; color:${TEXT1}; font-family:'DM Sans','Inter',system-ui,sans-serif; }    /* ── Sidebar ── */
     .bml-sidebar {
-      width: 240px; min-width: 240px; background: ${BG2};
+      width: 200px; min-width: 200px; background: ${BG2};
       border-right: 1px solid ${BORDER};
       display: flex; flex-direction: column;
       position: fixed; top: 0; left: 0; height: 100vh;
@@ -71,14 +69,14 @@ export function BosModuleLayout({ module: mod, nav, children }: Props) {
       transition: transform 0.28s cubic-bezier(.4,0,.2,1);
     }
     .bml-sidebar-brand {
-      padding: 20px 16px 16px;
+      padding: 12px 10px 8px;
       border-bottom: 1px solid ${BORDER};
       flex-shrink: 0;
       cursor: pointer;
     }
-    .bml-brand-row { display:flex; align-items:center; gap:12px; }
+    .bml-brand-row { display:flex; align-items:center; gap:8px; }
     .bml-brand-icon {
-      width: 36px; height: 36px; border-radius: 10px;
+      width: 24px; height: 24px; border-radius: 6px;
       background: rgba(${accentRgb},0.12);
       border: 1px solid rgba(${accentRgb},0.28);
       display: flex; align-items: center; justify-content: center;
@@ -86,27 +84,27 @@ export function BosModuleLayout({ module: mod, nav, children }: Props) {
     }
     .bml-brand-name {
       font-family: 'Playfair Display', Georgia, serif;
-      font-size: 14px; font-weight: 700; color: ${TEXT1};
+      font-size: 12.5px; font-weight: 700; color: ${TEXT1};
       line-height: 1.2;
     }
     .bml-brand-sub {
-      font-size: 8.5px; font-weight: 700; color: ${accent};
-      letter-spacing: 0.2em; text-transform: uppercase; margin-top: 3px;
+      font-size: 7.5px; font-weight: 700; color: ${accent};
+      letter-spacing: 0.2em; text-transform: uppercase; margin-top: 1px;
       opacity: 0.7;
     }
-
+ 
     /* ── Nav ── */
-    .bml-nav { flex: 1; padding: 8px; overflow-y: auto; }
+    .bml-nav { flex: 1; padding: 4px; overflow-y: auto; }
     .bml-nav-link {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 14px; border-radius: 8px;
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 10px; border-radius: 6px;
       background: transparent; border: none; width: 100%;
       text-align: left; font-family: 'DM Sans', sans-serif;
-      font-size: 13px; font-weight: 500;
+      font-size: 12px; font-weight: 500;
       color: ${TEXT2}; cursor: pointer; text-decoration: none;
       border-left: 2px solid transparent;
       transition: background 0.15s, color 0.15s, border-left-color 0.15s;
-      margin-bottom: 2px;
+      margin-bottom: 1px;
     }
     .bml-nav-link:hover { background: rgba(${accentRgb},0.07); color: ${accent}; }
     .bml-nav-link.active {
@@ -120,26 +118,26 @@ export function BosModuleLayout({ module: mod, nav, children }: Props) {
     }
     .bml-nav-link.active .bml-nav-icon,
     .bml-nav-link:hover .bml-nav-icon { opacity: 1; }
-
+ 
     /* ── Footer ── */
     .bml-sidebar-foot {
-      border-top: 1px solid ${BORDER}; padding: 12px;
+      border-top: 1px solid ${BORDER}; padding: 8px;
       flex-shrink: 0;
     }
     .bml-user-chip {
-      display: flex; align-items: center; gap: 10px;
+      display: flex; align-items: center; gap: 6px;
       background: ${BG1}; border: 1px solid ${BORDER};
-      border-radius: 10px; padding: 10px 12px;
+      border-radius: 6px; padding: 5px 8px;
     }
     .bml-user-avatar {
-      width: 28px; height: 28px; border-radius: 50%;
+      width: 20px; height: 20px; border-radius: 50%;
       background: rgba(${accentRgb},0.15);
       border: 1px solid rgba(${accentRgb},0.25);
       display: flex; align-items: center; justify-content: center;
-      font-size: 12px; flex-shrink: 0; color: ${accent};
+      font-size: 10px; flex-shrink: 0; color: ${accent};
     }
-    .bml-user-name { font-size: 12px; font-weight: 600; color: ${TEXT1}; }
-    .bml-user-role { font-size: 10px; color: ${TEXT3}; margin-top: 1px; }
+    .bml-user-name { font-size: 11px; font-weight: 600; color: ${TEXT1}; }
+    .bml-user-role { font-size: 9px; color: ${TEXT3}; margin-top: 1px; }
     .bml-signout-btn {
       background: none; border: none; color: rgba(239,68,68,0.55);
       cursor: pointer; padding: 4px; margin-left: auto; flex-shrink: 0;
@@ -147,9 +145,9 @@ export function BosModuleLayout({ module: mod, nav, children }: Props) {
       transition: color 0.2s;
     }
     .bml-signout-btn:hover { color: #ef4444; }
-
+ 
     /* ── Main ── */
-    .bml-main { flex: 1; margin-left: 240px; min-height: 100vh; display: flex; flex-direction: column; background: ${BG0}; }
+    .bml-main { flex: 1; margin-left: 200px; min-height: 100vh; display: flex; flex-direction: column; background: ${BG0}; }ion: column; background: ${BG0}; }
 
     /* ── Mobile topbar ── */
     .bml-mob-bar {

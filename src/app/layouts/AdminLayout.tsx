@@ -42,25 +42,25 @@ export function AdminLayout() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-main)' }}>
       <aside className={`adm-sidebar${open ? ' open' : ''}`}>
-        <div style={{ padding: '18px 16px 14px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ padding: '12px 10px 8px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{
-              width: 32, height: 32, borderRadius: 8,
+              width: 24, height: 24, borderRadius: 6,
               background: 'rgba(255,193,7,0.1)', border: '1px solid rgba(255,193,7,0.22)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              {logoSrc ? <img src={logoSrc} width={20} height={20} style={{ objectFit: 'contain' }} alt="Logo" /> : <img src="/favicon.svg" width={20} height={20} alt="Logo" />}
+              {logoSrc ? <img src={logoSrc} width={16} height={16} style={{ objectFit: 'contain' }} alt="Logo" /> : <img src="/favicon.svg" width={16} height={16} alt="Logo" />}
             </div>
             <div>
-              <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 13, fontWeight: 700, color: '#fff', lineHeight: 1 }}>ERP Control</div>
-              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.25em', color: 'rgba(255,193,7,0.45)', textTransform: 'uppercase', marginTop: 2 }}>
+              <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 12.5, fontWeight: 700, color: '#fff', lineHeight: 1 }}>ERP Control</div>
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 7.5, fontWeight: 700, letterSpacing: '0.25em', color: 'rgba(255,193,7,0.45)', textTransform: 'uppercase', marginTop: 1 }}>
                 Admin · {role ?? 'NO ROLE'}
               </div>
             </div>
           </div>
         </div>
 
-        <div style={{ padding: '10px 8px 2px', flexShrink: 0 }}>
+        <div style={{ padding: '6px 4px 1px', flexShrink: 0 }}>
           <button className={`adm-nav-link${location.pathname === '/admin' ? ' active' : ''}`} onClick={() => go('/admin')}>
             <span>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -72,10 +72,10 @@ export function AdminLayout() {
           </button>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px 12px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '0 4px 8px' }}>
           {NAV.filter(s => canAccess(s.minRole)).map(({ section, items }) => (
-            <div key={section} style={{ marginTop: 18 }}>
-              <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 8.5, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.18)', padding: '0 12px', marginBottom: 3 }}>
+            <div key={section} style={{ marginTop: 10 }}>
+              <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 7.5, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.18)', padding: '0 10px', marginBottom: 1 }}>
                 {section}
               </p>
               {items.map(item => (
