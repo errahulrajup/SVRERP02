@@ -1,10 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useRndFormulas } from '../../hooks';
 import { useProducts } from '../../hooks/useBos';
-import { rndFormulasApi } from '../../lib/rndApi';
+import { rndFormulasApi, rndMasterParamsApi, rndFormulaParamsApi } from '../../lib/rndApi';
 import { bosProductsApi } from '../../lib/bosApi';
-import type { RndFormula, RndFormulaStatus } from '../../types/rnd';
+import type { RndFormula, RndFormulaStatus, RndMasterParameter } from '../../types/rnd';
 import type { Product } from '../../types/bos';
 import { fmtDate, fmtCost } from '../../types/rnd';
 
@@ -13,9 +13,6 @@ type FormulaForm = {
   name: string;
   description: string;
   version: number;
-  target_ph: string;
-  target_brix: string;
-  target_sg: string;
   erp_product_id: string;
 };
 
@@ -24,9 +21,6 @@ const EMPTY_FORMULA: FormulaForm = {
   name: '',
   description: '',
   version: 1,
-  target_ph: '',
-  target_brix: '',
-  target_sg: '',
   erp_product_id: '',
 };
 
@@ -42,11 +36,12 @@ export function FormulationManager() {
   const [statusFilter, setStatusFilter] = useState<'ALL' | RndFormulaStatus>('ALL');
   const [editingFormula, setEditingFormula] = useState<RndFormula | null>(null);
   const [form, setForm] = useState<FormulaForm>(EMPTY_FORMULA);
-  const [activeSpecs, setActiveSpecs] = useState({
-    ph: false,
-    brix: false,
-    sg: false,
-  });
+  const [masterParams, setMasterParams] = useState<RndMasterParameter[]>([]);
+  const [selectedParams, setSelectedParams] = useState<Record<string, { active: boolean, value: string, unit: string }>>({});
+
+  useEffect(() => {
+    rndMasterParamsApi.list().then(res => setMasterParams(res.data || []));
+  }, []);
 
   // New product creation state inside formulation manager
   const [isCreatingProduct, setIsCreatingProduct] = useState(false);
@@ -75,11 +70,7 @@ export function FormulationManager() {
     setForm(EMPTY_FORMULA);
     setEditingFormula(null);
     setIsCreatingProduct(false);
-    setActiveSpecs({
-      ph: false,
-      brix: false,
-      sg: false,
-    });
+    setSelectedParams({});
   };
 
   const openCreate = () => {
@@ -95,16 +86,9 @@ export function FormulationManager() {
       name: formula.name,
       description: formula.description ?? '',
       version: formula.version,
-      target_ph: formula.target_ph?.toString() ?? '',
-      target_brix: formula.target_brix?.toString() ?? '',
-      target_sg: formula.target_sg?.toString() ?? '',
       erp_product_id: formula.erp_product_id ?? '',
     });
-    setActiveSpecs({
-      ph: formula.target_ph !== null && formula.target_ph !== undefined,
-      brix: formula.target_brix !== null && formula.target_brix !== undefined,
-      sg: formula.target_sg !== null && formula.target_sg !== undefined,
-    });
+    setSelectedParams({});
     setIsFormOpen(true);
   };
 
@@ -166,10 +150,10 @@ export function FormulationManager() {
         name: form.name.trim(),
         description: form.description.trim() || null,
         version: Number(form.version) || 1,
-        target_ph: (activeSpecs.ph && form.target_ph !== '') ? Number(form.target_ph) : null,
-        target_brix: (activeSpecs.brix && form.target_brix !== '') ? Number(form.target_brix) : null,
-        target_sg: (activeSpecs.sg && form.target_sg !== '') ? Number(form.target_sg) : null,
         erp_product_id: form.erp_product_id || null,
+        target_ph: null,
+        target_brix: null,
+        target_sg: null,
       };
 
       if (editingFormula) {
@@ -192,6 +176,23 @@ export function FormulationManager() {
           }
           return;
         }
+        if (!data) return;
+        
+        // Add dynamic params
+        const paramPromises = Object.entries(selectedParams)
+          .filter(([_, p]) => p.active)
+          .map(([name, p]) => rndFormulaParamsApi.create({
+            formula_id: data.id,
+            param_name: name,
+            unit: p.unit || null,
+            target_value: p.value ? Number(p.value) : null,
+            sort_order: 0,
+            target_min: null,
+            target_max: null,
+            test_method: null,
+            notes: null
+          }));
+        await Promise.all(paramPromises);
       }
 
       setIsFormOpen(false);
@@ -331,40 +332,49 @@ export function FormulationManager() {
             </div>
 
             {/* Target Specifications Selection Checklist */}
-            <div style={{ gridColumn: 'span 3', background: '#1e293b', padding: '12px 16px', borderRadius: 8, border: '1px solid #334155', marginTop: 8 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.05em' }}>Select Target Parameters for this Recipe:</div>
-              <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#f8fafc' }}>
-                  <input type="checkbox" checked={activeSpecs.ph} onChange={e => setActiveSpecs({ ...activeSpecs, ph: e.target.checked })} />
-                  Target pH
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#f8fafc' }}>
-                  <input type="checkbox" checked={activeSpecs.brix} onChange={e => setActiveSpecs({ ...activeSpecs, brix: e.target.checked })} />
-                  Target Brix (°Bx)
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#f8fafc' }}>
-                  <input type="checkbox" checked={activeSpecs.sg} onChange={e => setActiveSpecs({ ...activeSpecs, sg: e.target.checked })} />
-                  Target Specific Gravity
-                </label>
+            {!editingFormula ? (
+              <div style={{ gridColumn: 'span 3', background: '#1e293b', padding: '12px 16px', borderRadius: 8, border: '1px solid #334155', marginTop: 8 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.05em' }}>Select Initial Target Parameters for this Recipe:</div>
+                <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+                  {masterParams.map(mp => (
+                    <label key={mp.id} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#f8fafc' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={selectedParams[mp.name]?.active || false} 
+                        onChange={e => setSelectedParams(prev => ({
+                          ...prev,
+                          [mp.name]: { active: e.target.checked, value: prev[mp.name]?.value || '', unit: mp.default_unit || '' }
+                        }))} 
+                      />
+                      {mp.name} {mp.default_unit ? `(${mp.default_unit})` : ''}
+                    </label>
+                  ))}
+                  {masterParams.length === 0 && <span style={{ color: '#64748b', fontSize: 12 }}>No master parameters configured. Manage them in Settings.</span>}
+                </div>
+                
+                {/* Inputs for selected params */}
+                {Object.entries(selectedParams).filter(([_, p]) => p.active).length > 0 && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginTop: 16 }}>
+                    {Object.entries(selectedParams).filter(([_, p]) => p.active).map(([name, p]) => (
+                      <div key={name}>
+                        <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Target {name}</label>
+                        <input 
+                          className="rnd-input" 
+                          type="number" 
+                          step="any" 
+                          style={{ width: '100%' }} 
+                          value={p.value} 
+                          placeholder={`Value ${p.unit ? `in ${p.unit}` : ''}`}
+                          onChange={(e) => setSelectedParams(prev => ({ ...prev, [name]: { ...p, value: e.target.value } }))} 
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            </div>
-
-            {activeSpecs.ph && (
-              <div>
-                <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Target pH</label>
-                <input className="rnd-input" type="number" step="0.1" style={{ width: '100%' }} value={form.target_ph} onChange={(e) => setForm({ ...form, target_ph: e.target.value })} />
-              </div>
-            )}
-            {activeSpecs.brix && (
-              <div>
-                <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Target Brix (°Bx)</label>
-                <input className="rnd-input" type="number" step="0.1" style={{ width: '100%' }} value={form.target_brix} onChange={(e) => setForm({ ...form, target_brix: e.target.value })} />
-              </div>
-            )}
-            {activeSpecs.sg && (
-              <div>
-                <label style={{ display: 'block', fontSize: 11, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase' }}>Target Specific Gravity</label>
-                <input className="rnd-input" type="number" step="0.001" style={{ width: '100%' }} value={form.target_sg} onChange={(e) => setForm({ ...form, target_sg: e.target.value })} />
+            ) : (
+              <div style={{ gridColumn: 'span 3', padding: '12px 16px', background: 'rgba(56, 189, 248, 0.05)', borderRadius: 8, border: '1px dashed #0ea5e9' }}>
+                <span style={{ fontSize: 12, color: '#38bdf8' }}>ℹ️ Target parameters for existing formulas can be managed inside the <b>Formula Builder</b>.</span>
               </div>
             )}
           </div>
