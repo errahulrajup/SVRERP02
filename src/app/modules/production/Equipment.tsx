@@ -44,7 +44,7 @@ async function fetchEquipment(): Promise<Equipment[]> {
     const { data, error } = await equipmentApi.list();
     if (error) throw error;
     return data as Equipment[];
-  } catch (e: unknown) { showToast((e as Error).message, 'info'); return lsLoad(); }
+  } catch (e: unknown) { showToast('Offline Mode: Loaded equipment from local storage. ' + (e as Error).message, 'warning'); return lsLoad(); }
 }
 
 async function saveEquipment(eq: Omit<Equipment, 'id' | 'created_at'>): Promise<Equipment> {
@@ -53,7 +53,7 @@ async function saveEquipment(eq: Omit<Equipment, 'id' | 'created_at'>): Promise<
     if (error) throw error;
     return data as Equipment;
   } catch (e: unknown) {
-    showToast((e as Error).message, 'info');
+    showToast('Offline Mode: Saved equipment to local storage. ' + (e as Error).message, 'warning');
     const newEq: Equipment = { ...eq, id: `eq-${Date.now()}`, created_at: new Date().toISOString() };
     lsSave([newEq, ...lsLoad()]);
     return newEq;
@@ -65,7 +65,7 @@ async function updateEquipment(id: string, eq: Partial<Equipment>): Promise<void
     const { error } = await equipmentApi.update(id, eq);
     if (error) throw error;
   } catch (e: unknown) {
-    showToast((e as Error).message, 'info');
+    showToast('Offline Mode: Updated equipment in local storage. ' + (e as Error).message, 'warning');
     lsSave(lsLoad().map(x => x.id === id ? { ...x, ...eq } : x));
   }
 }
@@ -75,7 +75,7 @@ async function deleteEquipment(id: string): Promise<void> {
     const { error } = await equipmentApi.remove(id);
     if (error) throw error;
   } catch (e: unknown) {
-    showToast((e as Error).message, 'info');
+    showToast('Offline Mode: Deleted equipment from local storage. ' + (e as Error).message, 'warning');
     lsSave(lsLoad().filter(x => x.id !== id));
   }
 }

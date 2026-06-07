@@ -205,8 +205,8 @@ export function FormulaBuilder() {
       return;
     }
     if (!newItem.ingredient_id) return showToast('Select an ingredient', 'error');
-    const pct = parseFloat(newItem.percentage);
-    if (!pct || pct <= 0) return showToast('Enter a valid percentage', 'error');
+    const pct = newItem.percentage === '' ? 0 : parseFloat(newItem.percentage);
+    if (isNaN(pct) || pct < 0) return showToast('Enter a valid percentage', 'error');
     const phase = newItem.phase === 'Custom…' ? newItem.customPhase.trim() : newItem.phase;
     if (!phase) return showToast('Enter a phase name', 'error');
 
@@ -242,8 +242,8 @@ export function FormulaBuilder() {
 
   /* ── Inline edit ingredient pct ── */
   const saveItemPct = async (itemId: string) => {
-    const pct = parseFloat(editItemPct);
-    if (isNaN(pct) || pct <= 0) return showToast('Invalid percentage', 'error');
+    const pct = editItemPct === '' ? 0 : parseFloat(editItemPct);
+    if (isNaN(pct) || pct < 0) return showToast('Invalid percentage', 'error');
     const res = await rndFormulaItemsApi.update(itemId, { percentage: pct });
     if (res.error) return showToast(res.error.message, 'error');
     setEditItemId(null);

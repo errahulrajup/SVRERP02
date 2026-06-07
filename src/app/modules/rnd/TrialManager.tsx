@@ -210,6 +210,7 @@ export function TrialManager() {
     if (!activeRunnerTrial || !runnerFormula) return;
     if (!confirm('Are you sure you want to promote this formula to a Master Production Recipe? This will lock the R&D formula.')) return;
     setPromoting(true);
+    let createdRecipeId: string | null = null;
     try {
       if (form.actual_yield_kg === '' || form.actual_yield_kg == null) {
         throw new Error('Please enter Actual Yield (kg) before promoting to Production Recipe.');
@@ -239,6 +240,7 @@ export function TrialManager() {
 
       if (recipeRes.error || !recipeRes.data) throw new Error('Recipe creation failed: ' + (recipeRes.error?.message || 'Recipe data is null'));
       const recipeId = recipeRes.data.id;
+      createdRecipeId = recipeId;
 
       // Map formula ingredients to recipe inputs
       for (const item of runnerFormulaItems) {
@@ -319,6 +321,13 @@ export function TrialManager() {
       setActiveRunnerTrial(null);
       tReload();
     } catch (e: unknown) {
+      if (createdRecipeId) {
+        try {
+          await recipesApi.remove(createdRecipeId);
+        } catch (cleanupErr) {
+          console.error('Failed to rollback orphaned recipe:', cleanupErr);
+        }
+      }
       showToast('Error promoting to production recipe: ' + (e as Error).message, 'error');
     } finally {
       setPromoting(false);
@@ -389,7 +398,7 @@ export function TrialManager() {
     // RND-12 FIX: Validate COMPLETED status requires result data
     if (form.status === 'COMPLETED') {
       if (form.actual_yield_kg === '' || form.actual_yield_kg == null || form.actual_ph === '' || form.actual_ph == null) {
-        showToast('Please enter at least Yield (kg) and pH before marking as COMPLETED', 'success');
+        showToast('Please enter at least Yield (kg) and pH before marking as COMPLETED', 'warning');
         return;
       }
     }

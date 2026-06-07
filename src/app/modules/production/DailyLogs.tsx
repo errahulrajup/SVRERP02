@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router';
 import { dailyLogsApi } from '../../lib/bosApi';
 import { useAuth } from '../../hooks';
 import { fmtDate } from '../../types/bos';
@@ -60,7 +61,7 @@ async function fetchDailyLogs(): Promise<DailyLog[]> {
     const { data, error } = await dailyLogsApi.list();
     if (error) throw error;
     return data as DailyLog[];
-  } catch (e: unknown) { showToast((e as Error).message, 'info'); return lsLoad(); }
+  } catch (e: unknown) { showToast('Offline Mode: Loaded logs from local storage. ' + (e as Error).message, 'warning'); return lsLoad(); }
 }
 
 async function saveDailyLog(log: Omit<DailyLog, 'id' | 'created_at'>): Promise<DailyLog> {
@@ -69,7 +70,7 @@ async function saveDailyLog(log: Omit<DailyLog, 'id' | 'created_at'>): Promise<D
     if (error) throw error;
     return data as DailyLog;
   } catch (e: unknown) {
-    showToast((e as Error).message, 'info');
+    showToast('Offline Mode: Saved log to local storage. ' + (e as Error).message, 'warning');
     const newLog: DailyLog = { ...log, id: `dl-${Date.now()}`, created_at: new Date().toISOString() };
     lsSave([newLog, ...lsLoad()]);
     return newLog;
@@ -81,7 +82,7 @@ async function updateDailyLog(id: string, log: Partial<DailyLog>): Promise<void>
     const { error } = await dailyLogsApi.update(id, log);
     if (error) throw error;
   } catch (e: unknown) {
-    showToast((e as Error).message, 'info');
+    showToast('Offline Mode: Updated log in local storage. ' + (e as Error).message, 'warning');
     lsSave(lsLoad().map(x => x.id === id ? { ...x, ...log } : x));
   }
 }
@@ -91,7 +92,7 @@ async function deleteDailyLog(id: string): Promise<void> {
     const { error } = await dailyLogsApi.remove(id);
     if (error) throw error;
   } catch (e: unknown) {
-    showToast((e as Error).message, 'info');
+    showToast('Offline Mode: Deleted log from local storage. ' + (e as Error).message, 'warning');
     lsSave(lsLoad().filter(x => x.id !== id));
   }
 }
@@ -128,6 +129,7 @@ const EMPTY_FORM = {
 
 export function DailyLogs() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [items, setItems] = useState<DailyLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -215,7 +217,7 @@ export function DailyLogs() {
     }
     
     if (checksDone === 0 && form.qc_issues.trim()) {
-      showToast('Contradiction: You logged QC issues but 0 QC checks done.', 'success'); return;
+      showToast('Contradiction: You logged QC issues but 0 QC checks done.', 'warning'); return;
     }
 
     const yld = yieldPct(planned, actual);
@@ -501,7 +503,7 @@ export function DailyLogs() {
               {parseInt(form.safety_incidents as string) > 0 && (
                 <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: 12, marginTop: 8, color: '#EF4444', fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span>⚠️ Safety incident reported. FSSAI requires immediate logging.</span>
-                  <button className="bos-btn bos-btn-sm bos-btn-danger" onClick={(e) => { e.preventDefault(); window.location.hash = '#/compliances/capa'; }}>Raise CAPA ↗</button>
+                  <button className="bos-btn bos-btn-sm bos-btn-danger" onClick={(e) => { e.preventDefault(); navigate('/compliances/capa'); }}>Raise CAPA ↗</button>
                 </div>
               )}
             </div>

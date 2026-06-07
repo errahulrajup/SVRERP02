@@ -115,7 +115,7 @@ export function Batches() {
 
   const moveBatch = async (id: string, nextStatus: BatchStatus) => {
     if (nextStatus === 'QC_HOLD' && !canComplete) {
-      showToast('QC or Manager role required to complete a batch', 'success'); return;
+      showToast('QC or Manager role required to complete a batch', 'warning'); return;
     }
 
     if (nextStatus === 'QC_HOLD') {
@@ -124,6 +124,16 @@ export function Batches() {
       const { data: fresh, error: fetchErr } = await bApi.byId(id);
       if (fetchErr || !fresh) {
         showToast('Could not fetch batch status. Please refresh.', 'warning');
+        return;
+      }
+      if (fresh.status === 'REJECTED') {
+        try {
+          await batchesApi.update(id, { status: 'QC_HOLD' });
+          showToast('Batch status reverted to QC Hold for re-testing', 'success');
+          bReload();
+        } catch (e: unknown) {
+          showToast(`Error: ${(e as Error).message}`, 'error');
+        }
         return;
       }
       if (fresh.status !== 'RUNNING') {
@@ -211,7 +221,7 @@ export function Batches() {
         notes: cForm.notes
       });
 
-      showToast(`✅ Batch completed — FG lot created (Quarantined, 'success') & RM deducted.`);
+      showToast('✅ Batch completed — FG lot created (Quarantined) & RM deducted.', 'success');
       setIsCompleteModalOpen(false);
       await bReload();
     } catch (e: unknown) {
@@ -332,6 +342,9 @@ export function Batches() {
                           )}
                           {b.status === 'RUNNING' && (
                             <button className="bos-btn bos-btn-sm" style={{ background: '#2B4A34', color: '#88C096' }} onClick={() => moveBatch(b.id, 'QC_HOLD')}>✓ Complete</button>
+                          )}
+                          {b.status === 'REJECTED' && (
+                            <button className="bos-btn bos-btn-sm" style={{ background: '#2B4A34', color: '#88C096' }} onClick={() => moveBatch(b.id, 'QC_HOLD')}>🔄 Re-submit to QC</button>
                           )}
                           {canEdit && b.status === 'PLANNED' && (
                             <button className="bos-btn bos-btn-danger bos-btn-sm" onClick={() => deleteBatch(b.id)}>🗑</button>

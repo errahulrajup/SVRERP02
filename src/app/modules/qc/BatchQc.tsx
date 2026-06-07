@@ -86,7 +86,7 @@ export function BatchQc() {
     }
   }, [activeRecipeParams]);
 
-  const pendingBatches = useMemo(() => batches.filter(b => b.status === 'QC_HOLD' && !checks.find(c => c.batch_id === b.id)), [batches, checks]);
+  const pendingBatches = useMemo(() => batches.filter(b => b.status === 'QC_HOLD'), [batches]);
 
   const stats = [
     { label: 'In QC Hold', val: pendingBatches.length, color: '#FDE047' },
