@@ -70,6 +70,7 @@ const FormulaBuilder     = lazy(() => import('./modules/rnd/FormulaBuilder').the
 const IngredientIntel    = lazy(() => import('./modules/rnd/IngredientIntel').then(m => ({ default: m.IngredientIntel })));
 const TrialManager       = lazy(() => import('./modules/rnd/TrialManager').then(m => ({ default: m.TrialManager })));
 const ProductValidation  = lazy(() => import('./modules/rnd/ProductValidation').then(m => ({ default: m.ProductValidation })));
+const RndSettings        = lazy(() => import('./modules/rnd/RndSettings').then(m => ({ default: m.RndSettings })));
 const ProcessBuilder     = lazy(() => import('./modules/rnd/ProcessBuilder').then(m => ({ default: m.ProcessBuilder })));
 const LabNotebook        = lazy(() => import('./modules/rnd/LabNotebook').then(m => ({ default: m.LabNotebook })));
 
@@ -351,6 +352,7 @@ export function App() {
         <Route path="trials"           element={<S><TrialManager /></S>} />
         <Route path="validation"       element={<S><ProductValidation /></S>} />
         <Route path="processes"        element={<S><ProcessBuilder /></S>} />
+        <Route path="settings"         element={<S><RndSettings /></S>} />
         <Route path="notebook"         element={<S><LabNotebook /></S>} />
       </Route>
 

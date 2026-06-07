@@ -18,13 +18,13 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import {
   rndFormulasApi, rndFormulaItemsApi, rndIngredientsApi,
-  rndFormulaParamsApi,
+  rndFormulaParamsApi, rndMasterParamsApi
 } from '../../lib/rndApi';
 import { recipesApi, recipeInputsApi, recipeQcParamsApi } from '../../lib/bosApi';
 import { useAuth } from '../../hooks';
 import type {
   RndFormula, RndFormulaItemWithIngredient, RndFormulaStatus,
-  RndIngredient, RndFormulaParam,
+  RndIngredient, RndFormulaParam, RndMasterParameter
 } from '../../types/rnd';
 import { fmtCost, fmtPct } from '../../types/rnd';
 
@@ -68,6 +68,7 @@ export function FormulaBuilder() {
   const [items, setItems]           = useState<RndFormulaItemWithIngredient[]>([]);
   const [ingredients, setIngredients] = useState<RndIngredient[]>([]);
   const [params, setParams]         = useState<RndFormulaParam[]>([]);
+  const [masterParams, setMasterParams] = useState<RndMasterParameter[]>([]);
   const [loading, setLoading]       = useState(true);
   const [savingMeta, setSavingMeta] = useState(false);
   const [promoting, setPromoting]   = useState(false);
@@ -132,11 +133,12 @@ export function FormulaBuilder() {
     if (!id) return;
     setLoading(true);
     try {
-      const [fRes, iRes, ingRes, pRes] = await Promise.all([
+      const [fRes, iRes, ingRes, pRes, mpRes] = await Promise.all([
         rndFormulasApi.byId(id),
         rndFormulaItemsApi.byFormula(id),
         rndIngredientsApi.list(),
         rndFormulaParamsApi.byFormula(id),
+        rndMasterParamsApi.list(),
       ]);
 
       if (fRes.error) throw new Error(fRes.error.message);
@@ -145,6 +147,7 @@ export function FormulaBuilder() {
       setItems(iRes.data || []);
       setIngredients(ingRes.data || []);
       setParams(pRes.data || []);
+      setMasterParams(mpRes.data || []);
 
       setMetaForm({
         name: f.name,
@@ -677,10 +680,24 @@ export function FormulaBuilder() {
                   <label className="bos-form-label">Parameter Name *</label>
                   <input
                     className="bos-form-field"
+                    list="master-params-list"
                     value={newParam.param_name}
-                    onChange={e => setNewParam(p => ({ ...p, param_name: e.target.value }))}
+                    onChange={e => {
+                      const val = e.target.value;
+                      const matched = masterParams.find(m => m.name.toLowerCase() === val.toLowerCase());
+                      setNewParam(p => ({ 
+                        ...p, 
+                        param_name: val,
+                        unit: matched && matched.default_unit && !p.unit ? matched.default_unit : p.unit
+                      }));
+                    }}
                     placeholder="e.g. pH, Brix, Viscosity, Moisture %"
                   />
+                  <datalist id="master-params-list">
+                    {masterParams.map(mp => (
+                      <option key={mp.id} value={mp.name}>{mp.category}</option>
+                    ))}
+                  </datalist>
                 </div>
                 <div className="bos-form-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   <div className="bos-form-group">

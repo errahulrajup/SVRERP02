@@ -3,7 +3,7 @@ import { apiRequest } from './api';
 import type {
   RndIngredient, RndFormula, RndFormulaItem, RndProcess, RndTrial,
   RndNotebook, RndFile, RndFormulaItemWithIngredient, RndTrialWithFormula,
-  RndFormulaParam, RndTrialParam
+  RndFormulaParam, RndTrialParam, RndMasterParameter
 } from '../types/rnd';
 
 const ORDER_DESC = { ascending: false };
@@ -32,6 +32,14 @@ export const rndFormulaItemsApi = {
   create: (data: Omit<RndFormulaItem, 'id' | 'created_at'>) => apiRequest<RndFormulaItem>(() => supabase.from('rnd_formula_items').insert(data).select().single(), { label: 'rnd.formulaItems.create', retries: 0 }),
   update: (id: string, data: Partial<RndFormulaItem>) => apiRequest<RndFormulaItem>(() => supabase.from('rnd_formula_items').update(data).eq('id', id).select().single(), { label: 'rnd.formulaItems.update', retries: 0 }),
   remove: (id: string) => apiRequest<null>(() => supabase.from('rnd_formula_items').delete().eq('id', id), { label: 'rnd.formulaItems.remove', retries: 0 }),
+};
+
+// ── Master QC target parameters (Settings) ──────────────────────────────────
+export const rndMasterParamsApi = {
+  list: () => apiRequest<RndMasterParameter[]>(() => supabase.from('rnd_master_parameters').select('*').order('name', { ascending: true }), { label: 'rnd.masterParams.list' }),
+  create: (data: Omit<RndMasterParameter, 'id' | 'created_at'>) => apiRequest<RndMasterParameter>(() => supabase.from('rnd_master_parameters').insert(data).select().single(), { label: 'rnd.masterParams.create', retries: 0 }),
+  update: (id: string, data: Partial<RndMasterParameter>) => apiRequest<RndMasterParameter>(() => supabase.from('rnd_master_parameters').update(data).eq('id', id).select().single(), { label: 'rnd.masterParams.update', retries: 0 }),
+  remove: (id: string) => apiRequest<null>(() => supabase.from('rnd_master_parameters').delete().eq('id', id), { label: 'rnd.masterParams.remove', retries: 0 }),
 };
 
 // ── Dynamic formula QC target parameters ──────────────────────────────────────

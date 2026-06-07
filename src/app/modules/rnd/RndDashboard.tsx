@@ -46,7 +46,10 @@ export function RndDashboard() {
           <h1 className="rnd-title">Laboratory Overview</h1>
           <p className="rnd-subtitle">Formulation metrics, active trials, and system alerts.</p>
         </div>
-        <button className="rnd-btn" onClick={handleRefresh}>🔄 Refresh Data</button>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <button className="rnd-btn" onClick={() => window.location.href = '/rnd/settings'}>⚙️ Settings</button>
+          <button className="rnd-btn" onClick={handleRefresh}>🔄 Refresh Data</button>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20, marginBottom: 32 }}>

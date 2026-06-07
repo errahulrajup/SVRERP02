@@ -57,6 +57,15 @@ export interface RndFormulaItemWithIngredient extends RndFormulaItem {
   ingredient: RndIngredient;
 }
 
+// ── Master QC target parameters (Settings) ──────────────────────────────────
+export interface RndMasterParameter {
+  id: string;
+  name: string;
+  category: string;
+  default_unit: string | null;
+  created_at: string;
+}
+
 // ── Dynamic formula QC target parameters ──────────────────────────────────────
 export interface RndFormulaParam {
   id: string;
