@@ -12,132 +12,366 @@ export function AboutPage() {
   const { data: seo } = usePageSeo('about');
   const { settings } = useSiteSettings();
   const go = (p: string) => { navigate(p); window.scrollTo(0, 0); };
-  const aboutImg = '/images/plantsmor-natural.jpg';
 
   const PILLARS = [
-    { h: content.pillar_1?.title ?? 'Nordic Standard',    p: content.pillar_1?.body ?? 'Pure, honest ingredients crafted with Scandinavian food philosophy.' },
-    { h: content.pillar_2?.title ?? 'Culinary Excellence', p: content.pillar_2?.body ?? 'High heat stability and butter-like functionality in every environment.' },
-    { h: content.pillar_3?.title ?? '100% Plant-Based',   p: content.pillar_3?.body ?? 'No dairy, no compromises on flavor, taste, or texture.' },
-    { h: content.pillar_4?.title ?? 'Built For Planet',    p: content.pillar_4?.body ?? 'Minimizing environmental footprint with every batch we blend.' },
+    { h: content.pillar_1?.title ?? 'Indian Craftsmanship', p: content.pillar_1?.body ?? 'Pure, honest ingredients crafted locally to meet the diverse needs of Indian kitchens.' },
+    { h: content.pillar_2?.title ?? 'Culinary Excellence', p: content.pillar_2?.body ?? 'High heat stability and dairy-like performance in baking, frying, and spreading.' },
+    { h: content.pillar_3?.title ?? '100% Plant-Based',   p: content.pillar_3?.body ?? 'Dairy-free formulation with clean plant lipids, zero trans-fats, and zero compromises.' },
+    { h: content.pillar_4?.title ?? 'Built for Sustainability', p: content.pillar_4?.body ?? 'Minimizing food miles and carbon footprints by sourcing plant oils responsibly.' },
   ];
 
   const VALUES = [
-    { icon: '🌱', h: content.value_1?.title ?? 'Taste First',              p: content.value_1?.body ?? 'Our spreads must taste exceptional. Ethical eating shouldn\'t mean compromising on culinary pleasure.' },
-    { icon: '🌿', h: content.value_2?.title ?? 'Nordic Simplicity',        p: content.value_2?.body ?? 'Clean labels, transparent sourcing, and ingredients that you can recognize.' },
-    { icon: '🌍', h: content.value_3?.title ?? 'Sustainability as Standard', p: content.value_3?.body ?? 'Every decision we make, from oils to packaging, is measured by its impact on our environment.' },
+    { icon: '🌱', h: content.value_1?.title ?? 'Taste First',              p: content.value_1?.body ?? 'Our spreads must taste exceptional. Ethical food shouldn\'t mean compromising on culinary pleasure.' },
+    { icon: '🧪', h: content.value_2?.title ?? 'Clean Formulation',        p: content.value_2?.body ?? 'No hydrogenated oils, no heavy additives. Simple ingredients processed with culinary science.' },
+    { icon: '🏆', h: content.value_3?.title ?? 'Strict Quality Control', p: content.value_3?.body ?? 'Rigorous quality parameters at every stage of refining, blending, and packaging.' },
   ];
 
   return (
     <>
-      <SEO title={seo?.title ?? 'Our Story — PlantSmör'} description={seo?.description ?? 'Learn about the culinary philosophy, ingredients, and sustainability mission behind PlantSmör.'} />
+      <SEO 
+        title={seo?.title ?? 'Our Story — Srivriddhi'} 
+        description={seo?.description ?? 'Learn about the culinary philosophy, ingredients, and quality mission behind Srivriddhi plant-based products.'} 
+      />
       <style>{`
-        .ab-hero { position:relative; width:100%; height:75vh; min-height:480px; overflow:hidden; display:flex; align-items:flex-end; background:var(--bg-main); }
-        .ab-bg { position:absolute; inset:0; background-image:url('${aboutImg}'); background-size:cover; background-position:center 45%; filter: brightness(75%) contrast(102%); }
-        .ab-grad { position:absolute; inset:0; background:linear-gradient(to top, rgba(10,22,40,0.98) 0%, rgba(10,22,40,0.60) 45%, rgba(10,22,40,0.1) 100%); }
-        .ab-content { position:relative; z-index:2; width:100%; max-width:var(--max-w); margin:0 auto; padding:0 var(--pad) 72px; }
-        .ab-pillars { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; margin-top:36px; }
-        .ab-values { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; margin-top:36px; }
-        .ab-timeline { display:flex; flex-direction:column; gap:0; margin-top:36px; }
-        .ab-tl-row { display:grid; grid-template-columns:120px 1fr; gap:28px; padding:24px 0; border-bottom:1px solid var(--border); }
-        .ab-pillar-card { background:var(--bg-second); border:1px solid var(--border); border-radius:var(--radius-lg); padding:28px 24px; transition:all 0.3s ease; }
-        .ab-pillar-card:hover { border-color:var(--border-gold); transform:translateY(-2px); }
-        .ab-value-card { background:var(--bg-second); border:1px solid var(--border); border-radius:var(--radius-xl); padding:36px 24px; text-align:center; transition:all 0.3s ease; }
-        .ab-value-card:hover { border-color:var(--border-gold); transform:translateY(-2px); }
-        @media (max-width:960px) { .ab-pillars{grid-template-columns:1fr 1fr;} }
-        @media (max-width:768px) { .ab-hero{height:100dvh;min-height:500px;} .ab-content{padding:0 var(--pad) 56px;} .ab-values{grid-template-columns:1fr;} .ab-tl-row{grid-template-columns:80px 1fr; gap:16px;} }
-        @media (max-width:480px) { .ab-pillars{grid-template-columns:1fr;} }
+        /* ── ABOUT PAGE WARM THEME OVERRIDES ── */
+        .abw-root {
+          background: #FFFBF2;
+          color: #1A150A;
+          font-family: 'DM Sans', sans-serif;
+          min-height: 100vh;
+          padding-top: var(--hdr-h);
+        }
+        
+        /* Hero */
+        .abw-hero {
+          position: relative;
+          background: linear-gradient(135deg, #FFFBF0 0%, #FFF4D6 40%, #FFF9EC 100%);
+          padding: 90px 0 70px;
+          text-align: center;
+          overflow: hidden;
+          border-bottom: 1px solid rgba(201,134,10,0.08);
+        }
+        .abw-hero::before {
+          content: '';
+          position: absolute; top: -120px; right: -120px;
+          width: 500px; height: 500px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(212,160,23,0.08) 0%, transparent 70%);
+          pointer-events: none;
+        }
+
+        .abw-section-label {
+          display: inline-block;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+          color: #1A6B47;
+          margin-bottom: 14px;
+        }
+
+        .abw-hero-h1 {
+          font-family: 'Cormorant Garamond', Georgia, serif;
+          font-size: clamp(34px, 6vw, 60px);
+          font-weight: 600;
+          line-height: 1.1;
+          color: #1A150A;
+          margin-bottom: 20px;
+        }
+        .abw-hero-h1 em {
+          font-style: italic;
+          color: #C9860A;
+        }
+
+        .abw-hero-lead {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 16px;
+          color: #5A4A30;
+          max-width: 640px;
+          margin: 0 auto;
+          line-height: 1.7;
+        }
+
+        /* Pillars Grid */
+        .abw-pillars {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 24px;
+          margin-top: 48px;
+        }
+        .abw-pillar-card {
+          background: #fff;
+          border: 1.5px solid rgba(201,134,10,0.1);
+          border-radius: 20px;
+          padding: 32px 24px;
+          transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .abw-pillar-card:hover {
+          border-color: #1A6B47;
+          transform: translateY(-5px);
+          box-shadow: 0 16px 40px rgba(120,80,20,0.06);
+        }
+        .abw-pillar-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: #1A6B47;
+          margin-bottom: 18px;
+        }
+        .abw-pillar-name {
+          font-family: 'Cormorant Garamond', Georgia, serif;
+          font-size: 22px;
+          font-weight: 600;
+          color: #1A150A;
+          margin-bottom: 10px;
+        }
+        .abw-pillar-desc {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 13.5px;
+          color: #5A4A30;
+          line-height: 1.6;
+        }
+
+        /* Values Grid */
+        .abw-values {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 32px;
+          margin-top: 48px;
+        }
+        .abw-value-card {
+          background: #fff;
+          border: 1.5px solid rgba(201,134,10,0.1);
+          border-radius: 24px;
+          padding: 40px 32px;
+          text-align: center;
+          transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .abw-value-card:hover {
+          border-color: #C9860A;
+          transform: translateY(-5px);
+          box-shadow: 0 16px 40px rgba(120,80,20,0.08);
+        }
+        .abw-value-icon-box {
+          width: 68px;
+          height: 68px;
+          border-radius: 50%;
+          background: rgba(201,134,10,0.06);
+          border: 1.5px solid rgba(201,134,10,0.15);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 24px;
+          font-size: 28px;
+        }
+        .abw-value-title {
+          font-family: 'Cormorant Garamond', Georgia, serif;
+          font-size: 24px;
+          font-weight: 600;
+          color: #1A150A;
+          margin-bottom: 12px;
+        }
+        .abw-value-desc {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 14px;
+          color: #5A4A30;
+          line-height: 1.6;
+        }
+
+        /* Partner CTA Section */
+        .abw-partner-cta {
+          text-align: center;
+          background: #FFF9EC;
+          border-top: 1px solid rgba(201,134,10,0.08);
+          padding: 90px 0;
+        }
+        .abw-cta-title {
+          font-family: 'Cormorant Garamond', Georgia, serif;
+          font-size: clamp(28px, 4vw, 42px);
+          font-weight: 600;
+          color: #1A150A;
+          margin-bottom: 18px;
+        }
+        .abw-cta-desc {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 15px;
+          color: #5A4A30;
+          max-width: 600px;
+          margin: 0 auto 36px;
+          line-height: 1.7;
+        }
+        .abw-cta-btns {
+          display: flex;
+          gap: 16px;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+        .abw-btn-gold {
+          background: #C9860A;
+          color: #fff;
+          border: none;
+          border-radius: 8px;
+          padding: 14px 32px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 14px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.25s ease;
+          box-shadow: 0 4px 16px rgba(201,134,10,0.25);
+        }
+        .abw-btn-gold:hover {
+          background: #b07304;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 24px rgba(201,134,10,0.35);
+        }
+        .abw-btn-outline {
+          background: transparent;
+          color: #1A150A;
+          border: 2px solid rgba(26,21,10,0.25);
+          border-radius: 8px;
+          padding: 12px 30px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 14px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.25s ease;
+        }
+        .abw-btn-outline:hover {
+          border-color: #1A6B47;
+          color: #1A6B47;
+          transform: translateY(-2px);
+        }
+
+        @media (max-width: 1024px) {
+          .abw-pillars { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+          .abw-values { grid-template-columns: 1fr; gap: 24px; max-width: 500px; margin: 48px auto 0; }
+        }
+        @media (max-width: 640px) {
+          .abw-pillars { grid-template-columns: 1fr; gap: 20px; }
+        }
       `}</style>
 
-      <div style={{ background: 'var(--bg-main)' }}>
-        {/* Hero */}
-        <section className="ab-hero">
-          <div className="ab-bg" /><div className="ab-grad" />
-          <div style={{ position:'absolute', bottom:0, left:0, right:0, height:180, background:'linear-gradient(to top,rgba(201,166,60,0.05),transparent)', pointerEvents:'none', zIndex:1 }} />
-          <div className="ab-content">
-            <motion.p initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.5 }} className="t-label" style={{ marginBottom:14 }}>Our Story</motion.p>
-            <motion.h1 initial={{ opacity:0, y:28 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.6, delay:0.1 }}
-              style={{ fontFamily:"'Cormorant Garamond',Georgia,serif", fontSize:'var(--t-hero)', fontWeight: 400, lineHeight:1.1, color:'#fff' }}>
-              PlantSmör<br /><span style={{ color:'var(--gold)' }}>Spread the Change.</span>
-            </motion.h1>
-            <motion.p initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.6, delay:0.2 }}
-              style={{ fontFamily:"'DM Sans',sans-serif", fontSize:'15px', lineHeight:1.75, color:'var(--text-3)', maxWidth:520, marginTop:20 }}>
-              {loading ? 'A premium Nordic plant-based food brand.' : (content.mission?.body ?? 'A premium plant-based food brand engineered with clean Scandinavian design, rich flavor, and absolute functionality.')}
-            </motion.p>
-          </div>
-        </section>
-
-        {/* Mission */}
-        <section className="sec" style={{ background: 'var(--theme-cream)', color: 'var(--bg-main)', borderBottom:'1px solid var(--border)' }}>
-          <div className="wrap" style={{ maxWidth:720, margin:'0 auto', textAlign:'center' }}>
-            <span className="hp-sus-label">Our Mission</span>
-            <h2 className="hp-sus-title">Plant-Based. Premium. <span style={{ color:'var(--theme-leaf)' }}>Purposeful.</span></h2>
-            <p className="hp-sus-desc" style={{ marginBottom: 20 }}>{content.mission?.body ?? 'We believe plant-based food deserves to be crafted with the same rigor, quality, and culinary ambition as the world\'s best dairy products.'}</p>
-            <p className="t-sm" style={{ color:'#556675', lineHeight: 1.8 }}>{content.story?.body ?? 'We don\'t make compromises for plants. We build superior products that perform reliably for chefs, home cooks, and bakers alike.'}</p>
-          </div>
-        </section>
-
-        {/* Pillars */}
-        <section className="sec" style={{ borderBottom:'1px solid var(--border)' }}>
+      <div className="abw-root">
+        {/* Hero Section */}
+        <section className="abw-hero">
           <div className="wrap">
-            <p className="t-label" style={{ marginBottom:10 }}>What We Stand For</p>
-            <h2 className="t-h2">Our Four Pillars</h2>
-            <div style={{ width:40,height:2,background:'linear-gradient(90deg,var(--gold),transparent)',margin:'12px 0' }} />
-            <motion.div className="ab-pillars" initial="hidden" whileInView="show" viewport={{ once:true }} variants={FC}>
+            <span className="abw-section-label">Our Philosophy</span>
+            <h1 className="abw-hero-h1">
+              Srivriddhi — <em>Taste First, Always.</em>
+            </h1>
+            <p className="abw-hero-lead">
+              {loading 
+                ? 'Crafting premium plant-based culinary solutions.' 
+                : (content.mission?.body ?? 'A premium food tech brand blending rigorous culinary standards with clean plant lipids to build the future of butter alternatives.')}
+            </p>
+          </div>
+        </section>
+
+        {/* Mission Statement Split (Light Box Style) */}
+        <section className="sec" style={{ background: '#fff', borderBottom: '1px solid rgba(201,134,10,0.06)' }}>
+          <div className="wrap" style={{ maxWidth: 780, margin: '0 auto', textAlign: 'center' }}>
+            <span className="abw-section-label" style={{ color: '#C9860A' }}>The Core Mission</span>
+            <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 600, color: '#1A150A', marginBottom: 20, lineHeight: 1.2 }}>
+              Engineered for Bakers, Chefs, & <span style={{ color: '#1A6B47' }}>Kitchens That Care.</span>
+            </h2>
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 16, color: '#4A3B22', lineHeight: 1.8, marginBottom: 24 }}>
+              {content.mission?.body ?? 'We believe plant-based spreads deserve to be engineered with the same consistency, performance, and sensory satisfaction as premium dairy butter.'}
+            </p>
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#7A6A4A', lineHeight: 1.7 }}>
+              {content.story?.body ?? 'Our commitment is culinary precision. Every recipe, emulsion, and packaging lot is verified under strict standards in our food lab to ensure flawless aeration in cookies, puffing in pastry, and high smoke points in pan-frying.'}
+            </p>
+          </div>
+        </section>
+
+        {/* Four Pillars Section */}
+        <section className="sec" style={{ borderBottom: '1px solid rgba(201,134,10,0.06)' }}>
+          <div className="wrap">
+            <div style={{ textAlign: 'center' }}>
+              <span className="abw-section-label">Foundational Pillars</span>
+              <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 'clamp(26px, 3.5vw, 38px)', fontWeight: 600, color: '#1A150A' }}>How We Stand Out</h2>
+            </div>
+            
+            <motion.div 
+              className="abw-pillars" 
+              initial="hidden" 
+              whileInView="show" 
+              viewport={{ once: true, amount: 0.15 }} 
+              variants={FC}
+            >
               {PILLARS.map(p => (
-                <motion.div key={p.h} variants={FI} transition={{ duration:0.45 }} className="ab-pillar-card">
-                  <div style={{ width:8,height:8,borderRadius:'50%',background:'var(--theme-leaf)',marginBottom:14 }} />
-                  <h3 className="t-h3" style={{ fontSize: 20, marginBottom:8 }}>{p.h}</h3>
-                  <p className="t-sm" style={{ opacity: 0.8 }}>{p.p}</p>
+                <motion.div key={p.h} variants={FI} transition={{ duration: 0.45 }} className="abw-pillar-card">
+                  <div className="abw-pillar-dot" />
+                  <h3 className="abw-pillar-name">{p.h}</h3>
+                  <p className="abw-pillar-desc">{p.p}</p>
                 </motion.div>
               ))}
             </motion.div>
           </div>
         </section>
 
-        {/* Values */}
-        <section className="sec" style={{ background: 'var(--bg-second)', borderBottom:'1px solid var(--border)' }}>
+        {/* Values Section */}
+        <section className="sec" style={{ background: '#FFFBF2', borderBottom: '1px solid rgba(201,134,10,0.06)' }}>
           <div className="wrap">
-            <p className="t-label" style={{ marginBottom:10 }}>Our Values</p>
-            <h2 className="t-h2">How We Think</h2>
-            <div style={{ width:40,height:2,background:'linear-gradient(90deg,var(--gold),transparent)',margin:'12px 0' }} />
-            <motion.div className="ab-values" initial="hidden" whileInView="show" viewport={{ once:true }} variants={FC}>
+            <div style={{ textAlign: 'center' }}>
+              <span className="abw-section-label" style={{ color: '#1A6B47' }}>Our Values</span>
+              <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 'clamp(26px, 3.5vw, 38px)', fontWeight: 600, color: '#1A150A' }}>Guiding Principles</h2>
+            </div>
+            
+            <motion.div 
+              className="abw-values" 
+              initial="hidden" 
+              whileInView="show" 
+              viewport={{ once: true, amount: 0.15 }} 
+              variants={FC}
+            >
               {VALUES.map(v => (
-                <motion.div key={v.h} variants={FI} transition={{ duration:0.45 }} className="ab-value-card">
-                  <div style={{ width:60,height:60,borderRadius:'50%',background:'var(--gold-soft)',border:'1px solid var(--border-gold)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px',fontSize:24 }}>
-                    {v.icon}
-                  </div>
-                  <h3 className="t-h3" style={{ fontSize: 22, marginBottom:10 }}>{v.h}</h3>
-                  <p className="t-sm" style={{ opacity: 0.8 }}>{v.p}</p>
+                <motion.div key={v.h} variants={FI} transition={{ duration: 0.45 }} className="abw-value-card">
+                  <div className="abw-value-icon-box">{v.icon}</div>
+                  <h3 className="abw-value-title">{v.h}</h3>
+                  <p className="abw-value-desc">{v.p}</p>
                 </motion.div>
               ))}
             </motion.div>
           </div>
         </section>
 
-        {/* Founder */}
+        {/* Founder Section */}
         {(content.founder?.body || content.founder?.title) && (
-          <section className="sec" style={{ borderBottom:'1px solid var(--border)' }}>
-            <div className="wrap" style={{ maxWidth:800, margin:'0 auto' }}>
-              <p className="t-label" style={{ marginBottom:10 }}>The Leadership</p>
-              <h2 className="t-h2" style={{ marginBottom:0 }}>Founder</h2>
-              <div style={{ width:40,height:2,background:'linear-gradient(90deg,var(--gold),transparent)',margin:'12px 0 28px' }} />
-              <motion.div initial="hidden" whileInView="show" viewport={{ once:true }} variants={FC}
-                style={{ display:'flex', alignItems:'flex-start', gap:32, flexWrap:'wrap' }}>
-                <motion.div variants={FI} transition={{ duration:0.5 }}
-                  style={{ width:64,height:64,borderRadius:'50%',background:'var(--gold-soft)',border:'1px solid var(--border-gold)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,flexShrink:0 }}>
+          <section className="sec" style={{ background: '#fff', borderBottom: '1px solid rgba(201,134,10,0.06)' }}>
+            <div className="wrap" style={{ maxWidth: 840, margin: '0 auto' }}>
+              <div style={{ textAlign: 'center', marginBottom: 40 }}>
+                <span className="abw-section-label">Leadership</span>
+                <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 'clamp(26px, 3.5vw, 38px)', fontWeight: 600, color: '#1A150A' }}>Founder Message</h2>
+              </div>
+              
+              <motion.div 
+                initial="hidden" 
+                whileInView="show" 
+                viewport={{ once: true }} 
+                variants={FC}
+                style={{ display: 'flex', alignItems: 'flex-start', gap: 40, flexWrap: 'wrap' }}
+              >
+                <motion.div 
+                  variants={FI} 
+                  transition={{ duration: 0.5 }}
+                  style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(201,134,10,0.06)', border: '1.5px solid rgba(201,134,10,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, flexShrink: 0, margin: '0 auto' }}
+                >
                   🌾
                 </motion.div>
-                <motion.div variants={FI} transition={{ duration:0.5 }} style={{ flex:1, minWidth:260 }}>
+                
+                <motion.div variants={FI} transition={{ duration: 0.5 }} style={{ flex: 1, minWidth: 280 }}>
                   {content.founder?.title && (
-                    <h3 style={{ fontFamily:"'Cormorant Garamond',Georgia,serif", fontSize:'clamp(20px,2.5vw,26px)', fontWeight:500, color:'#fff', marginBottom:4 }}>
+                    <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 26, fontWeight: 600, color: '#1A150A', marginBottom: 4 }}>
                       {content.founder.title}
                     </h3>
                   )}
-                  <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:11, fontWeight:600, letterSpacing:'0.1em', textTransform:'uppercase', color:'var(--gold)', marginBottom:16, opacity:0.8 }}>
-                    Founder, Srivriddhi Enterprise
+                  <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#C9860A', marginBottom: 18 }}>
+                    Founder & Food Director
                   </p>
                   {content.founder?.body && (
-                    <p className="t-body" style={{ opacity:0.85 }}>{content.founder.body}</p>
+                    <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14.5, color: '#4A3B22', lineHeight: 1.75 }}>
+                      {content.founder.body}
+                    </p>
                   )}
                 </motion.div>
               </motion.div>
@@ -145,15 +379,22 @@ export function AboutPage() {
           </section>
         )}
 
-        {/* CTA */}
-        <section className="sec" style={{ textAlign:'center', background: 'var(--bg-second)', padding: '80px 0' }}>
-          <div className="wrap" style={{ maxWidth: 640, margin: '0 auto' }}>
-            <p className="t-label" style={{ marginBottom:16 }}>Partner With Us</p>
-            <h2 className="t-display" style={{ marginBottom:20 }}>Let's Build the Future of Food Together</h2>
-            <p className="t-lead" style={{ marginBottom:36, opacity: 0.85 }}>Whether you're a chef, bakery manager, retail buyer, or food distributor — we want to work with partners who believe great food can come from plants.</p>
-            <div style={{ display:'flex', gap:14, justifyContent:'center', flexWrap:'wrap' }}>
-              <button className="btn btn-gold btn-lg" onClick={() => go('/contact')}>Contact Our Team</button>
-              <button className="btn btn-ghost btn-lg" onClick={() => go('/products')}>Explore Products</button>
+        {/* Partner CTA Section */}
+        <section className="abw-partner-cta">
+          <div className="wrap">
+            <span className="abw-section-label">HoReCa & B2B Solutions</span>
+            <h2 className="abw-cta-title">Upgrade Your Kitchen Operations</h2>
+            <p className="abw-cta-desc">
+              Whether you represent a bakery chain, premium hotel, retail brand, or wholesale distribution, 
+              discover how Srivriddhi plant butter spreads can improve margins and flavor profiles.
+            </p>
+            <div className="abw-cta-btns">
+              <button className="abw-btn-gold" onClick={() => go('/contact')}>
+                Request Sample Pack
+              </button>
+              <button className="abw-btn-outline" onClick={() => go('/products')}>
+                Browse Product System
+              </button>
             </div>
           </div>
         </section>

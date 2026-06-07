@@ -89,19 +89,20 @@ const ManagerDashboard = lazy(() => import('./modules/admin/ManagerDashboard').t
 const BarcodeScanner = lazy(() => import('./pages/operator/BarcodeScanner').then(m => ({ default: m.BarcodeScanner })));
 const OperatorTask   = lazy(() => import('./pages/operator/OperatorTask').then(m => ({ default: m.OperatorTask })));
 
-// ── Public pages (eagerly loaded) ─────────────────────────────
-import { HomePage }      from './pages/HomePage';
-import { ProductsPage }  from './pages/ProductsPage';
-import { ProductDetail } from './pages/ProductDetail';
-import { AboutPage }     from './pages/AboutPage';
-import { ContactPage }   from './pages/ContactPage';
-import { BlogPage }      from './pages/BlogPage';
-import { BlogPostPage }  from './pages/BlogPostPage';
-import { NotFoundPage }  from './pages/NotFoundPage';
+// ── Public pages (lazy — not bundled with ERP user sessions) ───
+const HomePage      = lazy(() => import('./pages/HomePage').then(m => ({ default: m.HomePage })));
+const ProductsPage  = lazy(() => import('./pages/ProductsPage').then(m => ({ default: m.ProductsPage })));
+const ProductDetail = lazy(() => import('./pages/ProductDetail').then(m => ({ default: m.ProductDetail })));
+const AboutPage     = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })));
+const ContactPage   = lazy(() => import('./pages/ContactPage').then(m => ({ default: m.ContactPage })));
+const BlogPage      = lazy(() => import('./pages/BlogPage').then(m => ({ default: m.BlogPage })));
+const BlogPostPage  = lazy(() => import('./pages/BlogPostPage').then(m => ({ default: m.BlogPostPage })));
+const NotFoundPage  = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 
 // ── Auth ────────────────────────────────────────────────────────
 import { LoginPage } from './modules/auth/LoginPage';
 import { UnauthorizedPage } from './modules/auth/UnauthorizedPage';
+import { RequireAuth } from './components/RequireAuth';
 
 // ── Admin pages (lazy — never bundled with public site) ───────
 // Content

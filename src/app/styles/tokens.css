@@ -1,0 +1,226 @@
+/* ============================================================
+   SVRERP02 — Design Token System
+   Single source of truth for all colors, spacing, typography.
+   Eliminates hardcoded hex values (#071526, #EAB308, etc.)
+   across 11+ layout files.
+   ============================================================ */
+
+/* ── Core Brand Colors ── */
+:root {
+  /* Primary backgrounds — Deep Nordic Navy (~40% visual weight) */
+  --color-bg-main:      #0A1628;  /* App background */
+  --color-bg-sidebar:   #112745;  /* Sidebar surface */
+  --color-bg-card:      #1B2A44;  /* Card / panel surface */
+  --color-bg-card2:     #223555;  /* Elevated card */
+  --color-bg-header:    #0C1E36;  /* Topbar / header */
+  --color-bg-elevated:  #2A4066;  /* Modal / tooltip */
+  --color-bg-hover:     rgba(255,255,255,0.04); /* Nav item hover */
+
+  /* Borders */
+  --color-border:       rgba(165,184,209,0.12); /* Standard border */
+  --color-border-light: rgba(165,184,209,0.20); /* Highlighted border */
+  --color-border-gold:  rgba(201,166,60,0.22);  /* Gold accent border */
+
+  /* Text hierarchy */
+  --color-text-1:  #FFFFFF;       /* Primary text */
+  --color-text-2:  #FAF8F5;       /* Secondary / body text */
+  --color-text-3:  #A5B8D1;       /* Muted / label text */
+  --color-text-4:  rgba(255,255,255,0.18); /* Section labels */
+
+  /* Accent — Champagne Gold (~5% visual weight) */
+  --color-accent:       #EAB308;  /* Legacy gold (BOS modules) */
+  --color-accent-rgb:   234,179,8;
+  --color-gold:         #C9A63C;  /* Champagne gold (PlantSmör brand) */
+  --color-gold-soft:    rgba(201,166,60,0.10);
+  --color-gold-glow:    rgba(201,166,60,0.22);
+  --color-gold-dim:     rgba(234,179,8,0.06);
+
+  /* Status colors */
+  --color-status-ok:         #16a34a;
+  --color-status-ok-bg:      rgba(22,163,74,0.08);
+  --color-status-ok-border:  rgba(22,163,74,0.2);
+  --color-status-warn:       #d97706;
+  --color-status-warn-bg:    rgba(217,119,6,0.10);
+  --color-status-error:      #ef4444;
+  --color-status-error-bg:   rgba(239,68,68,0.08);
+  --color-status-error-border: rgba(239,68,68,0.2);
+  --color-status-info:       #60A5FA;
+  --color-status-info-bg:    rgba(96,165,250,0.08);
+
+  /* Botanical Green — sustainability accent */
+  --color-green:      #1A6B47;
+  --color-green-soft: rgba(26,107,71,0.08);
+
+  /* Danger */
+  --color-danger:     rgba(239,68,68,0.55);
+  --color-danger-hover: #ef4444;
+
+  /* ── Layout dimensions ── */
+  --sidebar-w:    200px;
+  --topbar-h:     56px;
+  --sidebar-brand-h: 52px;
+
+  /* ── Border radius ── */
+  --radius-sm:   4px;
+  --radius-md:   6px;
+  --radius-lg:   10px;
+  --radius-xl:   12px;
+  --radius-full: 9999px;
+
+  /* ── Shadows ── */
+  --shadow-sm:   0 1px 4px rgba(0,0,0,0.5);
+  --shadow-md:   0 4px 20px rgba(0,0,0,0.6);
+  --shadow-lg:   0 12px 48px rgba(0,0,0,0.7);
+  --shadow-glow: 0 0 40px rgba(212,168,67,0.12);
+
+  /* ── Typography scale ── */
+  --t-xs:    9.5px;
+  --t-sm:    11.5px;
+  --t-body:  13px;
+  --t-md:    14px;
+  --t-lg:    15px;
+  --t-xl:    18px;
+}
+
+/* ── App Shell Layout Classes ── */
+.shell { display: flex; min-height: 100vh; background: var(--color-bg-main); color: var(--color-text-1); font-family: 'DM Sans', 'Inter', system-ui, sans-serif; }
+
+/* Sidebar */
+.shell-sidebar {
+  width: var(--sidebar-w); min-width: var(--sidebar-w);
+  background: var(--color-bg-sidebar);
+  border-right: 1px solid var(--color-border);
+  display: flex; flex-direction: column;
+  position: fixed; top: 0; left: 0; height: 100vh;
+  z-index: 200; overflow-y: auto;
+  transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+}
+.shell-sidebar.open { transform: translateX(0) !important; }
+
+/* Sidebar brand header */
+.shell-brand {
+  padding: 12px 10px 8px;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0; cursor: pointer;
+}
+.shell-brand-row { display: flex; align-items: center; gap: 8px; }
+.shell-brand-icon {
+  width: 24px; height: 24px; border-radius: var(--radius-md);
+  background: rgba(var(--color-accent-rgb), 0.12);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.28);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.shell-brand-name {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 12.5px; font-weight: 700; color: var(--color-text-1); line-height: 1.2;
+}
+.shell-brand-sub {
+  font-size: var(--t-xs); font-weight: 700; letter-spacing: 0.2em;
+  text-transform: uppercase; margin-top: 1px; opacity: 0.75;
+  color: var(--color-accent);
+}
+
+/* Nav */
+.shell-nav { flex: 1; padding: 4px; overflow-y: auto; }
+.shell-nav-section-label {
+  font-family: 'DM Sans', sans-serif; font-size: var(--t-xs); font-weight: 700;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--color-text-4); padding: 8px 10px 2px; display: block;
+}
+.shell-nav-link {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px; border-radius: var(--radius-md);
+  background: transparent; border: none; width: 100%;
+  text-align: left; font-family: 'DM Sans', sans-serif;
+  font-size: var(--t-sm); font-weight: 500;
+  color: var(--color-text-2); cursor: pointer; text-decoration: none;
+  border-left: 2px solid transparent;
+  transition: background 0.15s, color 0.15s, border-left-color 0.15s;
+  margin-bottom: 1px;
+}
+.shell-nav-link:hover {
+  background: rgba(var(--color-accent-rgb), 0.07);
+  color: var(--color-accent);
+}
+.shell-nav-link.active {
+  background: rgba(var(--color-accent-rgb), 0.10);
+  color: var(--color-accent); font-weight: 600;
+  border-left-color: var(--color-accent);
+}
+.shell-nav-icon {
+  width: 18px; text-align: center; flex-shrink: 0;
+  opacity: 0.7; display: flex; align-items: center; justify-content: center;
+}
+.shell-nav-link.active .shell-nav-icon,
+.shell-nav-link:hover .shell-nav-icon { opacity: 1; }
+.shell-nav-badge {
+  background: var(--color-status-error); color: #fff;
+  border-radius: var(--radius-full); font-size: 9px; font-weight: 700;
+  padding: 1px 5px; min-width: 16px; text-align: center;
+}
+
+/* Sidebar footer (user chip) */
+.shell-sidebar-foot {
+  border-top: 1px solid var(--color-border); padding: 8px; flex-shrink: 0;
+}
+.shell-user-chip {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--color-bg-header); border: 1px solid var(--color-border);
+  border-radius: var(--radius-md); padding: 5px 8px;
+}
+.shell-user-avatar {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: rgba(var(--color-accent-rgb), 0.15);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; flex-shrink: 0; color: var(--color-accent);
+}
+.shell-user-name  { font-size: 11px; font-weight: 600; color: var(--color-text-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shell-user-role  { font-size: 9px; color: var(--color-text-3); margin-top: 1px; }
+.shell-signout-btn {
+  background: none; border: none; color: var(--color-danger);
+  cursor: pointer; padding: 4px; margin-left: auto; flex-shrink: 0;
+  display: flex; align-items: center; transition: color 0.2s;
+}
+.shell-signout-btn:hover { color: var(--color-danger-hover); }
+
+/* Main content area */
+.shell-main { flex: 1; margin-left: var(--sidebar-w); min-height: 100vh; display: flex; flex-direction: column; background: var(--color-bg-main); }
+.shell-content { flex: 1; overflow-y: auto; }
+
+/* Mobile topbar */
+.shell-mob-bar {
+  display: none;
+  position: fixed; top: 0; left: 0; right: 0; height: var(--topbar-h);
+  background: var(--color-bg-sidebar); border-bottom: 1px solid var(--color-border);
+  z-index: 198; align-items: center; justify-content: space-between; padding: 0 16px;
+}
+.shell-mob-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: var(--t-lg); font-weight: 700; color: var(--color-text-1);
+}
+.shell-mob-btn {
+  background: none; border: none; color: var(--color-text-2);
+  cursor: pointer; padding: 4px; display: flex;
+}
+
+/* Overlay */
+.shell-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.72); z-index: 190; cursor: pointer;
+}
+
+/* Scrollbar */
+.shell-sidebar::-webkit-scrollbar { width: 4px; }
+.shell-sidebar::-webkit-scrollbar-track { background: transparent; }
+.shell-sidebar::-webkit-scrollbar-thumb { background: rgba(165,184,209,0.2); border-radius: 4px; }
+.shell-sidebar::-webkit-scrollbar-thumb:hover { background: rgba(var(--color-accent-rgb), 0.4); }
+
+/* ── Mobile breakpoint ── */
+@media (max-width: 768px) {
+  .shell-sidebar { transform: translateX(-100%); }
+  .shell-mob-bar { display: flex !important; }
+  .shell-main { margin-left: 0; }
+  .shell-content { margin-top: var(--topbar-h); }
+  .shell-overlay.visible { display: block !important; }
+}

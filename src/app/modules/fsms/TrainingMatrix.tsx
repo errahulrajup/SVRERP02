@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import SignatureCanvas from 'react-signature-canvas';
+import { SignaturePad, type SignaturePadHandle } from '../../components/SignaturePad';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks';
 import { showToast } from '../../lib/toast';
@@ -13,8 +13,8 @@ export function TrainingMatrix() {
   const [selectedCell, setSelectedCell] = useState<{emp_id: string, sop_id: string} | null>(null);
   const [score, setScore] = useState(0);
 
-  const trainerSigRef = useRef<SignatureCanvas>(null);
-  const traineeSigRef = useRef<SignatureCanvas>(null);
+  const trainerSigRef = useRef<SignaturePadHandle>(null);
+  const traineeSigRef = useRef<SignaturePadHandle>(null);
 
   const loadData = async () => {
     const [matRes, empRes, sopRes] = await Promise.all([
@@ -154,14 +154,14 @@ export function TrainingMatrix() {
                 <div>
                   <label className="bos-form-label">Trainer Signature *</label>
                   <div style={{ border: '1px solid var(--bos-border)', borderRadius: 8, background: '#fff' }}>
-                    <SignatureCanvas ref={trainerSigRef} canvasProps={{ width: 250, height: 100, className: 'sig-canvas' }} />
+                    <SignaturePad ref={trainerSigRef} width={250} height={100} backgroundColor="rgba(255,255,255,1)" />
                   </div>
                   <button className="btn btn-sm btn-ghost" onClick={() => trainerSigRef.current?.clear()}>Clear</button>
                 </div>
                 <div>
                   <label className="bos-form-label">Trainee Signature * <span style={{color:'#F59E0B'}}>21 CFR Required</span></label>
                   <div style={{ border: '1px solid var(--bos-border)', borderRadius: 8, background: '#fff' }}>
-                    <SignatureCanvas ref={traineeSigRef} canvasProps={{ width: 250, height: 100, className: 'sig-canvas' }} />
+                    <SignaturePad ref={traineeSigRef} width={250} height={100} backgroundColor="rgba(255,255,255,1)" />
                   </div>
                   <button className="btn btn-sm btn-ghost" onClick={() => traineeSigRef.current?.clear()}>Clear</button>
                 </div>

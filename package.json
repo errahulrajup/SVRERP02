@@ -19,12 +19,12 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.4",
-    "@types/react-signature-canvas": "^1.0.7",
     "framer-motion": "^12.10.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router": "^7.13.0",
-    "react-signature-canvas": "^1.1.0-alpha.2"
+    "signature_pad": "^5.0.4",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.12",

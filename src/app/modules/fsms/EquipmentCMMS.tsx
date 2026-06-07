@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import SignatureCanvas from 'react-signature-canvas';
+import { SignaturePad, type SignaturePadHandle } from '../../components/SignaturePad';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks';
 import { showToast } from '../../lib/toast';
@@ -10,7 +10,7 @@ export function EquipmentCMMS() {
   const [selected, setSelected] = useState<any>(null);
   const [calibrating, setCalibrating] = useState(false);
   const [calForm, setCalForm] = useState({ result: 'PASS', notes: '', next_due: '', cert_url: '' });
-  const sigRef = useRef<SignatureCanvas>(null);
+  const sigRef = useRef<SignaturePadHandle>(null);
 
   const loadEquipment = async () => {
     const { data } = await supabase
@@ -141,7 +141,7 @@ export function EquipmentCMMS() {
                 <div className="bos-form-group" style={{ gridColumn: '1/-1' }}>
                   <label className="bos-form-label">Technician E-Signature * <span style={{color:'#F59E0B'}}>21 CFR Part 11</span></label>
                   <div style={{ border: '1px solid var(--bos-border)', borderRadius: 8, background: '#fff' }}>
-                    <SignatureCanvas ref={sigRef} canvasProps={{ width: 500, height: 150 }} />
+                    <SignaturePad ref={sigRef} width={500} height={150} backgroundColor="rgba(255,255,255,1)" />
                   </div>
                   <button className="btn btn-sm btn-ghost" onClick={() => sigRef.current?.clear()}>Clear</button>
                 </div>

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useInvoices, useExpenses, useBatches } from '../../hooks/useBos';
 import { fmtINR, fmtDate } from '../../types/bos';
+import { exportToCSV, exportToExcel, type ExportColumn } from '../../lib/export';
 
 export function AccountsDashboard() {
   const { items: invoices, loading: iLoading } = useInvoices();
@@ -78,16 +79,17 @@ export function AccountsDashboard() {
     ...filteredExpenses.map(e => ({ id: e.id, date: e.date, desc: `${e.category}: ${e.description}`, debit: e.amount, credit: 0, collected: 0, type: 'Expense' }))
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  const exportCSV = () => {
-    const csv = [
-      ['Date','Description','Type','Debit','Credit'].join(','),
-      ...entries.map(r => [r.date, `"${r.desc}"`, r.type, r.debit, r.credit].join(','))
-    ].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `GL_${period}_${new Date().toISOString().split('T')[0]}.csv`; a.click();
-  };
+  type GlEntry = { id: string; date: string; desc: string; debit: number; credit: number; type: string; };
+  const GL_COLUMNS: ExportColumn<GlEntry>[] = [
+    { header: 'Date',        getValue: r => r.date },
+    { header: 'Description', getValue: r => r.desc },
+    { header: 'Type',        getValue: r => r.type },
+    { header: 'Debit (₹)',   getValue: r => r.debit > 0 ? r.debit : '' },
+    { header: 'Credit (₹)',  getValue: r => r.credit > 0 ? r.credit : '' },
+  ];
+
+  const exportCSV   = () => exportToCSV(entries, GL_COLUMNS, `GL_${period}`);
+  const exportExcel = () => exportToExcel(entries, GL_COLUMNS, `GL_${period}`);
 
   return (
     <div>
@@ -108,7 +110,8 @@ export function AccountsDashboard() {
               <option value="accrual">Accrual Basis</option>
               <option value="cash">Cash Basis</option>
             </select>
-            <button className="bos-btn bos-btn-sm" onClick={exportCSV}>📥 Export CSV</button>
+            <button className="bos-btn bos-btn-sm" onClick={exportExcel} title="Download Excel">↓ Excel</button>
+            <button className="bos-btn bos-btn-sm" onClick={exportCSV} title="Download CSV">↓ CSV</button>
           </div>
         </div>
       </div>

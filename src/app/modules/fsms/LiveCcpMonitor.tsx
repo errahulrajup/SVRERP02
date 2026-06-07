@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks';
 import { useRecipeFsmsCcp } from '../../hooks/useBos';
@@ -10,6 +10,7 @@ export function LiveCcpMonitor() {
   const [equipment, setEquipment] = useState<any[]>([]);
   const [liveLogs, setLiveLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isLive, setIsLive] = useState(false);
 
   // Form State
   const [selectedCcp, setSelectedCcp] = useState('');
@@ -17,13 +18,13 @@ export function LiveCcpMonitor() {
   const [reading, setReading] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     // Load Equipment
     const { data: eqData } = await supabase.from('equipment').select('*').order('equipment_code');
     if (eqData) setEquipment(eqData);
 
-    // Load Live Logs (Last 50)
+    // Load initial logs (last 50)
     const { data: logsData } = await supabase
       .from('ccp_live_log')
       .select('*, profiles!logged_by(name), recipe_fsms_ccp(ccp_name, critical_limit), equipment(equipment_code, name)')
@@ -31,12 +32,39 @@ export function LiveCcpMonitor() {
       .limit(50);
     if (logsData) setLiveLogs(logsData);
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     loadData();
-    // In a real app, you would use supabase.channel() here for real-time WebSockets
-  }, []);
+
+    // ── Supabase Realtime: replace 30s polling with live INSERT subscription ──
+    const channel = supabase
+      .channel('ccp-live-realtime')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'ccp_live_log' },
+        async (payload) => {
+          // Fetch full row with joins
+          const { data } = await supabase
+            .from('ccp_live_log')
+            .select('*, profiles!logged_by(name), recipe_fsms_ccp(ccp_name, critical_limit), equipment(equipment_code, name)')
+            .eq('id', payload.new.id)
+            .single();
+          if (data) {
+            setLiveLogs(prev => [data, ...prev].slice(0, 50));
+          }
+        }
+      )
+      .subscribe((status) => {
+        setIsLive(status === 'SUBSCRIBED');
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+      setIsLive(false);
+    };
+  }, [loadData]);
+
 
   const handleLogReading = async () => {
     if (!selectedCcp || !selectedEquip || !reading) return alert('Select CCP, Equipment, and enter reading');
@@ -85,7 +113,24 @@ export function LiveCcpMonitor() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
           <div>
             <p className="bos-eyebrow">FSMS · Real-Time Monitor · FSMA Compliant</p>
-            <h1 className="bos-page-title">Live CCP Monitoring & CMMS</h1>
+            <h1 className="bos-page-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              Live CCP Monitoring &amp; CMMS
+              <span title={isLive ? 'Realtime connected' : 'Connecting...'} style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                fontSize: 11, fontWeight: 600, color: isLive ? '#16a34a' : 'var(--bos-text3)',
+                background: isLive ? 'rgba(22,163,74,0.08)' : 'rgba(138,134,120,0.1)',
+                border: `1px solid ${isLive ? 'rgba(22,163,74,0.25)' : 'rgba(138,134,120,0.2)'}`,
+                borderRadius: 20, padding: '2px 10px',
+              }}>
+                <span style={{
+                  width: 7, height: 7, borderRadius: '50%',
+                  background: isLive ? '#16a34a' : '#6b7280',
+                  animation: isLive ? 'livePulse 2s ease-in-out infinite' : 'none',
+                  flexShrink: 0,
+                }} />
+                {isLive ? 'Live' : 'Connecting…'}
+              </span>
+            </h1>
             <p className="bos-page-sub">Auto-CAPA triggers · Calibration verification · Real-time limits</p>
           </div>
         </div>
@@ -233,6 +278,10 @@ export function LiveCcpMonitor() {
           0% { opacity: 1; }
           50% { opacity: 0.4; }
           100% { opacity: 1; }
+        }
+        @keyframes livePulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(22,163,74,0.5); }
+          50% { box-shadow: 0 0 0 5px rgba(22,163,74,0); }
         }
       `}} />
     </div>
