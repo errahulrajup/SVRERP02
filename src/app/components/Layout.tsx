@@ -1,5 +1,5 @@
 // ── Layout.tsx ────────────────────────────────────────────────────────────────
-import { Outlet } from 'react-router';
+import { Outlet, useLocation } from 'react-router';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { ErrorBoundary } from './ErrorBoundary';
@@ -7,6 +7,8 @@ import { useSiteSettings } from '../hooks';
 
 export function Layout() {
   const { settings } = useSiteSettings();
+  const location = useLocation();
+  const isHome = location.pathname === '/';
   const waNumber = settings.site_whatsapp ?? '917565000365';
 
   return (
@@ -17,7 +19,7 @@ export function Layout() {
           <Outlet />
         </ErrorBoundary>
       </main>
-      <Footer />
+      {!isHome && <Footer />}
       {/* WhatsApp Float — dynamic from site settings */}
       <a href={`https://wa.me/${waNumber}`} target="_blank" rel="noopener noreferrer"
         className="wa-float" aria-label="Chat on WhatsApp">
