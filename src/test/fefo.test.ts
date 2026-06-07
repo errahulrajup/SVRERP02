@@ -6,7 +6,7 @@ describe('Inventory FEFO Allocation Integrity', () => {
     // Simple ping to ensure our staging config is working
     const { error } = await supabase.rpc('hello_world');
     // Just ensuring we don't get network ENOTFOUND errors
-    expect(error?.message).not.toContain('ENOTFOUND');
+    expect(error?.message || '').not.toContain('ENOTFOUND');
   });
 
   it('should prevent FEFO allocation if required stock is higher than available stock', async () => {

@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS public.batch_components (
 -- Indices for common join patterns
 CREATE INDEX IF NOT EXISTS idx_batch_components_batch ON public.batch_components(batch_id);
 CREATE INDEX IF NOT EXISTS idx_batch_components_lot   ON public.batch_components(lot_id);
-CREATE INDEX IF NOT EXISTS idx_batch_components_added ON public.batch_components(added_at DESC);
+CREATE INDEX IF NOT EXISTS idx_batch_components_added ON public.batch_components(created_at DESC);
 
 -- Auto-update updated_at
 CREATE OR REPLACE FUNCTION public.touch_batch_components()

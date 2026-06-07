@@ -36,8 +36,8 @@ interface HealthCheck {
 }
 
 const DB_TABLES = [
-  'grns','lots','stock_ledger','batches','fg_lots','dispatch_orders',
-  'invoices','expenses','capas','app_users','recipes',
+  'grns','lots','stock_ledger','batches','fg_lots','dispatches',
+  'invoices','expenses','capas','profiles','recipes',
 ];
 
 export function AdminHealth() {
@@ -53,7 +53,7 @@ export function AdminHealth() {
     // 1. DB ping
     const t0 = Date.now();
     try {
-      await metricsApi.count('app_users'); // ping
+      await metricsApi.count('profiles'); // ping
       results.push({ name: 'Database (Supabase PostgreSQL)', status: 'ok', value: 'Connected', latency: Date.now() - t0 });
     } catch {
       results.push({ name: 'Database (Supabase PostgreSQL)', status: 'error', value: 'Connection failed' });

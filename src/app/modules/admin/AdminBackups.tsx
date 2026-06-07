@@ -26,11 +26,11 @@ const BACKUP_TABLES = [
   { key: 'batches',          label: 'Production Batches',      module: 'Production' },
   { key: 'fg_lots',          label: 'FG Lots',                 module: 'Production' },
   { key: 'recipes',          label: 'Recipes / BOM',           module: 'Production' },
-  { key: 'dispatch_orders',  label: 'Dispatch Orders',         module: 'Accounts' },
+  { key: 'dispatches',       label: 'Dispatches',              module: 'Accounts' },
   { key: 'invoices',         label: 'Invoices',                module: 'Accounts' },
   { key: 'expenses',         label: 'Expenses',                module: 'Accounts' },
   { key: 'capas',            label: 'CAPA Register',           module: 'Compliances' },
-  { key: 'app_users',        label: 'Users',                   module: 'Admin' },
+  { key: 'profiles',         label: 'Profiles / Users',        module: 'Admin' },
 ];
 
 export function AdminBackups() {

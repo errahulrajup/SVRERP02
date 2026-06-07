@@ -4,6 +4,7 @@ import {
 } from '../../hooks/useBos';
 import { fmtDate } from '../../types/bos';
 import { showToast } from '../../lib/toast';
+import { supabase } from '../../lib/supabase';
 
 export function Traceability() {
   const { items: batches, loading: bLoading } = useBatches();
@@ -125,25 +126,32 @@ export function Traceability() {
 
         // Fetch consumed components
         try {
-          // FSSAI Traceability - Backend RPC required
-          throw new Error('Backend RPC get_batch_consumed_lots is required for accurate backward traceability.');
-        } catch (e: unknown) {
+          const { data: consumedLots, error: rpcError } = await supabase.rpc('get_batch_consumed_lots', { p_batch_id: batch.id });
+          if (rpcError) throw rpcError;
+
+          if (consumedLots && consumedLots.length > 0) {
+            nodes.push(<div key="consumed-arrow" style={{ textAlign: 'center', padding: 8, color: '#9AAF96', fontSize: 12 }}>↑ Consumed Materials (Batch Formula)</div>);
+            consumedLots.forEach((c: any) => {
+              nodes.push(<TraceNode key={`consumed-${c.id}`} title={`📥 Lot Consumed: ${c.material}`} color="#60A5FA" rows={[
+                ['Lot No', c.lot_no],
+                ['Qty Consumed', `${c.qty_consumed} kg`],
+                ['Cost', `₹${c.cost}`],
+                ['Date', fmtDate(c.created_at)]
+              ]} />);
+            });
+          } else {
+            nodes.push(
+              <div key="warn" style={{ margin: '8px 0 12px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 8, padding: '10px 14px', fontSize: 12, color: '#9AAF96' }}>
+                ℹ No batch consumed components record found for this batch in the database.
+              </div>
+            );
+          }
+        } catch (rpcErr: unknown) {
           nodes.push(
             <div key="warn" style={{ margin: '8px 0 12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, padding: '10px 14px', fontSize: 12, color: '#F87171' }}>
-              <strong>⚠ Traceability Limitation:</strong> {(e as Error).message}
+              <strong>⚠ Traceability Limitation:</strong> {(rpcErr as Error).message}
             </div>
           );
-            const bProd = (batch.product || '').toLowerCase();
-            const possibleGRNs = grns.filter(g => g.status !== 'REJECTED' && (g.material?.toLowerCase().includes(bProd) || bProd.includes(g.material?.toLowerCase() || '__none')));
-            if (possibleGRNs.length) {
-              nodes.push(<div key="poss-arrow" style={{ textAlign: 'center', padding: 8, color: '#9AAF96', fontSize: 12 }}>↑ Possible Source Materials (Best-Effort)</div>);
-              possibleGRNs.slice(0, 3).forEach(g => {
-                nodes.push(<TraceNode key={`grn-${g.id}`} title="📥 Possible Raw Material Source" color="#60A5FA" rows={[
-                  ['GRN No', g.grn_no], ['Supplier', g.supplier],
-                  ['Material', g.material], ['Qty', `${g.quantity} ${g.unit}`]
-                ]} />);
-              });
-            }
         }
       }
     }
