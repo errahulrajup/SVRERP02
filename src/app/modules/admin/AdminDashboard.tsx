@@ -28,7 +28,7 @@ export function AdminDashboard() {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
         {MODULES.map(mod => {
           const hasAccess = canAccessModule(mod.id);
           
@@ -40,7 +40,7 @@ export function AdminDashboard() {
                 background: 'var(--bg-card)', 
                 border: '1px solid var(--border)',
                 borderRadius: 'var(--radius-lg)', 
-                padding: '24px 20px',
+                padding: '16px 14px',
                 cursor: hasAccess ? 'pointer' : 'not-allowed', 
                 opacity: hasAccess ? 1 : 0.5,
                 transition: 'border-color 0.2s, transform 0.2s, box-shadow 0.2s',
@@ -59,15 +59,15 @@ export function AdminDashboard() {
                 d.style.transform = 'translateY(0)';
               }}
             >
-              <div style={{ fontSize: 32, marginBottom: 16 }}>{mod.icon}</div>
-              <h3 style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 6 }}>
+              <div style={{ fontSize: 24, marginBottom: 10 }}>{mod.icon}</div>
+              <h3 style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 4 }}>
                 {mod.label}
               </h3>
-              <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 1.4 }}>
+              <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: 'rgba(255,255,255,0.4)', lineHeight: 1.3 }}>
                 {mod.desc}
               </p>
               {!hasAccess && (
-                <div style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(248,113,113,0.1)', color: '#F87171', padding: '4px 8px', borderRadius: 4, fontSize: 10, fontWeight: 600 }}>
+                <div style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(248,113,113,0.1)', color: '#F87171', padding: '4px 8px', borderRadius: 4, fontSize: 10, fontWeight: 600 }}>
                   Locked
                 </div>
               )}
