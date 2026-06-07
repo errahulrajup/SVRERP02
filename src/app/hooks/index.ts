@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { supabase } from '../lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 import type { ApiError, ApiResult, PageOptions } from '../lib/api';
 import { captureException } from '../lib/observability';
@@ -31,11 +32,18 @@ const ROLE_RANK: Record<BosRole | 'EDITOR', number> = {
 export function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [orgId, setOrgId] = useState<string | null>(null);
 
   useEffect(() => {
     auth.getSession()
       .then(({ data }) => {
         setSession(data.session ?? null);
+        if (data.session?.user?.id) {
+          supabase.from('profiles').select('org_id').eq('id', data.session.user.id).single()
+            .then(res => {
+              if (res.data) setOrgId(res.data.org_id);
+            });
+        }
         setLoading(false);
       })
       .catch((err) => {
@@ -44,6 +52,14 @@ export function useAuth() {
       });
     const { data: { subscription } } = auth.onAuthStateChange((_e, s) => {
       setSession(s);
+      if (s?.user?.id) {
+        supabase.from('profiles').select('org_id').eq('id', s.user.id).single()
+          .then(res => {
+            if (res.data) setOrgId(res.data.org_id);
+          });
+      } else {
+        setOrgId(null);
+      }
       setLoading(false);
     });
     return () => subscription.unsubscribe();
@@ -70,6 +86,7 @@ export function useAuth() {
         is_active: true,
         last_sign_in_at: session.user.last_sign_in_at ?? null,
         created_at: session.user.created_at ?? new Date().toISOString(),
+        org_id: orgId || 'a0000000-0000-0000-0000-000000000001',
       }
     : null;
 

@@ -2050,13 +2050,17 @@ create index if not exists rnd_files_entity_idx on public.rnd_files(entity_type,
 
 -- RND-01 FIX: Add missing tables that were in rnd_params_upgrade.sql only
 CREATE TABLE IF NOT EXISTS rnd_formula_params (
-  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  formula_id  uuid NOT NULL REFERENCES rnd_formulas(id) ON DELETE CASCADE,
-  param_name  text NOT NULL,
-  target_min  numeric,
-  target_max  numeric,
-  unit        text,
-  created_at  timestamptz DEFAULT now(),
+  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  formula_id   uuid NOT NULL REFERENCES rnd_formulas(id) ON DELETE CASCADE,
+  param_name   text NOT NULL,
+  unit         text,
+  target_min   numeric,
+  target_max   numeric,
+  target_value numeric,
+  test_method  text,
+  notes        text,
+  sort_order   integer DEFAULT 0,
+  created_at   timestamptz DEFAULT now(),
   UNIQUE(formula_id, param_name)
 );
 

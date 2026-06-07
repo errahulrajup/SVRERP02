@@ -44,7 +44,8 @@ export function RndSettings() {
   const handleAddParam = async () => {
     if (!paramForm.name.trim()) return alert('Parameter name is required');
     try {
-      await rndMasterParamsApi.create(paramForm);
+      const { error } = await rndMasterParamsApi.create(paramForm);
+      if (error) throw new Error(error.message);
       setParamForm({ name: '', category: 'Physical', default_unit: '' });
       loadParams();
     } catch (e: any) { alert(e.message); }
@@ -53,7 +54,8 @@ export function RndSettings() {
   const handleDeleteParam = async (id: string) => {
     if (!confirm('Delete this parameter?')) return;
     try {
-      await rndMasterParamsApi.remove(id);
+      const { error } = await rndMasterParamsApi.remove(id);
+      if (error) throw new Error(error.message);
       loadParams();
     } catch (e: any) { alert(e.message); }
   };
@@ -61,10 +63,16 @@ export function RndSettings() {
   const handleAddMachine = async () => {
     if (!machineForm.name.trim() || !machineForm.equipment_code.trim()) return alert('Name and Code are required');
     try {
-      await equipmentApi.create({
-        ...machineForm,
-        org_id: 'a0000000-0000-0000-0000-000000000001'
+      const orgId = user?.org_id || 'a0000000-0000-0000-0000-000000000001';
+      const { error } = await equipmentApi.create({
+        name: machineForm.name,
+        asset_code: machineForm.equipment_code,
+        equipment_code: machineForm.equipment_code,
+        equipment_type: machineForm.equipment_type,
+        status: machineForm.status,
+        org_id: orgId
       });
+      if (error) throw new Error(error.message);
       setMachineForm({ name: '', equipment_code: '', equipment_type: 'Mixer', status: 'ACTIVE' });
       loadMachines();
     } catch (e: any) { alert(e.message); }
@@ -73,7 +81,8 @@ export function RndSettings() {
   const handleDeleteMachine = async (id: string) => {
     if (!confirm('Delete this equipment?')) return;
     try {
-      await equipmentApi.remove(id);
+      const { error } = await equipmentApi.remove(id);
+      if (error) throw new Error(error.message);
       loadMachines();
     } catch (e: any) { alert(e.message); }
   };

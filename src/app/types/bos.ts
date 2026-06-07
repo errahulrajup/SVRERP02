@@ -578,6 +578,7 @@ export interface BosUser {
   is_active: boolean;
   last_sign_in_at: string | null;
   created_at: string;
+  org_id?: string;
 }
 
 // ── Utility types ─────────────────────────────────────────────────────────────
