@@ -11,8 +11,8 @@ const NAV = [
 ];
 
 export function Header() {
-  const [scrolled,  setScrolled]  = useState(false);
-  const [menuOpen,  setMenuOpen]  = useState(false);
+  const [scrolled,   setScrolled]   = useState(false);
+  const [menuOpen,   setMenuOpen]   = useState(false);
   const navigate  = useNavigate();
   const location  = useLocation();
   const { settings } = useSiteSettings();
@@ -21,7 +21,7 @@ export function Header() {
   const headerCta = settings.header_cta_label ?? 'Get Samples';
 
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 30);
+    const fn = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', fn, { passive: true });
     return () => window.removeEventListener('scroll', fn);
   }, []);
@@ -35,209 +35,92 @@ export function Header() {
   const go = (path: string) => { navigate(path); window.scrollTo({ top: 0 }); };
   const isActive = (p: string) => p === '/' ? location.pathname === '/' : location.pathname.startsWith(p);
 
-  // Detect if we're on a "dark" ERP/admin page to keep dark header there
-  const isDarkPage = location.pathname.startsWith('/admin') ||
-    location.pathname.startsWith('/cms') ||
-    location.pathname.startsWith('/inventory') ||
-    location.pathname.startsWith('/production') ||
-    location.pathname.startsWith('/qc') ||
-    location.pathname.startsWith('/dms') ||
-    location.pathname.startsWith('/accounts') ||
-    location.pathname.startsWith('/logistics') ||
-    location.pathname.startsWith('/fsms') ||
-    location.pathname.startsWith('/compliances') ||
-    location.pathname.startsWith('/rnd');
-
-  if (isDarkPage) return null; // ERP modules use AppShell sidebar
-
   return (
     <>
       <style>{`
-        /* ── VIBRANT YELLOW & NAVY HEADER ── */
         .hdr {
           position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
           height: var(--hdr-h);
-          background: ${scrolled
-            ? 'rgba(255, 254, 234, 0.98)'
-            : 'rgba(255, 254, 234, 0.88)'
-          };
-          backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-          border-bottom: 2px solid ${scrolled ? '#002D62' : 'rgba(0, 45, 98, 0.12)'};
-          box-shadow: ${scrolled ? '0 4px 20px rgba(0, 45, 98, 0.08)' : 'none'};
+          background: ${scrolled ? 'rgba(11,11,11,0.97)' : 'rgba(11,11,11,0.70)'};
+          backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
+          border-bottom: 1px solid ${scrolled ? 'rgba(255,193,7,0.13)' : 'rgba(255,255,255,0.04)'};
+          box-shadow: ${scrolled ? '0 4px 40px rgba(0,0,0,0.8)' : 'none'};
           transition: background 0.35s, border-color 0.35s, box-shadow 0.35s;
         }
-        .hdr-inner {
-          max-width: var(--max-w); margin: 0 auto; height: 100%;
-          display: flex; align-items: center; justify-content: space-between;
-          padding: 0 var(--pad);
-        }
-
-        /* Logo */
-        .hdr-logo {
-          display: flex; align-items: center; gap: 10px;
-          background: none; border: none; cursor: pointer; padding: 0; text-decoration: none;
-        }
-        .hdr-logo-img {
-          width: 36px; height: 36px; object-fit: contain; display: block;
-        }
-        .hdr-brand {
-          font-family: 'Outfit', sans-serif;
-          font-size: 24px; font-weight: 900; color: #002D62;
-          transition: color 0.2s; letter-spacing: -0.01em; line-height: 1;
-        }
-        .hdr-logo:hover .hdr-brand { color: #00875A; }
-        .hdr-sub {
-          font-family: 'Outfit', sans-serif; font-size: 9px; font-weight: 800;
-          letter-spacing: 0.2em; color: #00875A;
-          text-transform: uppercase; margin-top: 3px; opacity: 0.9;
-        }
-
-        /* Desktop Nav */
-        .hdr-nav { display: flex; align-items: center; gap: 4px; }
-        .hdr-link {
-          background: none; border: none; cursor: pointer;
-          padding: 7px 14px;
-          font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700;
-          color: #002D62;
-          border-radius: 8px; transition: color 0.2s, background 0.2s;
-          position: relative; white-space: nowrap;
-        }
-        .hdr-link::after {
-          content: ''; position: absolute; bottom: 3px; left: 14px; right: 14px;
-          height: 3px; background: #00875A; border-radius: 2px;
-          transform: scaleX(0); transform-origin: center;
-          transition: transform 0.22s cubic-bezier(0.4,0,0.2,1);
-        }
-        .hdr-link:hover { color: #00875A; }
-        .hdr-link:hover::after { transform: scaleX(1); }
-        .hdr-link.on { color: #00875A; font-weight: 800; }
-        .hdr-link.on::after { transform: scaleX(1); }
-
-        /* CTA Button */
-        .hdr-cta-btn {
-          margin-left: 10px;
-          background: #00875A; color: #fff;
-          padding: 10px 22px; border-radius: 8px; border: 2.5px solid #002D62;
-          font-family: 'Outfit', sans-serif; font-size: 13.5px; font-weight: 800;
-          letter-spacing: 0.02em; cursor: pointer;
-          transition: all 0.22s ease;
-          box-shadow: 2px 2px 0px #002D62;
-        }
-        .hdr-cta-btn:hover { background: #006644; transform: translate(1px, 1px); box-shadow: 1px 1px 0px #002D62; }
-
-        /* Burger */
-        .hdr-burger {
-          display: none; flex-direction: column; gap: 5px;
-          background: none; border: none; cursor: pointer; padding: 6px;
-        }
-
-        /* Mobile Menu */
-        .hdr-mob {
-          display: none; position: fixed;
-          top: var(--hdr-h); left: 0; right: 0; bottom: 0;
-          background: #FFFBF2;
-          padding: 24px 24px 40px;
-          flex-direction: column; gap: 4px;
-          overflow-y: auto;
-          border-top: 1px solid rgba(201,134,10,0.12);
-        }
+        .hdr-inner { max-width: var(--max-w); margin: 0 auto; height: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0 var(--pad); }
+        .hdr-logo { display: flex; align-items: center; gap: 10px; background: none; border: none; cursor: pointer; padding: 0; }
+        .hdr-logo:hover .hdr-brand { color: var(--gold); }
+        .hdr-brand { font-family: 'Playfair Display',Georgia,serif; font-size: 18px; font-weight: 700; color: #FFFFFF; transition: color 0.2s; letter-spacing: -0.01em; }
+        .hdr-sub   { font-family: 'DM Sans',sans-serif; font-size: 8px; font-weight: 700; letter-spacing: 0.3em; color: rgba(255,193,7,0.6); text-transform: uppercase; margin-top: 2px; }
+        .hdr-nav   { display: flex; align-items: center; gap: 2px; }
+        .hdr-link  { background: none; border: none; cursor: pointer; padding: 7px 14px; font-family: 'DM Sans',sans-serif; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.55); border-radius: 8px; transition: color 0.2s, background 0.2s; border-bottom: 2px solid transparent; white-space: nowrap; }
+        .hdr-link:hover { color: #fff; background: rgba(255,255,255,0.04); }
+        .hdr-link.on { color: var(--gold); font-weight: 600; border-bottom-color: var(--gold); }
+        .hdr-cta { margin-left: 14px; }
+        .hdr-burger { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 6px; }
+        .hdr-mob { display: none; position: absolute; top: var(--hdr-h); left: 0; right: 0; background: rgba(11,11,11,0.98); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,193,7,0.1); padding: 16px 20px 28px; flex-direction: column; gap: 2px; }
         .hdr-mob.open { display: flex; }
-        .mob-link {
-          background: none; border: none; cursor: pointer;
-          padding: 15px 0;
-          font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 500;
-          color: #5A4A30; text-align: left;
-          border-bottom: 1px solid rgba(26,21,10,0.06);
-          transition: color 0.2s; width: 100%;
-        }
-        .mob-link:hover { color: #1A150A; }
-        .mob-link.on { color: #C9860A; font-weight: 700; }
-
-        @media (max-width: 768px) {
-          .hdr-nav { display: none; }
-          .hdr-burger { display: flex !important; }
-        }
+        .mob-link { background: none; border: none; cursor: pointer; padding: 13px 0; font-family: 'DM Sans',sans-serif; font-size: 15px; font-weight: 500; color: rgba(255,255,255,0.6); text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); transition: color 0.2s; width: 100%; }
+        .mob-link:hover { color: #fff; }
+        .mob-link.on { color: var(--gold); }
+        @media (max-width: 768px) { .hdr-nav { display: none; } .hdr-burger { display: flex !important; } }
       `}</style>
 
-      <nav className="hdr" role="banner">
+      <nav className="hdr">
         <div className="hdr-inner">
-          {/* Logo */}
-          <button className="hdr-logo" onClick={() => go('/')} aria-label="Srivriddhi — Home">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button className="hdr-logo" onClick={() => go('/')}>
+            <div style={{ animation: 'logoPulse 3s ease infinite alternate' }}>
+              <style>{`@keyframes logoPulse { from { filter: drop-shadow(0 0 8px rgba(212,168,67,0.3)); } to { filter: drop-shadow(0 0 20px rgba(212,168,67,0.6)); } }`}</style>
               {logoSrc ? (
-                <img src={logoSrc} width={36} height={36} alt="logo" className="hdr-logo-img" />
+                <img src={logoSrc} width={32} height={32} alt="logo"
+                  style={{ objectFit: 'contain', display: 'block' }} />
               ) : (
-                <img src="/favicon.svg" alt="logo" width={36} height={36} className="hdr-logo-img" />
+                <img src="/favicon.svg" alt="logo" width={32} height={32} style={{ objectFit: 'contain', display: 'block' }} />
               )}
-              <div>
-                <div className="hdr-brand">{siteName.split(' ')[0]}</div>
-                <div className="hdr-sub">{siteName.split(' ').slice(1).join(' ') || 'Enterprise'}</div>
-              </div>
+            </div>
+            <div>
+              <div className="hdr-brand">{siteName.split(' ')[0]}</div>
+              <div className="hdr-sub">{siteName.split(' ').slice(1).join(' ') || 'Enterprise'}</div>
             </div>
           </button>
 
-          {/* Desktop Nav */}
           <div className="hdr-nav">
             {NAV.map(n => (
               <button key={n.path} className={`hdr-link${isActive(n.path) ? ' on' : ''}`}
-                onClick={() => go(n.path)}>
-                {n.label}
-              </button>
+                onClick={() => go(n.path)}>{n.label}</button>
             ))}
-            <button className="hdr-cta-btn" onClick={() => go('/contact')}>
+            <button className="btn btn-gold hdr-cta" onClick={() => go('/contact')}>
               {headerCta} →
             </button>
           </div>
 
-          {/* Burger */}
-          <button
-            className="hdr-burger"
-            onClick={() => setMenuOpen(o => !o)}
-            aria-label="Toggle navigation menu"
-            aria-expanded={menuOpen}
-          >
-            {[0, 1, 2].map(i => (
+          <button className="hdr-burger" onClick={() => setMenuOpen(o => !o)} aria-label="Toggle menu">
+            {[0,1,2].map(i => (
               <span key={i} style={{
-                display: 'block', width: 24, height: 2,
-                background: '#1A150A', borderRadius: 1,
+                display: 'block', width: 22, height: 1.5, background: '#fff', borderRadius: 1,
                 transition: 'all 0.28s',
                 transform: menuOpen
-                  ? i === 0 ? 'rotate(45deg) translate(5px, 5px)'
-                    : i === 2 ? 'rotate(-45deg) translate(5px, -5px)' : 'scaleX(0)'
-                  : 'none',
-                opacity: menuOpen && i === 1 ? 0 : 1,
+                  ? i===0 ? 'rotate(45deg) translate(4.5px,4.5px)'
+                  : i===2 ? 'rotate(-45deg) translate(4.5px,-4.5px)' : 'scaleX(0)' : 'none',
+                opacity: menuOpen && i===1 ? 0 : 1,
               }} />
             ))}
           </button>
         </div>
 
-        {/* Mobile Menu */}
         <div className={`hdr-mob${menuOpen ? ' open' : ''}`}>
           {NAV.map(n => (
             <button key={n.path} className={`mob-link${isActive(n.path) ? ' on' : ''}`}
-              onClick={() => go(n.path)}>
-              {n.label}
-            </button>
+              onClick={() => go(n.path)}>{n.label}</button>
           ))}
-          <button
-            style={{
-              marginTop: 24, background: '#1A6B47', color: '#fff',
-              padding: '14px 24px', borderRadius: 8, border: 'none',
-              fontFamily: "'DM Sans',sans-serif", fontSize: 15, fontWeight: 700, cursor: 'pointer',
-            }}
-            onClick={() => go('/contact')}
-          >
-            {headerCta} →
-          </button>
+          <button className="btn btn-gold btn-lg" style={{ marginTop: 16, width: '100%' }}
+            onClick={() => go('/contact')}>{headerCta} →</button>
         </div>
       </nav>
 
-      {/* Mobile overlay */}
       {menuOpen && (
-        <div
-          onClick={() => setMenuOpen(false)}
-          style={{ position: 'fixed', inset: 0, zIndex: 999, background: 'rgba(26,21,10,0.4)' }}
-        />
+        <div onClick={() => setMenuOpen(false)}
+          style={{ position: 'fixed', inset: 0, zIndex: 999, background: 'rgba(0,0,0,0.7)' }} />
       )}
     </>
   );

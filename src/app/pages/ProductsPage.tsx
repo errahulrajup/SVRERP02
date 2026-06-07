@@ -14,6 +14,7 @@ export function ProductsPage() {
   const { data: seo } = usePageSeo('products');
   const { settings } = useSiteSettings();
   const go = (p: string) => { navigate(p); window.scrollTo(0, 0); };
+  const productsImg = settings.img_products_hero ?? '/images/hero.webp';
 
   const categories = useMemo(() => {
     const cats = Array.from(new Set(products?.map(p => p.category) ?? []));
@@ -26,392 +27,102 @@ export function ProductsPage() {
 
   return (
     <>
-      <SEO 
-        title={seo?.title ?? 'Our Plant-Based Products — Srivriddhi'} 
-        description={seo?.description ?? 'Explore our premium range of plant-based butter, spreads, and cooking creams built to the highest culinary standards.'} 
-      />
+      <SEO title={seo?.title ?? 'Products — Srivriddhi Enterprise'} description={seo?.description ?? undefined} />
       <style>{`
-        /* ── PRODUCTS PAGE WARM THEME OVERRIDES ── */
-        .prw-root {
-          background: #FFFEEA;
-          color: #002D62;
-          font-family: 'DM Sans', sans-serif;
-          min-height: 100vh;
-          padding-top: var(--hdr-h);
-        }
-        
-        /* Hero */
-        .prw-hero {
-          position: relative;
-          background: linear-gradient(135deg, #FFFEEA 0%, #FFF3A8 50%, #FFC72C 100%);
-          padding: 80px 0 60px;
-          text-align: center;
-          overflow: hidden;
-          border-bottom: 4px solid #002D62;
-        }
-        .prw-hero::before {
-          content: '';
-          position: absolute; top: -120px; right: -120px;
-          width: 500px; height: 500px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(255,199,44,0.3) 0%, transparent 70%);
-          pointer-events: none;
-        }
-        .prw-hero::after {
-          content: '';
-          position: absolute; bottom: -120px; left: -120px;
-          width: 400px; height: 400px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(0,135,90,0.08) 0%, transparent 70%);
-          pointer-events: none;
-        }
-
-        .prw-section-label {
-          display: inline-block;
-          font-family: 'Outfit', sans-serif;
-          font-size: 12px;
-          font-weight: 900;
-          letter-spacing: 0.16em;
-          text-transform: uppercase;
-          color: #00875A;
-          margin-bottom: 14px;
-        }
-
-        .prw-hero-h1 {
-          font-family: 'Outfit', sans-serif;
-          font-size: clamp(34px, 5.5vw, 60px);
-          font-weight: 900;
-          line-height: 1.1;
-          color: #002D62;
-          margin-bottom: 18px;
-        }
-        .prw-hero-h1 em {
-          font-style: normal;
-          color: #00875A;
-          text-decoration: underline;
-          text-decoration-color: #002D62;
-          text-decoration-thickness: 4px;
-        }
-
-        .prw-hero-lead {
-          font-family: 'DM Sans', sans-serif;
-          font-size: 16.5px;
-          color: #002D62;
-          max-width: 600px;
-          margin: 0 auto;
-          line-height: 1.6;
-        }
-
-        /* Filter Bar */
-        .prw-filter-bar {
-          position: sticky;
-          top: var(--hdr-h);
-          z-index: 10;
-          background: rgba(255, 254, 234, 0.95);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border-bottom: 3px solid #002D62;
-        }
-        .prw-filter-inner {
-          max-width: var(--max-w);
-          margin: 0 auto;
-          padding: 0 var(--pad);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          height: 64px;
-          overflow-x: auto;
-          white-space: nowrap;
-        }
-        
-        .prw-filter-btn {
-          background: #FFFEEA;
-          border: 2.5px solid #002D62;
-          border-radius: var(--radius-full);
-          padding: 8px 22px;
-          font-family: 'Outfit', sans-serif;
-          font-size: 13px;
-          font-weight: 800;
-          letter-spacing: 0.02em;
-          color: #002D62;
-          cursor: pointer;
-          transition: all 0.2s;
-          box-shadow: 2px 2px 0px #002D62;
-        }
-        .prw-filter-btn:hover {
-          color: #00875A;
-          background: #fff;
-          transform: translateY(-1px);
-        }
-        .prw-filter-btn.on {
-          background: #00875A;
-          border-color: #002D62;
-          color: #fff;
-          box-shadow: 2px 2px 0px #002D62;
-        }
-
-        /* Grid */
-        .prw-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 32px;
-          margin-top: 48px;
-        }
-        @media (max-width: 1024px) {
-          .prw-grid { grid-template-columns: repeat(2, 1fr); }
-          .prw-filter-inner { justify-content: flex-start; }
-        }
-        @media (max-width: 640px) {
-          .prw-grid { grid-template-columns: 1fr; gap: 24px; }
-        }
-
-        /* Product Card */
-        .prw-prod-card {
-          border-radius: 20px;
-          overflow: hidden;
-          background: #fff;
-          border: 3px solid #002D62;
-          transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-          cursor: pointer;
-          display: flex;
-          flex-direction: column;
-          box-shadow: 4px 4px 0px #FFC72C;
-        }
-        .prw-prod-card:hover {
-          transform: translateY(-6px);
-          box-shadow: 6px 6px 0px #00875A;
-        }
-        .prw-prod-img-wrap {
-          position: relative;
-          overflow: hidden;
-          background: #fff;
-          aspect-ratio: 4/3;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 20px;
-          border-bottom: 3px solid #002D62;
-        }
-        .prw-prod-img {
-          max-width: 100%;
-          max-height: 100%;
-          object-fit: contain;
-          transition: transform 0.5s;
-        }
-        .prw-prod-card:hover .prw-prod-img {
-          transform: scale(1.05);
-        }
-        .prw-prod-body {
-          padding: 24px 22px;
-          display: flex;
-          flex-direction: column;
-          flex-grow: 1;
-        }
-        .prw-prod-cat {
-          font-family: 'Outfit', sans-serif;
-          font-size: 10px;
-          font-weight: 800;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          color: #00875A;
-          margin-bottom: 8px;
-        }
-        .prw-prod-name {
-          font-family: 'Outfit', sans-serif;
-          font-size: 22px;
-          font-weight: 800;
-          color: #002D62;
-          margin-bottom: 8px;
-          line-height: 1.2;
-        }
-        .prw-prod-tagline {
-          font-family: 'Outfit', sans-serif;
-          font-size: 14px;
-          font-style: italic;
-          font-weight: 600;
-          color: #002D62;
-          margin-bottom: 12px;
-          line-height: 1.4;
-          opacity: 0.9;
-        }
-        .prw-prod-desc {
-          font-family: 'DM Sans', sans-serif;
-          font-size: 13.5px;
-          color: #5A4A30;
-          line-height: 1.6;
-          margin-bottom: 20px;
-          flex-grow: 1;
-        }
-        .prw-prod-benefits {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 6px;
-          margin-bottom: 22px;
-        }
-        .prw-prod-benefit {
-          font-family: 'DM Sans', sans-serif;
-          font-size: 11px;
-          font-weight: 700;
-          background: #FFFEEA;
-          color: #00875A;
-          border: 1.5px solid #002D62;
-          border-radius: var(--radius-full);
-          padding: 3px 12px;
-          box-shadow: 1px 1px 0px #002D62;
-        }
-        .prw-btn-detail {
-          width: 100%;
-          text-align: center;
-          background: transparent;
-          color: #002D62;
-          border: 2.5px solid #002D62;
-          border-radius: 8px;
-          padding: 10px 16px;
-          font-family: 'Outfit', sans-serif;
-          font-size: 13.5px;
-          font-weight: 800;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-        .prw-prod-card:hover .prw-btn-detail {
-          background: #00875A;
-          color: #fff;
-          border-color: #002D62;
-          box-shadow: 2px 2px 0px #002D62;
-        }
-        
-        .prw-badge-stock {
-          position: absolute;
-          top: 14px; right: 14px;
-          background: #D93838;
-          color: #fff;
-          font-family: 'Outfit', sans-serif;
-          font-size: 10px;
-          font-weight: 800;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          padding: 4px 8px;
-          border-radius: 4px;
-          border: 2px solid #002D62;
-          z-index: 2;
-        }
-
-        /* Shimmer Loading */
-        .prw-shimmer-card {
-          height: 380px;
-          border-radius: 20px;
-          background: #FFFEEA;
-          border: 3px solid #002D62;
-          position: relative;
-          overflow: hidden;
-        }
-        .prw-shimmer-card::after {
-          content: '';
-          position: absolute; inset: 0;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-          transform: translateX(-100%);
-          animation: prwShimmer 1.5s infinite;
-        }
-        @keyframes prwShimmer {
-          100% { transform: translateX(100%); }
-        }
+        .pr-hero { position:relative; width:100%; height:72vh; min-height:500px; overflow:hidden; display:flex; align-items:flex-end; }
+        .pr-bg { position:absolute; inset:0; background-image:url('${productsImg}'); background-size:cover; background-position:center 30%; }
+        .pr-grad { position:absolute; inset:0; background:linear-gradient(to top, rgba(5,5,5,0.97) 0%, rgba(5,5,5,0.55) 40%, rgba(5,5,5,0.15) 70%, transparent 100%); }
+        .pr-content { position:relative; z-index:2; width:100%; max-width:var(--max-w); margin:0 auto; padding:0 var(--pad) 76px; }
+        .pr-filter-bar { position:sticky; top:var(--hdr-h); z-index:10; background:rgba(11,11,11,0.96); backdrop-filter:blur(20px); border-bottom:1px solid rgba(255,193,7,0.08); }
+        .pr-filter-inner { max-width:var(--max-w); margin:0 auto; padding:0 var(--pad); display:flex; align-items:center; gap:4px; height:52px; overflow-x:auto; }
+        .pr-filter-btn { background:none; border:1px solid transparent; border-radius:var(--radius-full); padding:5px 16px; font-family:'DM Sans',sans-serif; font-size:11px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:rgba(255,255,255,0.38); cursor:pointer; white-space:nowrap; transition:all 0.2s; }
+        .pr-filter-btn:hover { color:rgba(255,255,255,0.7); border-color:rgba(255,255,255,0.12); }
+        .pr-filter-btn.on { background:var(--gold-soft); border-color:var(--border-gold); color:var(--gold); }
+        .pr-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+        @media (max-width:1024px) { .pr-grid { grid-template-columns:repeat(2,1fr); } }
+        @media (max-width:640px) { .pr-grid { grid-template-columns:1fr; } .pr-hero{height:65dvh;min-height:420px;} .pr-content{padding:0 var(--pad) 56px;} }
       `}</style>
 
-      <div className="prw-root">
-        {/* Hero Section */}
-        <section className="prw-hero">
-          <div className="wrap">
-            <span className="prw-section-label">Pure Plant Goodness</span>
-            <h1 className="prw-hero-h1">
-              Explore Our <em>Plant Spreads.</em>
-            </h1>
-            <p className="prw-hero-lead">
-              Made with premium plant oils, natural flavor profiles, and zero compromise. 
-              Formulated to spread, cook, and bake beautifully.
-            </p>
-          </div>
-        </section>
-
-        {/* Categories Filter Bar */}
-        <div className="prw-filter-bar">
-          <div className="prw-filter-inner">
-            {categories.map(cat => (
-              <button 
-                key={cat} 
-                className={`prw-filter-btn${filter === cat ? ' on' : ''}`}
-                onClick={() => setFilter(cat)}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+      {/* Hero */}
+      <section className="pr-hero">
+        <div className="pr-bg" /><div className="pr-grad" />
+        <div className="pr-content">
+          <motion.p initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.5 }}
+            className="t-label" style={{ marginBottom:18 }}>The Core System</motion.p>
+          <motion.h1 initial={{ opacity:0, y:28 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.6, delay:0.1 }}
+            style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'var(--t-hero)', lineHeight:0.88, letterSpacing:'0.03em', color:'#fff' }}>
+            PRODUCTS THAT<br /><span style={{ color:'var(--gold)', textShadow:'0 0 48px rgba(255,193,7,0.4)' }}>DELIVER.</span>
+          </motion.h1>
         </div>
+      </section>
 
-        {/* Product Grid Area */}
-        <section className="sec" style={{ padding: '60px 0 90px' }}>
-          <div className="wrap">
-            {loading ? (
-              <div className="prw-grid">
-                {[1, 2, 3, 4, 5, 6].map(i => (
-                  <div key={i} className="prw-shimmer-card" />
-                ))}
-              </div>
-            ) : !visible.length ? (
-              <div style={{ textAlign: 'center', padding: '80px 24px' }}>
-                <div style={{ fontSize: 48, marginBottom: 16 }}>🌱</div>
-                <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 24, fontWeight: 600, marginBottom: 8 }}>No products available</h3>
-                <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#7A6A4A' }}>Check back soon for our new additions!</p>
-              </div>
-            ) : (
-              <motion.div 
-                className="prw-grid"
-                initial="hidden" 
-                animate="show" 
-                variants={FC} 
-                key={filter}
-              >
-                {visible.map(p => (
-                  <motion.article 
-                    key={p.id} 
-                    variants={FI} 
-                    transition={{ duration: 0.45 }}
-                    className="prw-prod-card" 
-                    onClick={() => go(`/products/${p.slug}`)}
-                  >
-                    <div className="prw-prod-img-wrap">
-                      {!p.in_stock && <span className="prw-badge-stock">Out of Stock</span>}
-                      <img 
-                        src={p.images?.[0] ?? '/images/placeholder.webp'} 
-                        alt={p.name} 
-                        loading="lazy" 
-                        className="prw-prod-img" 
-                      />
-                    </div>
-                    
-                    <div className="prw-prod-body">
-                      <span className="prw-prod-cat">{p.category}</span>
-                      <h2 className="prw-prod-name">{p.name}</h2>
-                      {p.tagline && <p className="prw-prod-tagline">“{p.tagline}”</p>}
-                      <p className="prw-prod-desc">{p.short_desc}</p>
-                      
-                      {p.benefits && p.benefits.length > 0 && (
-                        <div className="prw-prod-benefits">
-                          {p.benefits.slice(0, 3).map(b => (
-                            <span key={b} className="prw-prod-benefit">{b}</span>
-                          ))}
-                        </div>
-                      )}
-                      
-                      <button className="prw-btn-detail">
-                        View Solution Details
-                      </button>
-                    </div>
-                  </motion.article>
-                ))}
-              </motion.div>
-            )}
-          </div>
-        </section>
+      {/* Filter */}
+      <div className="pr-filter-bar">
+        <div className="pr-filter-inner">
+          {categories.map(cat => (
+            <button key={cat} className={`pr-filter-btn${filter===cat?' on':''}`}
+              onClick={() => setFilter(cat)}>{cat}</button>
+          ))}
+        </div>
       </div>
+
+      {/* Grid */}
+      <section className="sec">
+        <div className="wrap">
+          {loading ? (
+            <div className="pr-grid">
+              {[1,2,3,4,5,6].map(i => <div key={i} className="shimmer" style={{ height:360, borderRadius:'var(--radius-xl)' }} />)}
+            </div>
+          ) : !visible.length ? (
+            <div style={{ textAlign:'center', padding:'80px 24px' }}>
+              <div style={{ fontSize:48, marginBottom:16 }}>📦</div>
+              <p className="t-h3" style={{ marginBottom:8 }}>No products found</p>
+              <p className="t-sm">Try a different category or check back later.</p>
+            </div>
+          ) : (
+            <motion.div className="pr-grid"
+              initial="hidden" animate="show" variants={FC} key={filter}>
+              {visible.map(p => (
+                <motion.article key={p.id} variants={FI} transition={{ duration:0.45 }}
+                  className="prod-card" onClick={() => go(`/products/${p.slug}`)} style={{ cursor:'pointer' }}>
+                  <div style={{ overflow:'hidden' }}>
+                    <img src={p.images?.[0] ?? '/images/placeholder.webp'} alt={p.name} loading="lazy" className="prod-card__img" />
+                  </div>
+                  <div className="prod-card__body">
+                    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12, flexWrap:'wrap', gap:8 }}>
+                      <span className="badge badge-gold">{p.category}</span>
+                      {!p.in_stock && <span className="badge badge-red">Out of Stock</span>}
+                    </div>
+                    <h3 className="t-h3" style={{ marginBottom:6 }}>{p.name}</h3>
+                    <p style={{ fontFamily:"'Cormorant Garamond',Georgia,serif", fontSize:15, fontStyle:'italic', color:'rgba(255,255,255,0.45)', marginBottom:12, lineHeight:1.4 }}>{p.tagline}</p>
+                    <p className="t-sm" style={{ marginBottom:20 }}>{p.short_desc}</p>
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:20 }}>
+                      {(p.benefits ?? []).slice(0,3).map(b => (
+                        <span key={b} className="badge badge-muted">{b}</span>
+                      ))}
+                    </div>
+                    {p.pack_sizes && (
+                      <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:11, color:'rgba(255,255,255,0.28)', marginBottom:16, letterSpacing:'0.04em' }}>
+                        📦 {p.pack_sizes}
+                      </p>
+                    )}
+                    <button className="btn btn-outline btn-sm" style={{ width:'100%' }}>View Details →</button>
+                  </div>
+                </motion.article>
+              ))}
+            </motion.div>
+          )}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="sec-sm" style={{ background:'var(--bg-second)', borderTop:'1px solid var(--border)' }}>
+        <div className="wrap" style={{ textAlign:'center' }}>
+          <h2 className="t-h2" style={{ marginBottom:12 }}>Interested? Request Samples.</h2>
+          <p className="t-body" style={{ maxWidth:400, margin:'0 auto 28px' }}>We dispatch samples to qualified buyers. Tell us what you need.</p>
+          <button className="btn btn-gold btn-lg" onClick={() => go('/contact')}>Request Samples →</button>
+        </div>
+      </section>
     </>
   );
 }

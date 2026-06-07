@@ -12,249 +12,63 @@ export function BlogPage() {
   const { data: seo } = usePageSeo('blog');
   const { settings } = useSiteSettings();
   const go = (p: string) => { navigate(p); window.scrollTo(0, 0); };
+  const blogImg = settings.img_blog_hero ?? '';
 
   return (
     <>
-      <SEO 
-        title={seo?.title ?? 'Culinary Blog & Insights — Srivriddhi'} 
-        description={seo?.description ?? 'Read our articles, industry updates, and recipes focused on plant-based food innovation and B2B baking solutions.'} 
-      />
+      <SEO title={seo?.title ?? 'Insights — Srivriddhi Enterprise'} description={seo?.description ?? undefined} />
       <style>{`
-        /* ── BLOG PAGE WARM THEME OVERRIDES ── */
-        .blw-root {
-          background: #FFFBF2;
-          color: #1A150A;
-          font-family: 'DM Sans', sans-serif;
-          min-height: 100vh;
-          padding-top: var(--hdr-h);
-        }
-        
-        /* Hero */
-        .blw-hero {
-          position: relative;
-          background: linear-gradient(135deg, #FFFBF0 0%, #FFF4D6 40%, #FFF9EC 100%);
-          padding: 80px 0 60px;
-          text-align: center;
-          overflow: hidden;
-          border-bottom: 1px solid rgba(201,134,10,0.08);
-        }
-        .blw-hero::before {
-          content: '';
-          position: absolute; top: -120px; right: -120px;
-          width: 500px; height: 500px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(212,160,23,0.08) 0%, transparent 70%);
-          pointer-events: none;
-        }
-
-        .blw-section-label {
-          display: inline-block;
-          font-family: 'DM Sans', sans-serif;
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 0.2em;
-          text-transform: uppercase;
-          color: #1A6B47;
-          margin-bottom: 14px;
-        }
-
-        .blw-hero-h1 {
-          font-family: 'Cormorant Garamond', Georgia, serif;
-          font-size: clamp(32px, 5vw, 56px);
-          font-weight: 600;
-          line-height: 1.15;
-          color: #1A150A;
-          margin-bottom: 18px;
-        }
-        .blw-hero-h1 em {
-          font-style: italic;
-          color: #C9860A;
-        }
-
-        /* Grid */
-        .blw-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 32px;
-          margin-top: 48px;
-        }
-        @media (max-width: 1024px) {
-          .blw-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-        @media (max-width: 640px) {
-          .blw-grid { grid-template-columns: 1fr; gap: 24px; }
-        }
-
-        /* Blog Card */
-        .blw-card {
-          background: #fff;
-          border: 1.5px solid rgba(201,134,10,0.1);
-          border-radius: 20px;
-          overflow: hidden;
-          cursor: pointer;
-          transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-          display: flex;
-          flex-direction: column;
-        }
-        .blw-card:hover {
-          transform: translateY(-6px);
-          box-shadow: 0 16px 36px rgba(120,80,20,0.06);
-          border-color: rgba(201,134,10,0.3);
-        }
-        .blw-img-wrap {
-          aspect-ratio: 16/9;
-          overflow: hidden;
-        }
-        .blw-img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          transition: transform 0.5s ease;
-        }
-        .blw-card:hover .blw-img {
-          transform: scale(1.04);
-        }
-        .blw-body {
-          padding: 24px;
-          display: flex;
-          flex-direction: column;
-          flex-grow: 1;
-        }
-        .blw-cat-tag {
-          font-family: 'DM Sans', sans-serif;
-          font-size: 10px;
-          font-weight: 700;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          color: #C9860A;
-          background: rgba(201,134,10,0.06);
-          border: 1px solid rgba(201,134,10,0.12);
-          border-radius: var(--radius-full);
-          padding: 3px 10px;
-        }
-        .blw-date {
-          font-family: 'DM Sans', sans-serif;
-          font-size: 12px;
-          color: #7A6A4A;
-        }
-        .blw-title {
-          font-family: 'Cormorant Garamond', Georgia, serif;
-          font-size: 22px;
-          font-weight: 600;
-          color: #1A150A;
-          margin-bottom: 10px;
-          line-height: 1.25;
-        }
-        .blw-excerpt {
-          font-family: 'DM Sans', sans-serif;
-          font-size: 13.5px;
-          color: #5A4A30;
-          line-height: 1.6;
-          margin-bottom: 20px;
-          flex-grow: 1;
-          display: -webkit-box;
-          WebkitLineClamp: 3;
-          WebkitBoxOrient: vertical;
-          overflow: hidden;
-        }
-        .blw-link {
-          font-family: 'DM Sans', sans-serif;
-          font-size: 13px;
-          color: #1A6B47;
-          font-weight: 700;
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          transition: transform 0.2s;
-        }
-        .blw-card:hover .blw-link {
-          transform: translateX(4px);
-        }
-
-        /* Shimmer Card */
-        .blw-shimmer-card {
-          height: 360px;
-          border-radius: 20px;
-          background: #FFFBF2;
-          border: 1.5px solid rgba(201,134,10,0.08);
-          position: relative;
-          overflow: hidden;
-        }
-        .blw-shimmer-card::after {
-          content: '';
-          position: absolute; inset: 0;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-          transform: translateX(-100%);
-          animation: blwShimmer 1.5s infinite;
-        }
-        @keyframes blwShimmer {
-          100% { transform: translateX(100%); }
-        }
+        .bl-hero{position:relative;width:100%;height:60vh;min-height:420px;overflow:hidden;display:flex;align-items:flex-end;background:var(--bg-second);}
+        .bl-bg{position:absolute;inset:0;background-image:url('${blogImg}');background-size:cover;background-position:center 30%;transition:transform 8s ease;}
+        .bl-grad{position:absolute;inset:0;background:linear-gradient(to top,rgba(5,5,5,0.97) 0%,rgba(5,5,5,0.60) 38%,rgba(5,5,5,0.25) 65%,rgba(5,5,5,0.08) 100%);}
+        .bl-content{position:relative;z-index:2;width:100%;max-width:var(--max-w);margin:0 auto;padding:0 var(--pad) 72px;}
+        .bl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+        .bl-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;cursor:pointer;transition:transform 0.28s,box-shadow 0.28s,border-color 0.28s;}
+        .bl-card:hover{transform:translateY(-6px);border-color:var(--border-gold);box-shadow:0 20px 60px rgba(0,0,0,0.6);}
+        .bl-img{width:100%;aspect-ratio:16/9;object-fit:cover;transition:transform 0.5s;}
+        .bl-card:hover .bl-img{transform:scale(1.04);}
+        @media(max-width:1024px){.bl-grid{grid-template-columns:repeat(2,1fr);}}
+        @media(max-width:640px){.bl-grid{grid-template-columns:1fr;}.bl-hero{height:55vh;min-height:380px;}}
       `}</style>
-
-      <div className="blw-root">
-        {/* Hero Section */}
-        <section className="blw-hero">
-          <div className="wrap">
-            <span className="blw-section-label">Culinary Innovations</span>
-            <h1 className="blw-hero-h1">
-              Food Science & <em>Baking Insights.</em>
-            </h1>
+      <div style={{ background:'var(--bg-main)' }}>
+        <section className="bl-hero">
+          {blogImg && <div className="bl-bg" />}
+          <div className="bl-grad" style={{ background: blogImg ? undefined : 'radial-gradient(ellipse 80% 60% at 50% 0%,rgba(255,193,7,0.04) 0%,transparent 70%)' }} />
+          <div className="bl-content">
+            <motion.p initial={{ opacity:0,y:20 }} animate={{ opacity:1,y:0 }} transition={{ duration:0.5 }} className="t-label" style={{ marginBottom:18 }}>Knowledge & Insights</motion.p>
+            <motion.h1 initial={{ opacity:0,y:28 }} animate={{ opacity:1,y:0 }} transition={{ duration:0.6,delay:0.1 }}
+              style={{ fontFamily:"'Bebas Neue',sans-serif",fontSize:'var(--t-hero)',lineHeight:0.88,letterSpacing:'0.03em',color:'#fff' }}>
+              PLANT-BASED<br /><span style={{ color:'var(--gold)' }}>INSIGHTS.</span>
+            </motion.h1>
           </div>
         </section>
-
-        {/* Blog Post List Grid */}
-        <section className="sec" style={{ padding: '60px 0 90px' }}>
+        <section className="sec">
           <div className="wrap">
             {loading ? (
-              <div className="blw-grid">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="blw-shimmer-card" />
-                ))}
-              </div>
+              <div className="bl-grid">{[1,2,3,4,5,6].map(i=><div key={i} className="shimmer" style={{ height:340,borderRadius:'var(--radius-xl)' }} />)}</div>
             ) : !posts?.length ? (
-              <div style={{ textAlign: 'center', padding: '80px 24px' }}>
-                <div style={{ fontSize: 48, marginBottom: 16 }}>✍️</div>
-                <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 24, fontWeight: 600, marginBottom: 8 }}>No Articles Published Yet</h3>
-                <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#7A6A4A' }}>Our development team is currently drafting insights. Check back soon.</p>
+              <div style={{ textAlign:'center',padding:'80px 24px' }}>
+                <div style={{ fontSize:48,marginBottom:16 }}>✍️</div>
+                <h2 className="t-h2" style={{ marginBottom:10 }}>No Posts Yet</h2>
+                <p className="t-body">Check back soon — our team is creating content.</p>
               </div>
             ) : (
-              <motion.div 
-                className="blw-grid" 
-                initial="hidden" 
-                animate="show" 
-                variants={FC}
-              >
-                {posts.map(post => (
-                  <motion.article 
-                    key={post.id} 
-                    variants={FI} 
-                    transition={{ duration: 0.45 }} 
-                    className="blw-card" 
-                    onClick={() => go(`/blog/${post.slug}`)}
-                  >
-                    <div className="blw-img-wrap">
-                      <img 
-                        src={post.cover_image ?? '/images/plantsmor-natural.jpg'} 
-                        alt={post.title} 
-                        loading="lazy" 
-                        className="blw-img" 
-                      />
+              <motion.div className="bl-grid" initial="hidden" animate="show" variants={FC}>
+                {posts.map(post=>(
+                  <motion.article key={post.id} variants={FI} transition={{ duration:0.45 }} className="bl-card" onClick={()=>go(`/blog/${post.slug}`)}>
+                    <div style={{ overflow:'hidden' }}>
+                      <img src={post.cover_image??'/images/hero.webp'} alt={post.title} loading="lazy" className="bl-img" />
                     </div>
-                    
-                    <div className="blw-body">
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
-                        <span className="blw-cat-tag">{post.category}</span>
-                        <span className="blw-date">
-                          {new Date(post.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
+                    <div style={{ padding:'24px' }}>
+                      <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:12,flexWrap:'wrap' }}>
+                        <span className="badge badge-gold">{post.category}</span>
+                        <span style={{ fontFamily:"'DM Sans',sans-serif",fontSize:11,color:'rgba(255,255,255,0.3)' }}>
+                          {new Date(post.created_at).toLocaleDateString('en-IN',{year:'numeric',month:'short',day:'numeric'})}
                         </span>
                       </div>
-                      
-                      <h2 className="blw-title">{post.title}</h2>
-                      <p className="blw-excerpt">{post.excerpt}</p>
-                      
-                      <div className="blw-link">
-                        Read Article <span style={{ fontSize: 14 }}>→</span>
-                      </div>
+                      <h3 className="t-h3" style={{ marginBottom:10 }}>{post.title}</h3>
+                      <p className="t-sm" style={{ marginBottom:20,display:'-webkit-box',WebkitLineClamp:3,WebkitBoxOrient:'vertical',overflow:'hidden' }}>{post.excerpt}</p>
+                      <span style={{ fontFamily:"'DM Sans',sans-serif",fontSize:12,color:'var(--gold)',fontWeight:600 }}>Read More →</span>
                     </div>
                   </motion.article>
                 ))}

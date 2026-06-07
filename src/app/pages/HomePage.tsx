@@ -3,752 +3,217 @@ import { motion } from 'framer-motion';
 import { useProducts, useTestimonials, useHomepageSections, usePageSeo, useSiteSettings } from '../hooks';
 import { SEO } from '../components/SEO';
 
-const FI = { hidden: { opacity: 0, y: 30 }, show: { opacity: 1, y: 0 } };
+const FI = { hidden: { opacity: 0, y: 28 }, show: { opacity: 1, y: 0 } };
 const FC = { hidden: {}, show: { transition: { staggerChildren: 0.12 } } };
 
-/* ─── Mini components ──────────────────────────────────────────── */
-function LeafIcon({ size = 20 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-      <path d="M2 22c0 0 4-6 12-6s12-8 12-8S22 2 12 6 2 22 2 22z" />
-      <path d="M7 17c1-3 3-5 5-6" />
-    </svg>
-  );
-}
+const TICKER = ['PlantSmör','Spread The Change','Heat Stable','HoReCa Ready','100% Vegan','No Dairy','Built for Kitchens','Premium Quality',
+                'PlantSmör','Spread The Change','Heat Stable','HoReCa Ready','100% Vegan','No Dairy','Built for Kitchens','Premium Quality'];
 
-function StarRating({ n = 5 }: { n?: number }) {
-  return (
-    <div style={{ display: 'flex', gap: 3 }}>
-      {Array.from({ length: n }).map((_, i) => (
-        <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill="#002D62" stroke="none">
-          <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
-        </svg>
-      ))}
-    </div>
-  );
-}
-
-/* ─── Main Component ────────────────────────────────────────────── */
 export function HomePage() {
   const navigate = useNavigate();
-  const { data: products } = useProducts({ featured: true });
-  const { data: testimonials } = useTestimonials();
-  const { data: sections } = useHomepageSections();
-  const { data: seo } = usePageSeo('home');
-  const { settings } = useSiteSettings();
+  const { data: products   } = useProducts({ featured: true });
+  const { data: testimonials} = useTestimonials();
+  const { data: sections   } = useHomepageSections();
+  const { data: seo        } = usePageSeo('home');
+  const { settings         } = useSiteSettings();
   const go = (p: string) => { navigate(p); window.scrollTo(0, 0); };
 
   const hero   = sections?.find(s => s.key === 'hero');
   const teaser = sections?.find(s => s.key === 'about_teaser');
+  const cta    = sections?.find(s => s.key === 'cta_band');
 
-  const BENEFITS = [
-    { icon: '🌿', title: '100% Plant-Based',    desc: 'Dairy-free, vegan, and crafted purely from high-quality plant lipids.' },
-    { icon: '🧈', title: 'Butter-Like Taste',   desc: 'Rich, creamy, indulgent — the authentic taste your food deserves.' },
-    { icon: '❤️', title: 'Heart-Healthy',       desc: 'Zero cholesterol, clean lipid profiles for wellness.' },
-    { icon: '🔥', title: 'High Smoke Point',    desc: 'Baste, fry, and cook at high heat without burning.' },
-    { icon: '🌍', title: 'Planet-Positive',     desc: 'Significantly lower carbon footprint than traditional dairy fats.' },
-    { icon: '🇮🇳', title: 'Made for India',     desc: 'Perfect for local bakery standards, tadka, and premium table spread.' },
-  ];
-
-  const RECIPES = [
-    {
-      title: 'Buttery Miso Citrus Salmon',
-      tag: 'Chef Curated',
-      time: '20 min',
-      portions: 'Portions 4',
-      diff: 'Medium',
-      rating: 5,
-      image: '/images/plantsmor-spread.jpg',
-      desc: 'Pan-seared salmon basted in a rich glaze of Srivriddhi spread, white miso, and fresh orange juice.'
-    },
-    {
-      title: 'Fluffy Golden Pancakes',
-      tag: 'Breakfast Classic',
-      time: '15 min',
-      portions: 'Portions 4',
-      diff: 'Easy',
-      rating: 5,
-      image: '/images/plantsmor-pack.png',
-      desc: 'Super light, aerated pancakes cooked to golden perfection and topped with melting plant butter.'
-    },
-    {
-      title: 'Maple Mustard Glazed Chicken',
-      tag: 'Dinner Entrée',
-      time: '30 min',
-      portions: 'Portions 4',
-      diff: 'Medium',
-      rating: 5,
-      image: '/images/plantsmor-tub.jpg',
-      desc: 'Juicy chicken breasts cooked with a caramelized maple-mustard butter sauce and lemon broccolini.'
-    }
-  ];
-
-  const TRUST = [
-    { icon: '🛡️', name: 'AGMARK Certified',  sub: 'Quality & purity assured' },
-    { icon: '🇮🇳', name: 'FSSAI Compliant',   sub: 'Rigorous safety standards' },
-    { icon: '🌱', name: 'Vegan Verified',    sub: '100% dairy-free, no compromise' },
-    { icon: '🏆', name: 'ISO 22000',         sub: 'Global food safety system' },
-  ];
+  const heroImg = settings.img_home_hero ?? '/images/hero.webp';
 
   return (
     <>
-      <SEO
-        title={seo?.title ?? 'Srivriddhi — Premium Plant-Based Butter & Spreads'}
-        description={seo?.description ?? 'India\'s finest plant-based butter, cooking cream, and ghee alternative. Built for HoReCa, premium retail, and kitchens that care.'}
-        schema={{
-          "@context": "https://schema.org",
-          "@type": "Organization",
-          "name": "Srivriddhi Enterprise",
-          "url": "https://www.srivriddhi.com"
-        }}
-      />
-
+      <SEO title={seo?.title ?? undefined} description={seo?.description ?? undefined}
+        schema={{ "@context":"https://schema.org","@type":"WebSite","name":"Srivriddhi Enterprise","url":"https://www.srivriddhi.com" }} />
       <style>{`
-        /* ── VIBRANT PLAYFUL MARGARINE BRAND THEME OVERRIDES ── */
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap');
-
-        .hpw-root {
-          --brand-cream: #FFFEEA;
-          --brand-yellow: #FFC72C;
-          --brand-yellow-light: #FFF3A8;
-          --brand-navy: #002D62;
-          --brand-green: #00875A;
-          --brand-green-dark: #006644;
-          
-          background: #FFFEEA;
-          color: #002D62;
-          font-family: 'DM Sans', sans-serif;
+        .hp-hero { position:relative; width:100%; height:100vh; min-height:600px; overflow:hidden; display:flex; align-items:flex-end; background:var(--bg-main); }
+        .hp-bg   { position:absolute; inset:0; background-image:url('${heroImg}'); background-size:cover; background-position:center 20%; transform:scale(1.04); transition:transform 8s ease; }
+        .hp-hero:hover .hp-bg { transform:scale(1.07); }
+        .hp-grad { position:absolute; inset:0; background:linear-gradient(to top, rgba(5,5,5,0.97) 0%, rgba(5,5,5,0.60) 35%, rgba(5,5,5,0.18) 65%, rgba(5,5,5,0.04) 100%); }
+        .hp-wm   { position:absolute; top:50%; right:7%; transform:translateY(-50%); width:min(400px,42vw); height:min(400px,42vw); opacity:0.05; pointer-events:none; animation:wmPulse 4s ease-in-out infinite alternate; }
+        @keyframes wmPulse { from{opacity:0.03;transform:translateY(-50%) scale(0.97)} to{opacity:0.08;transform:translateY(-50%) scale(1.03)} }
+        .hp-content { position:relative; z-index:2; width:100%; max-width:var(--max-w); margin:0 auto; padding:0 var(--pad) 88px; }
+        .hp-hero-title { font-family:'Bebas Neue',sans-serif; font-size:var(--t-hero); line-height:0.88; letter-spacing:0.03em; color:#fff; }
+        .hp-hero-title em { font-style:normal; color:var(--gold); text-shadow:0 0 48px rgba(255,193,7,0.4); }
+        .hp-bottom-glow { position:absolute; bottom:0; left:0; right:0; height:220px; background:linear-gradient(to top,rgba(255,193,7,0.06),transparent); pointer-events:none; z-index:1; }
+        .hp-ticker-bar { overflow:hidden; background:#080808; border-top:1px solid rgba(255,193,7,0.1); border-bottom:1px solid rgba(255,193,7,0.1); }
+        .hp-prod-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+        .hp-teaser-grid { display:grid; grid-template-columns:1fr 1fr; gap:72px; align-items:center; }
+        .hp-test-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+        @media (max-width:960px) {
+          .hp-prod-grid { grid-template-columns:repeat(2,1fr); gap:16px; }
+          .hp-teaser-grid { grid-template-columns:1fr; gap:36px; }
+          .hp-test-grid { grid-template-columns:repeat(2,1fr); gap:16px; }
         }
-
-        /* ─ HERO ─ */
-        .hpw-hero {
-          min-height: 94vh;
-          background: linear-gradient(135deg, #FFFEEA 0%, #FFF3A8 50%, #FFC72C 100%);
-          display: flex; align-items: center;
-          position: relative; overflow: hidden;
-          padding: 120px 0 80px;
-          border-bottom: 4px solid #002D62;
-        }
-        .hpw-hero::before {
-          content: '';
-          position: absolute; top: -120px; right: -120px;
-          width: 500px; height: 500px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(255,199,44,0.4) 0%, transparent 70%);
-          pointer-events: none;
-        }
-
-        .hpw-hero-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 64px; align-items: center; }
-        
-        .hpw-hero-eyebrow {
-          display: inline-flex; align-items: center; gap: 8px;
-          background: #00875A; border: 2.5px solid #002D62;
-          color: #fff; border-radius: 999px;
-          font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 800;
-          letter-spacing: 0.1em; text-transform: uppercase;
-          padding: 6px 18px; margin-bottom: 24px;
-          box-shadow: 2px 2px 0px #002D62;
-        }
-        
-        .hpw-hero-h1 {
-          font-family: 'Outfit', sans-serif;
-          font-size: clamp(38px, 5.5vw, 68px);
-          font-weight: 900; line-height: 1.05;
-          color: #002D62;
-          margin-bottom: 24px;
-          letter-spacing: -0.01em;
-        }
-        .hpw-hero-h1 em {
-          font-style: normal;
-          color: #00875A;
-          text-decoration: underline;
-          text-decoration-color: #002D62;
-          text-decoration-thickness: 6px;
-        }
-        
-        .hpw-hero-lead {
-          font-family: 'DM Sans', sans-serif;
-          font-size: clamp(16px, 1.8vw, 19px); line-height: 1.7;
-          color: #002D62; margin-bottom: 38px;
-          opacity: 0.95;
-        }
-        
-        .hpw-hero-btns { display: flex; gap: 16px; flex-wrap: wrap; }
-        
-        .hpw-btn-primary {
-          display: inline-flex; align-items: center; gap: 8px;
-          background: #00875A; color: #fff;
-          padding: 16px 36px; border-radius: 12px; border: 3px solid #002D62;
-          font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 800;
-          cursor: pointer; text-decoration: none;
-          transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-          box-shadow: 4px 4px 0px #002D62;
-        }
-        .hpw-btn-primary:hover {
-          background: #00734c;
-          transform: translate(2px, 2px);
-          box-shadow: 2px 2px 0px #002D62;
-        }
-        
-        .hpw-btn-secondary {
-          display: inline-flex; align-items: center; gap: 8px;
-          background: #FFFEEA; color: #002D62;
-          padding: 14px 34px; border-radius: 12px;
-          border: 3px solid #002D62;
-          font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 800;
-          cursor: pointer; text-decoration: none;
-          transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-          box-shadow: 4px 4px 0px #002D62;
-        }
-        .hpw-btn-secondary:hover {
-          background: #FFFDD5;
-          transform: translate(2px, 2px);
-          box-shadow: 2px 2px 0px #002D62;
-        }
-
-        .hpw-hero-stats {
-          display: flex; gap: 28px; margin-top: 48px; padding: 20px;
-          background: #FFFEEA; border: 3px solid #002D62; border-radius: 16px;
-          box-shadow: 4px 4px 0px #002D62; width: max-content;
-        }
-        .hpw-stat-val { font-family: 'Outfit', sans-serif; font-size: 32px; font-weight: 900; color: #00875A; line-height: 1; }
-        .hpw-stat-lab { font-family: 'DM Sans',sans-serif; font-size: 11px; font-weight: 700; color: #002D62; margin-top: 4px; text-transform: uppercase; }
-        
-        .hpw-hero-img-area { position: relative; display: flex; justify-content: center; align-items: center; }
-        .hpw-hero-img {
-          width: 100%; max-width: 420px;
-          filter: drop-shadow(0 20px 40px rgba(0,45,98,0.15));
-          transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .hpw-hero-img:hover { transform: scale(1.05) rotate(-2deg); }
-        
-        .hpw-float-badge {
-          position: absolute; background: #fff; border: 3px solid #002D62; border-radius: 16px;
-          padding: 12px 18px; box-shadow: 4px 4px 0px #002D62;
-          display: flex; align-items: center; gap: 10px;
-          font-family: 'Outfit', sans-serif;
-        }
-        .hpw-badge-1 { top: 10%; right: -5%; }
-        .hpw-badge-2 { bottom: 15%; left: -8%; }
-
-        /* ─ MARQUEE ─ */
-        .hpw-marquee { background: #002D62; padding: 16px 0; overflow: hidden; border-bottom: 4px solid #002D62; }
-        .hpw-marquee-track {
-          display: flex; gap: 48px; width: max-content;
-          animation: hpwMarquee 28s linear infinite;
-          font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 800;
-          letter-spacing: 0.1em; text-transform: uppercase; color: #FFFEEA; align-items: center;
-        }
-        @keyframes hpwMarquee { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
-        .hpw-marquee-dot { width: 6px; height: 6px; background: #FFC72C; border-radius: 50%; flex-shrink: 0; }
-
-        /* ─ NUTRI-RICH SECTION ─ */
-        .hpw-nutri-rich { background: #FFFEEA; padding: 60px 0; }
-        .hpw-nutri-box {
-          background: #FFC72C; border: 4px solid #002D62; border-radius: 24px;
-          padding: 44px; text-align: center; color: #002D62;
-          box-shadow: 6px 6px 0px #002D62; max-width: 900px; margin: 0 auto;
-        }
-        .hpw-nutri-title { font-family: 'Outfit', sans-serif; font-size: clamp(34px, 5vw, 52px); font-weight: 900; letter-spacing: 0.05em; color: #002D62; margin: 0; }
-        .hpw-nutri-pronounce { font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; font-style: italic; opacity: 0.8; margin-top: 4px; display: block; }
-        .hpw-nutri-body { font-family: 'DM Sans', sans-serif; font-size: 16.5px; line-height: 1.75; max-width: 760px; margin: 24px auto; color: #002D62; }
-        .hpw-nutri-badges { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; margin-top: 28px; }
-        .hpw-nutri-badge-item { font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 800; border: 2.5px solid #002D62; background: #FFFEEA; padding: 8px 18px; border-radius: 999px; display: inline-flex; align-items: center; gap: 8px; box-shadow: 3px 3px 0px #002D62; }
-        .hpw-nutri-badge-dot { color: #00875A; font-size: 12px; }
-
-        /* ─ BENEFITS ─ */
-        .hpw-benefits { background: #fff; padding: 90px 0; border-bottom: 4px solid #002D62; }
-        .hpw-section-label {
-          display: inline-block;
-          font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 900;
-          letter-spacing: 0.16em; text-transform: uppercase;
-          color: #00875A; margin-bottom: 14px;
-        }
-        .hpw-section-h2 {
-          font-family: 'Outfit', sans-serif;
-          font-size: clamp(30px, 4.5vw, 48px); font-weight: 900; color: #002D62;
-          line-height: 1.15; margin-bottom: 16px;
-        }
-        .hpw-section-h2 em { font-style: normal; color: #00875A; text-decoration: underline; text-decoration-color: #FFC72C; text-decoration-thickness: 4px; }
-        .hpw-section-sub {
-          font-family: 'DM Sans', sans-serif; font-size: 16px; color: #5A4A30; line-height: 1.7;
-          max-width: 580px;
-        }
-        .hpw-benefits-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 28px; margin-top: 52px; }
-        .hpw-benefit-card {
-          background: #FFFEEA; border: 3px solid #002D62;
-          border-radius: 20px; padding: 32px 28px;
-          transition: all 0.25s ease;
-          box-shadow: 4px 4px 0px #002D62;
-        }
-        .hpw-benefit-card:hover { transform: translateY(-4px); box-shadow: 6px 6px 0px #FFC72C; border-color: #002D62; }
-        .hpw-benefit-emoji { font-size: 36px; margin-bottom: 16px; display: block; }
-        .hpw-benefit-title { font-family: 'Outfit', sans-serif; font-size: 21px; font-weight: 800; color: #002D62; margin-bottom: 10px; }
-        .hpw-benefit-desc { font-family: 'DM Sans',sans-serif; font-size: 14px; color: #5A4A30; line-height: 1.65; }
-
-        /* ─ RECIPES INSPIRATION ─ */
-        .hpw-recipes { background: #FFFEEA; padding: 90px 0; border-bottom: 4px solid #002D62; }
-        .hpw-recipe-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-top: 48px; }
-        .hpw-recipe-card {
-          background: #fff; border: 3px solid #002D62; border-radius: 20px;
-          overflow: hidden; box-shadow: 5px 5px 0px #FFC72C;
-          display: flex; flex-direction: column; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .hpw-recipe-card:hover { transform: translateY(-6px); box-shadow: 7px 7px 0px #00875A; }
-        .hpw-recipe-img-wrap { position: relative; aspect-ratio: 16/10; overflow: hidden; background: #fff; border-bottom: 3px solid #002D62; }
-        .hpw-recipe-img { width: 100%; height: 100%; object-fit: cover; }
-        .hpw-recipe-tag { position: absolute; top: 12px; left: 12px; background: #00875A; color: #fff; font-family: 'Outfit', sans-serif; font-size: 10px; font-weight: 800; text-transform: uppercase; padding: 4px 12px; border-radius: 6px; border: 2px solid #002D62; }
-        .hpw-recipe-body { padding: 20px; display: flex; flex-direction: column; flex-grow: 1; }
-        .hpw-recipe-meta { display: flex; gap: 12px; font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 700; color: #7A6A4A; margin-bottom: 12px; }
-        .hpw-recipe-card-title { font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 800; color: #002D62; line-height: 1.25; margin-bottom: 8px; }
-        .hpw-recipe-card-desc { font-family: 'DM Sans', sans-serif; font-size: 13.5px; color: #5A4A30; line-height: 1.5; margin-bottom: 16px; flex-grow: 1; }
-
-        /* ─ STORY SPLIT ─ */
-        .hpw-story { background: #fff; padding: 100px 0; border-bottom: 4px solid #002D62; }
-        .hpw-story-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
-        .hpw-story-img-wrap { position: relative; border-radius: 24px; overflow: hidden; border: 3px solid #002D62; box-shadow: 6px 6px 0px #FFC72C; }
-        .hpw-story-img { width: 100%; height: 460px; object-fit: cover; display: block; }
-        .hpw-story-img-badge {
-          position: absolute; bottom: 24px; left: 24px;
-          background: #00875A; color: #fff; border: 3px solid #002D62; border-radius: 14px;
-          padding: 14px 20px; display: flex; align-items: center; gap: 10px;
-          font-family: 'Outfit', sans-serif; box-shadow: 4px 4px 0px #002D62;
-        }
-        .hpw-story-img-badge-val { font-size: 28px; font-weight: 900; }
-        .hpw-story-img-badge-lab { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; opacity: 0.9; }
-        
-        .hpw-story-text blockquote {
-          font-family: 'Outfit', sans-serif; font-size: 21px; font-style: italic; font-weight: 700;
-          color: #00875A; border-left: 4px solid #00875A;
-          padding-left: 20px; margin: 24px 0; line-height: 1.6;
-        }
-        .hpw-story-features { display: flex; flex-direction: column; gap: 16px; margin-top: 32px; }
-        .hpw-story-feature {
-          display: flex; align-items: flex-start; gap: 14px;
-          padding: 18px 20px; background: #FFFEEA; border-radius: 14px; border: 2.5px solid #002D62;
-          box-shadow: 3px 3px 0px #002D62;
-        }
-        .hpw-story-feature-icon { font-size: 22px; flex-shrink: 0; }
-        .hpw-story-feature-title { font-family: 'Outfit',sans-serif; font-size: 15px; font-weight: 800; color: #002D62; margin-bottom: 3px; }
-        .hpw-story-feature-desc { font-family: 'DM Sans',sans-serif; font-size: 13px; color: #5A4A30; }
-
-        /* ─ USES SECTION ─ */
-        .hpw-uses { background: linear-gradient(180deg, #00875A 0%, #006644 100%); padding: 90px 0; border-bottom: 4px solid #002D62; }
-        .hpw-uses-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 24px; margin-top: 52px; }
-        .hpw-use-card {
-          border-radius: 20px; padding: 36px 24px; text-align: center;
-          border: 3px solid #002D62; background: #FFFEEA;
-          transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: default;
-          box-shadow: 4px 4px 0px #002D62; color: #002D62;
-        }
-        .hpw-use-card:hover { transform: translateY(-4px); box-shadow: 6px 6px 0px #FFC72C; }
-        .hpw-use-emoji { font-size: 48px; display: block; margin-bottom: 18px; }
-        .hpw-use-label { font-family: 'Outfit', sans-serif; font-size: 21px; font-weight: 800; color: #002D62; margin-bottom: 8px; }
-        .hpw-use-desc { font-family: 'DM Sans',sans-serif; font-size: 13px; color: #5A4A30; line-height: 1.6; }
-
-        /* ─ TESTIMONIALS ─ */
-        .hpw-testi { background: #FFFEEA; padding: 90px 0; border-bottom: 4px solid #002D62; }
-        .hpw-testi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 28px; margin-top: 52px; }
-        .hpw-testi-card {
-          background: #fff; border: 3px solid #002D62;
-          border-radius: 20px; padding: 32px 28px;
-          transition: all 0.25s ease; box-shadow: 4px 4px 0px #002D62;
-        }
-        .hpw-testi-card:hover { border-color: #002D62; box-shadow: 6px 6px 0px #FFC72C; }
-        .hpw-testi-quote { font-family: 'Outfit',sans-serif; font-size: 17px; font-style: italic; font-weight: 600; color: #002D62; line-height: 1.6; margin-bottom: 24px; }
-        .hpw-testi-author { display: flex; align-items: center; gap: 12px; }
-        .hpw-testi-avatar { width: 44px; height: 44px; border-radius: 50%; background: #00875A; display: flex; align-items: center; justify-content: center; font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 800; color: #fff; flex-shrink: 0; border: 2px solid #002D62; }
-        .hpw-testi-name { font-family: 'Outfit',sans-serif; font-size: 14px; font-weight: 800; color: #002D62; }
-        .hpw-testi-role { font-family: 'DM Sans',sans-serif; font-size: 11.5px; color: #7A6A4A; margin-top: 2px; }
-
-        /* ─ TRUST BADGES ─ */
-        .hpw-trust { background: #fff; padding: 80px 0; }
-        .hpw-trust-grid { display: flex; justify-content: center; gap: 28px; flex-wrap: wrap; margin-top: 48px; }
-        .hpw-trust-item {
-          display: flex; align-items: center; gap: 14px;
-          background: #FFFEEA; border: 2.5px solid #002D62;
-          padding: 18px 28px; border-radius: 16px;
-          transition: all 0.22s ease; min-width: 210px;
-          box-shadow: 3px 3px 0px #002D62;
-        }
-        .hpw-trust-item:hover { border-color: #002D62; box-shadow: 5px 5px 0px #FFC72C; transform: translateY(-2px); }
-        .hpw-trust-icon { font-size: 28px; }
-        .hpw-trust-name { font-family: 'Outfit',sans-serif; font-size: 16px; font-weight: 800; color: #002D62; }
-        .hpw-trust-sub { font-family: 'DM Sans',sans-serif; font-size: 11.5px; color: #7A6A4A; margin-top: 2px; }
-
-        /* ─ CTA SECTION ─ */
-        .hpw-cta {
-          background: linear-gradient(135deg, #00875A 0%, #006644 100%);
-          padding: 110px 0; position: relative; overflow: hidden; text-align: center;
-          border-top: 4px solid #002D62;
-        }
-        .hpw-cta::before {
-          content: ''; position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
-          width: 700px; height: 700px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(255,199,44,0.18) 0%, transparent 65%);
-          pointer-events: none;
-        }
-        .hpw-cta-inner { position: relative; z-index: 1; max-width: 640px; margin: 0 auto; }
-        .hpw-cta-h2 { font-family: 'Outfit', sans-serif; font-size: clamp(32px, 5.5vw, 56px); font-weight: 900; color: #fff; line-height: 1.1; margin-bottom: 20px; }
-        .hpw-cta-h2 em { font-style: normal; color: #FFC72C; text-decoration: underline; text-decoration-color: #fff; }
-        .hpw-cta-sub { font-family: 'DM Sans', sans-serif; font-size: 16.5px; color: rgba(255,255,255,0.9); line-height: 1.7; margin-bottom: 40px; }
-        .hpw-cta-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
-        
-        .hpw-cta-btn-primary {
-          background: #FFC72C; color: #002D62; padding: 16px 40px; border-radius: 12px; border: 3px solid #002D62;
-          font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 900; cursor: pointer;
-          transition: all 0.25s; box-shadow: 4px 4px 0px #002D62;
-        }
-        .hpw-cta-btn-primary:hover {
-          background: #e5b323; transform: translate(2px, 2px); box-shadow: 2px 2px 0px #002D62;
-        }
-
-        /* ─ RESPONSIVE ─ */
-        @media(max-width:1024px) {
-          .hpw-hero-grid { grid-template-columns: 1fr; text-align: center; }
-          .hpw-hero-btns { justify-content: center; }
-          .hpw-hero-stats { justify-content: center; margin: 40px auto 0; }
-          .hpw-hero-img-area { display: none; }
-          .hpw-story-grid { grid-template-columns: 1fr; gap: 40px; }
-          .hpw-benefits-grid { grid-template-columns: repeat(2,1fr); }
-          .hpw-recipe-grid { grid-template-columns: repeat(2,1fr); }
-          .hpw-uses-grid { grid-template-columns: repeat(2,1fr); }
-          .hpw-testi-grid { grid-template-columns: 1fr; }
-          .hpw-badge-1, .hpw-badge-2 { display: none; }
-        }
-        @media(max-width:640px) {
-          .hpw-benefits-grid { grid-template-columns: 1fr; }
-          .hpw-recipe-grid { grid-template-columns: 1fr; }
-          .hpw-uses-grid { grid-template-columns: 1fr; }
-          .hpw-trust-grid { flex-direction: column; align-items: stretch; }
+        @media (max-width:768px) { .hp-hero{height:100dvh;min-height:560px;} .hp-content{padding:0 var(--pad) 60px;} .hp-wm{display:none;} .hp-hero-title{font-size:clamp(40px,11vw,72px);} }
+        @media (max-width:600px) {
+          .hp-prod-grid { grid-template-columns:1fr; gap:16px; }
+          .hp-test-grid { grid-template-columns:1fr; gap:16px; }
         }
       `}</style>
 
-      <div className="hpw-root">
-
-        {/* ══════════════════════════════════════════════════════
-            HERO
-        ══════════════════════════════════════════════════════ */}
-        <section className="hpw-hero">
-          <div className="wrap" style={{ width: '100%' }}>
-            <div className="hpw-hero-grid">
-              {/* Left — Text */}
-              <motion.div initial="hidden" animate="show" variants={FC}>
-                <motion.div variants={FI} transition={{ duration: 0.55 }}>
-                  <span className="hpw-hero-eyebrow">
-                    <LeafIcon size={12} />
-                    Premium Plant-Based Foods · India
-                  </span>
-                </motion.div>
-
-                <motion.h1 className="hpw-hero-h1" variants={FI} transition={{ duration: 0.65, delay: 0.05 }}>
-                  {hero?.title ? (
-                    hero.title
-                  ) : (
-                    <>
-                      Taste So Rich,<br />
-                      You Won't Believe<br />
-                      It's <em>Plant-Based!</em>
-                    </>
-                  )}
-                </motion.h1>
-
-                <motion.p className="hpw-hero-lead" variants={FI} transition={{ duration: 0.6, delay: 0.1 }}>
-                  {hero?.subtitle ?? "Srivriddhi blends clean lipid engineering with culinary artistry to create spreads, cooking creams, and ghee alternatives that spread, cook, and bake identically to dairy butter."}
-                </motion.p>
-
-                <motion.div className="hpw-hero-btns" variants={FI} transition={{ duration: 0.6, delay: 0.15 }}>
-                  <button className="hpw-btn-primary" onClick={() => go('/products')}>
-                    Explore Spreads →
-                  </button>
-                  <button className="hpw-btn-secondary" onClick={() => go('/contact')}>
-                    Request B2B Sample Pack
-                  </button>
-                </motion.div>
-
-                <motion.div className="hpw-hero-stats" variants={FI} transition={{ duration: 0.6, delay: 0.2 }}>
-                  {[
-                    { val: '100%', lab: 'Dairy-Free' },
-                    { val: '0g',   lab: 'Cholesterol' },
-                    { val: '500+', lab: 'HoReCa Partners' },
-                    { val: 'FSSAI', lab: 'Certified' },
-                  ].map(s => (
-                    <div key={s.lab}>
-                      <div className="hpw-stat-val">{s.val}</div>
-                      <div className="hpw-stat-lab">{s.lab}</div>
-                    </div>
-                  ))}
-                </motion.div>
-              </motion.div>
-
-              {/* Right — Image */}
-              <div className="hpw-hero-img-area">
-                <img
-                  src="/images/plantsmor-pack.png"
-                  alt="Srivriddhi Premium Plant Butter"
-                  className="hpw-hero-img"
-                />
-                {/* Float badges */}
-                <div className="hpw-float-badge hpw-badge-1">
-                  <span style={{ fontSize: 22 }}>🌿</span>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: '#002D62' }}>100% Vegan</div>
-                    <div style={{ fontSize: 11, color: '#7A6A4A', fontWeight: 600 }}>No animal fat</div>
-                  </div>
-                </div>
-                <div className="hpw-float-badge hpw-badge-2">
-                  <StarRating n={5} />
-                  <div style={{ fontSize: 12, color: '#002D62', marginLeft: 4, fontWeight: 800 }}>
-                    Chef's Choice
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ══════════════════════════════════════════════════════
-            RUNNING MARQUEE
-        ══════════════════════════════════════════════════════ */}
-        <div className="hpw-marquee" aria-hidden="true">
-          <div className="hpw-marquee-track">
-            {[
-              '100% Plant-Based', 'FSSAI Certified', 'Zero Cholesterol',
-              'Made in India', 'HoReCa Grade', 'Butter-Like Taste',
-              'Heart-Healthy', 'Vegan Verified', 'AGMARK Quality',
-              '100% Plant-Based', 'FSSAI Certified', 'Zero Cholesterol',
-              'Made in India', 'HoReCa Grade', 'Butter-Like Taste',
-              'Heart-Healthy', 'Vegan Verified', 'AGMARK Quality',
-            ].map((t, i) => (
-              <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 24 }}>
-                {t}
-                <span className="hpw-marquee-dot" />
-              </span>
-            ))}
-          </div>
+      {/* ═══ HERO ══════════════════════════════════════════════════════════ */}
+      <section className="hp-hero">
+        <div className="hp-bg" />
+        <div className="hp-grad" />
+        <div className="hp-wm">
+          <img src="/images/logo.png" alt="" aria-hidden style={{ width:'100%',height:'100%',objectFit:'contain',filter:'drop-shadow(0px 0px 4px rgba(0,0,0,0.5))' }} />
         </div>
+        <div className="hp-bottom-glow" />
+        <div className="hp-content">
+          <motion.div initial="hidden" animate="show" variants={FC}>
+            <motion.p variants={FI} transition={{ duration: 0.6 }} className="t-label" style={{ marginBottom: 18 }}>
+              Premium Plant-Based Foods
+            </motion.p>
+            <motion.h1 variants={FI} transition={{ duration: 0.6 }} className="hp-hero-title">
+              {hero?.title
+                ? hero.title.split('.').map((part, i, arr) => (
+                    <span key={i}>
+                      {i % 2 === 1 ? <em>{part.trim()}{i < arr.length - 1 ? '.' : ''}</em>
+                        : <>{part.trim()}{i < arr.length - 1 ? '.' : ''}</>}
+                      {i < arr.length - 1 && <br />}
+                    </span>
+                  ))
+                : <><span>BUILT FOR </span><em>KITCHENS.</em><br /><span>DRIVEN BY </span><em>TASTE.</em><br /><em>MADE FOR INDIA.</em></>
+              }
+            </motion.h1>
+            <motion.p variants={FI} transition={{ duration: 0.6 }}
+              style={{ fontFamily:"'Cormorant Garamond',Georgia,serif", fontSize:'clamp(1rem,1.6vw,1.4rem)', lineHeight:1.6, color:'rgba(255,255,255,0.62)', maxWidth:520, margin:'20px 0 36px' }}>
+              {hero?.subtitle ?? 'Plant-based fats and spreads engineered for chefs, HoReCa operators, and premium retail — where performance is non-negotiable.'}
+            </motion.p>
+            <motion.div variants={FI} transition={{ duration: 0.6 }} style={{ display:'flex', gap:14, flexWrap:'wrap' }}>
+              <button className="btn btn-gold btn-lg" onClick={() => go(hero?.cta_link ?? '/contact')}>
+                {hero?.cta_label ?? 'Get Samples'} →
+              </button>
+              <button className="btn btn-ghost btn-lg" onClick={() => go('/products')}>
+                Explore Products
+              </button>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
 
-        {/* ══════════════════════════════════════════════════════
-            NUTRI-RICH GOODNESS SECTION
-        ══════════════════════════════════════════════════════ */}
-        <section className="hpw-nutri-rich">
-          <div className="wrap">
-            <div className="hpw-nutri-box">
-              <h2 className="hpw-nutri-title">NU·TRI·RICH</h2>
-              <span className="hpw-nutri-pronounce">/noo-tree-rich/</span>
-              <p className="hpw-nutri-body">
-                Srivriddhi plant-based spreads carrying the <strong>NutriRich™</strong> designation are packed with 
-                essential nutrients. Each serving delivers <strong>20% of the daily value</strong> of Vitamins A, D, and E, 
-                and at least 15% of Omega-3 ALA—giving you that rich, creamy butter flavor with zero cholesterol.
-              </p>
-              <div className="hpw-nutri-badges">
-                {['Vitamins A, D, E', 'Omega-3 ALA', 'Creamy, Delicious Taste', 'Dairy-Free', 'Zero Cholesterol'].map(b => (
-                  <div key={b} className="hpw-nutri-badge-item">
-                    <span className="hpw-nutri-badge-dot">●</span> {b}
-                  </div>
-                ))}
-              </div>
+      {/* ═══ TICKER ════════════════════════════════════════════════════════ */}
+      <div className="hp-ticker-bar">
+        <div className="ticker-track">
+          {TICKER.map((t, i) => (
+            <span key={i} style={{ color:'rgba(255,255,255,0.45)', whiteSpace:'nowrap', fontFamily:"'DM Sans',sans-serif", fontSize:10, fontWeight:600, letterSpacing:'0.2em', textTransform:'uppercase' }}>
+              {t}<span style={{ marginLeft:40, color:'var(--gold)', opacity:0.5 }}>◆</span>
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* ═══ FEATURED PRODUCTS ══════════════════════════════════════════════ */}
+      <section className="sec" style={{ borderBottom:'1px solid var(--border)' }}>
+        <div className="wrap">
+          <div style={{ display:'flex', alignItems:'flex-end', justifyContent:'space-between', marginBottom:48, flexWrap:'wrap', gap:16 }}>
+            <div>
+              <p className="t-label" style={{ marginBottom:10 }}>The Core System</p>
+              <h2 className="t-display">Products That Deliver.</h2>
+              <div className="sec-divider" />
             </div>
+            <button className="btn btn-outline btn-lg" onClick={() => go('/products')}>View All →</button>
           </div>
-        </section>
-
-        {/* ══════════════════════════════════════════════════════
-            BENEFITS
-        ══════════════════════════════════════════════════════ */}
-        <section className="hpw-benefits">
-          <div className="wrap">
-            <div style={{ textAlign: 'center' }}>
-              <span className="hpw-section-label">Why Srivriddhi</span>
-              <h2 className="hpw-section-h2">The Butter Taste You Love.<br /><em>Without the Dairy.</em></h2>
-              <p className="hpw-section-sub" style={{ margin: '0 auto' }}>
-                Engineered with high-grade vegetable fats to perform identically to premium table butter in Indian kitchens.
-              </p>
+          {!products?.length ? (
+            <div className="hp-prod-grid">
+              {[1,2,3].map(i => <div key={i} className="shimmer" style={{ height:320, borderRadius:'var(--radius-xl)' }} />)}
             </div>
+          ) : (
             <motion.div
-              className="hpw-benefits-grid"
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: true, amount: 0.2 }}
-              variants={FC}
-            >
-              {BENEFITS.map(b => (
-                <motion.div key={b.title} className="hpw-benefit-card" variants={FI} transition={{ duration: 0.5 }}>
-                  <span className="hpw-benefit-emoji">{b.icon}</span>
-                  <h3 className="hpw-benefit-title">{b.title}</h3>
-                  <p className="hpw-benefit-desc">{b.desc}</p>
-                </motion.div>
+              className="hp-prod-grid"
+              initial="hidden" whileInView="show" viewport={{ once:true, amount:0.15 }} variants={FC}>
+              {products.map(p => (
+                <motion.article key={p.id} variants={FI} transition={{ duration:0.5 }}
+                  className="prod-card" style={{ cursor:'pointer' }} onClick={() => go(`/products/${p.slug}`)}>
+                  <div style={{ overflow:'hidden' }}>
+                    <img src={p.images?.[0] ?? '/images/placeholder.webp'} alt={p.name} loading="lazy" className="prod-card__img" />
+                  </div>
+                  <div className="prod-card__body">
+                    <span className="badge badge-gold" style={{ marginBottom:12 }}>{p.category}</span>
+                    <h3 className="t-h3" style={{ marginBottom:8 }}>{p.name}</h3>
+                    <div style={{ width:28,height:2,background:'var(--gold)',marginBottom:10,transition:'width 0.3s' }} />
+                    <p className="t-sm" style={{ marginBottom:16 }}>{p.short_desc ?? p.tagline}</p>
+                    <button className="btn btn-outline btn-sm" style={{ width:'100%' }}>View Details</button>
+                  </div>
+                </motion.article>
               ))}
             </motion.div>
-          </div>
-        </section>
+          )}
+        </div>
+      </section>
 
-        {/* ══════════════════════════════════════════════════════
-            CHEF RECIPES & CULINARY PERFORMANCE
-        ══════════════════════════════════════════════════════ */}
-        <section className="hpw-recipes">
+      {/* ═══ ABOUT TEASER ═══════════════════════════════════════════════════ */}
+      {teaser?.visible !== false && (
+        <section className="sec sec-alt" style={{ borderBottom:'1px solid var(--border)' }}>
           <div className="wrap">
-            <div style={{ textAlign: 'center', marginBottom: 44 }}>
-              <span className="hpw-section-label">Culinary Inspiration</span>
-              <h2 className="hpw-section-h2">Flavorful, Nutrient-Dense <em>Recipes.</em></h2>
-              <p className="hpw-section-sub" style={{ margin: '0 auto' }}>
-                Tested and curated by chefs to showcase premium culinary performance in home and professional environments.
-              </p>
-            </div>
-            
-            <div className="hpw-recipe-grid">
-              {RECIPES.map(r => (
-                <article key={r.title} className="hpw-recipe-card">
-                  <div className="hpw-recipe-img-wrap">
-                    <img src={r.image} alt={r.title} className="hpw-recipe-img" loading="lazy" />
-                    <span className="hpw-recipe-tag">{r.tag}</span>
-                  </div>
-                  <div className="hpw-recipe-body">
-                    <div className="hpw-recipe-meta">
-                      <span>⏱ {r.time}</span>
-                      <span>🍽 {r.portions}</span>
-                      <span>⚡ {r.diff}</span>
-                    </div>
-                    <h3 className="hpw-recipe-card-title">{r.title}</h3>
-                    <p className="hpw-recipe-card-desc">{r.desc}</p>
-                    <div className="hpw-recipe-rating">
-                      <StarRating n={r.rating} />
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ══════════════════════════════════════════════════════
-            OUR STORY SPLIT
-        ══════════════════════════════════════════════════════ */}
-        <section className="hpw-story">
-          <div className="wrap">
-            <div className="hpw-story-grid">
-              {/* Image */}
-              <motion.div
-                initial={{ opacity: 0, x: -40 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, amount: 0.3 }}
-                transition={{ duration: 0.7 }}
-              >
-                <div className="hpw-story-img-wrap">
-                  <img src="/images/plantsmor-spread.jpg" alt="Srivriddhi craftsmanship" className="hpw-story-img" />
-                  <div className="hpw-story-img-badge">
-                    <div>
-                      <div className="hpw-story-img-badge-val">5+</div>
-                      <div className="hpw-story-img-badge-lab">Years of R&D</div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Text */}
-              <motion.div
-                initial={{ opacity: 0, x: 40 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, amount: 0.3 }}
-                transition={{ duration: 0.7, delay: 0.1 }}
-              >
-                <span className="hpw-section-label">Our Craft</span>
-                <h2 className="hpw-section-h2" style={{ marginBottom: 16 }}>Sourced from Nature.<br />Engineered for Taste.</h2>
-                <p style={{ fontSize: 15.5, color: '#4A3B22', lineHeight: 1.8, marginBottom: 8 }}>
-                  {teaser?.body ?? "Born in Madhya Pradesh, Srivriddhi blends agricultural bounty with state-of-the-art lipid science. We create spreads that cook, emulsify, and brown exactly like traditional butter—without any dairy allergens."}
-                </p>
-
-                <blockquote>
-                  "No heavy trans-fats. No hydrogenated oils. Just clean plant lipids and culinary science."
-                </blockquote>
-
-                <div className="hpw-story-features">
-                  {[
-                    { icon: '🌻', title: 'Premium Sunflower Oils', desc: 'Cold-pressed and winterized for smooth spreadability directly from the fridge.' },
-                    { icon: '🧪', title: 'Clean Emulsions', desc: 'No synthetic binders or hydrogenated fats. Pure physical crystallization.' },
-                    { icon: '🏭', title: 'FSSAI Licensed Lab', desc: 'Manufactured under rigorous pharmaceutical-grade food-safety controls.' },
-                  ].map(f => (
-                    <div key={f.title} className="hpw-story-feature">
-                      <span className="hpw-story-feature-icon">{f.icon}</span>
-                      <div>
-                        <div className="hpw-story-feature-title">{f.title}</div>
-                        <div className="hpw-story-feature-desc">{f.desc}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <button className="hpw-btn-primary" onClick={() => go('/about')} style={{ marginTop: 36 }}>
-                  Our Full Story →
+            <motion.div initial="hidden" whileInView="show" viewport={{ once:true, amount:0.3 }} variants={FC}
+              className="hp-teaser-grid">
+              <motion.div variants={FI} transition={{ duration:0.6 }}>
+                <p className="t-label" style={{ marginBottom:14 }}>Our Standard</p>
+                <h2 className="t-display" style={{ marginBottom:20 }}>{teaser?.title ?? 'Plant-Based. Premium. Purposeful.'}</h2>
+                <div style={{ width:48,height:2,background:'linear-gradient(90deg,var(--gold),transparent)',marginBottom:24 }} />
+                <p className="t-lead" style={{ marginBottom:16 }}>{teaser?.subtitle}</p>
+                <p className="t-body" style={{ marginBottom:32 }}>{teaser?.body}</p>
+                <button className="btn btn-gold btn-lg" onClick={() => go(teaser?.cta_link ?? '/about')}>
+                  {teaser?.cta_label ?? 'Our Story'} →
                 </button>
               </motion.div>
-            </div>
-          </div>
-        </section>
-
-        {/* ══════════════════════════════════════════════════════
-            USAGE OCCASIONS
-        ══════════════════════════════════════════════════════ */}
-        <section className="hpw-uses">
-          <div className="wrap">
-            <div style={{ textAlign: 'center' }}>
-              <span className="hpw-section-label" style={{ color: 'rgba(255,255,255,0.75)' }}>Versatility</span>
-              <h2 className="hpw-section-h2" style={{ color: '#fff', marginTop: 10 }}>
-                Excels in Every Single <em>Culinary Application.</em>
-              </h2>
-            </div>
-            <motion.div
-              className="hpw-uses-grid"
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: true, amount: 0.2 }}
-              variants={FC}
-            >
-              {[
-                { emoji: '🍞', label: 'Spreading', desc: 'Spreads effortlessly straight from the refrigerator onto soft buns, toast, or parathas.' },
-                { emoji: '🥐', label: 'Baking', desc: 'Yields exceptional flakiness and high overrun in puff pastries, cookies, and cakes.' },
-                { emoji: '🍳', label: 'Cooking', desc: 'Creates rich, velvety emulsions in hot gravies, curries, and pan sauces.' },
-                { emoji: '🫕', label: 'Tadka & Fry', desc: 'Stable smoke point designed to handle hot sizzling tempering without burning.' },
-              ].map((u, i) => (
-                <motion.div key={u.label} className="hpw-use-card" variants={FI} transition={{ duration: 0.5, delay: i * 0.08 }}>
-                  <span className="hpw-use-emoji">{u.emoji}</span>
-                  <div className="hpw-use-label">{u.label}</div>
-                  <p className="hpw-use-desc">{u.desc}</p>
-                </motion.div>
-              ))}
+              <motion.div variants={FI} transition={{ duration:0.6 }}
+                style={{ display:'flex', flexDirection:'column', gap:16 }}>
+                {[
+                  { n:'3+',    l:'Core SKUs',     s:'Butter, Cream, Mayo' },
+                  { n:'B2B',   l:'HoReCa Ready',  s:'Bulk & trade supply' },
+                  { n:'100%',  l:'Plant-Based',   s:'No dairy. No compromise.' },
+                  { n:'24h',   l:'Response Time', s:'Direct team access' },
+                ].map(s => (
+                  <div key={s.l} style={{ display:'flex', alignItems:'center', gap:24, padding:'20px 24px', background:'var(--bg-card)', border:'1px solid var(--border)', borderRadius:'var(--radius-md)', transition:'border-color 0.25s, box-shadow 0.25s' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor='var(--border-gold)'; (e.currentTarget as HTMLDivElement).style.boxShadow='0 0 20px rgba(255,193,7,0.07)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor='var(--border)'; (e.currentTarget as HTMLDivElement).style.boxShadow='none'; }}>
+                    <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:44, color:'var(--gold)', lineHeight:1, minWidth:72, letterSpacing:'0.02em' }}>{s.n}</span>
+                    <div>
+                      <span style={{ display:'block', fontFamily:"'DM Sans',sans-serif", fontSize:13, fontWeight:700, color:'#fff', letterSpacing:'0.04em' }}>{s.l}</span>
+                      <span style={{ display:'block', fontFamily:"'DM Sans',sans-serif", fontSize:12, color:'rgba(255,255,255,0.35)' }}>{s.s}</span>
+                    </div>
+                  </div>
+                ))}
+              </motion.div>
             </motion.div>
           </div>
         </section>
+      )}
 
-        {/* ══════════════════════════════════════════════════════
-            TESTIMONIALS
-        ══════════════════════════════════════════════════════ */}
-        <section className="hpw-testi">
+      {/* ═══ TESTIMONIALS ════════════════════════════════════════════════════ */}
+      {testimonials && testimonials.length > 0 && (
+        <section className="sec" style={{ borderBottom:'1px solid var(--border)' }}>
           <div className="wrap">
-            <div style={{ textAlign: 'center' }}>
-              <span className="hpw-section-label">Partner Feedback</span>
-              <h2 className="hpw-section-h2" style={{ marginTop: 10 }}>
-                What Professional Chefs <em>Are Saying.</em>
-              </h2>
+            <div style={{ textAlign:'center', marginBottom:52 }}>
+              <p className="t-label" style={{ marginBottom:10 }}>Trusted By</p>
+              <h2 className="t-display">What Our Clients Say.</h2>
+              <div className="sec-divider" style={{ margin:'14px auto 0' }} />
             </div>
             <motion.div
-              className="hpw-testi-grid"
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: true, amount: 0.2 }}
-              variants={FC}
-            >
-              {(testimonials?.slice(0, 3) ?? [
-                { id: '1', name: 'Chef Vikram Bose', role: 'Executive Chef, Oberoi Hotels', quote: "Srivriddhi plant butter performs identically to imported dairy butter in our kitchens — from delicate pastries to hot restaurant pans. Absolute game-changer." },
-                { id: '2', name: 'Priya Mehta', role: 'Head Baker, Le Petit Four', quote: "I was highly skeptical about a dairy alternative, but the overrun and crumb structure in our pastries is incredible. Spreads beautifully right from the chiller." },
-                { id: '3', name: 'Rajesh Kumar', role: 'F&B Quality Lead, ITC Group', quote: "The thermal emulsion stability is outstanding. It handles high-heat tadka and delivers rich ghee notes with zero cholesterol. Exactly what modern menus need." },
-              ]).map(t => (
-                <motion.div key={t.id} className="hpw-testi-card" variants={FI} transition={{ duration: 0.5 }}>
-                  <StarRating n={5} />
-                  <p className="hpw-testi-quote" style={{ marginTop: 16 }}>"{t.quote}"</p>
-                  <div className="hpw-testi-author">
-                    <div className="hpw-testi-avatar">{(t.name ?? 'A')[0]}</div>
+              className="hp-test-grid"
+              initial="hidden" whileInView="show" viewport={{ once:true, amount:0.2 }} variants={FC}>
+              {testimonials.slice(0,3).map(t => (
+                <motion.div key={t.id} variants={FI} transition={{ duration:0.5 }}
+                  style={{ background:'var(--bg-card)', border:'1px solid var(--border)', borderRadius:'var(--radius-xl)', padding:32, transition:'border-color 0.25s, box-shadow 0.25s' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor='var(--border-gold)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor='var(--border)'; }}>
+                  <div style={{ color:'var(--gold)', fontSize:28, lineHeight:1, marginBottom:16 }}>"</div>
+                  <p style={{ fontFamily:"'Cormorant Garamond',Georgia,serif", fontSize:'clamp(1rem,1.4vw,1.2rem)', fontStyle:'italic', lineHeight:1.75, color:'rgba(255,255,255,0.6)', marginBottom:24 }}>
+                    {t.quote}
+                  </p>
+                  <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                    <div style={{ width:36,height:36,borderRadius:'50%',background:'var(--gold-soft)',border:'1.5px solid var(--border-gold)',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:"'DM Sans',sans-serif",fontWeight:700,color:'var(--gold)',fontSize:14,flexShrink:0 }}>
+                      {t.name.charAt(0)}
+                    </div>
                     <div>
-                      <div className="hpw-testi-name">{t.name}</div>
-                      <div className="hpw-testi-role">{t.role}</div>
+                      <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:13, fontWeight:600, color:'#fff' }}>{t.name}</div>
+                      <div style={{ fontFamily:"'DM Sans',sans-serif", fontSize:11, color:'rgba(255,255,255,0.35)', marginTop:2 }}>{t.role}{t.company ? `, ${t.company}` : ''}</div>
                     </div>
                   </div>
                 </motion.div>
@@ -756,52 +221,36 @@ export function HomePage() {
             </motion.div>
           </div>
         </section>
+      )}
 
-        {/* ══════════════════════════════════════════════════════
-            TRUST & CERTS
-        ══════════════════════════════════════════════════════ */}
-        <section className="hpw-trust">
-          <div className="wrap">
-            <div style={{ textAlign: 'center' }}>
-              <span className="hpw-section-label">Certifications</span>
-              <h2 className="hpw-section-h2" style={{ marginTop: 10 }}>
-                Verified Quality & <em>Standards.</em>
-              </h2>
-            </div>
-            <div className="hpw-trust-grid">
-              {TRUST.map(c => (
-                <div key={c.name} className="hpw-trust-item">
-                  <span className="hpw-trust-icon">{c.icon}</span>
-                  <div>
-                    <div className="hpw-trust-name">{c.name}</div>
-                    <div className="hpw-trust-sub">{c.sub}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ══════════════════════════════════════════════════════
-            CTA BAND
-        ══════════════════════════════════════════════════════ */}
-        <section className="hpw-cta">
-          <div className="hpw-cta-inner">
-            <h2 className="hpw-cta-h2">
-              Ready to Upgrade your <em>Kitchen Operations?</em>
-            </h2>
-            <p className="hpw-cta-sub">
-              Request a commercial sample pack or coordinate a kitchen trial with one of our regional culinary solutions experts today.
-            </p>
-            <div className="hpw-cta-btns">
-              <button className="hpw-cta-btn-primary" onClick={() => go('/contact')}>
-                Get Free Sample Pack →
-              </button>
-            </div>
-          </div>
-        </section>
-
-      </div>
+      {/* ═══ CTA BAND ════════════════════════════════════════════════════════ */}
+      <section style={{ padding:'88px 0', background:'linear-gradient(135deg,#111 0%,#0B0B0B 50%,#100A00 100%)', position:'relative', overflow:'hidden' }}>
+        <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse 70% 50% at 50% 50%, rgba(255,193,7,0.05) 0%, transparent 70%)', pointerEvents:'none' }} />
+        <div style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:360, height:360, opacity:0.04, pointerEvents:'none' }}>
+          <img src="/images/logo.png" alt="" aria-hidden style={{ width:'100%', height:'100%', objectFit:'contain', filter:'drop-shadow(0px 0px 4px rgba(0,0,0,0.5))' }} />
+        </div>
+        <motion.div className="wrap" style={{ textAlign:'center', position:'relative', zIndex:1 }}
+          initial="hidden" whileInView="show" viewport={{ once:true, amount:0.4 }} variants={FC}>
+          <motion.p variants={FI} className="t-label" style={{ marginBottom:20 }}>Get Started Today</motion.p>
+          <motion.h2 variants={FI} className="t-display" style={{ marginBottom:16 }}>
+            {cta?.title?.split('?')[0] ?? 'Ready to Go '}
+            <span style={{ color:'var(--gold)' }}>{cta?.title?.includes('?') ? cta.title.split('?')[0].split(' ').pop() + '?' : 'Plant-Based?'}</span>
+          </motion.h2>
+          <motion.p variants={FI} className="t-lead" style={{ maxWidth:520, margin:'0 auto 40px' }}>
+            {cta?.subtitle ?? 'Talk to our team about bulk supply, samples, or trade terms. We respond within 24 hours.'}
+          </motion.p>
+          <motion.div variants={FI} style={{ display:'flex', gap:14, justifyContent:'center', flexWrap:'wrap' }}>
+            <button className="btn btn-gold btn-lg" onClick={() => go(cta?.cta_link ?? '/contact')}>
+              {cta?.cta_label ?? 'Request Samples'} →
+            </button>
+            <a href={`https://wa.me/${settings.site_whatsapp ?? '917565000365'}`} target="_blank" rel="noopener noreferrer"
+              className="btn btn-ghost btn-lg" style={{ textDecoration:'none', display:'inline-flex', alignItems:'center', gap:8 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+              WhatsApp Us
+            </a>
+          </motion.div>
+        </motion.div>
+      </section>
     </>
   );
 }
