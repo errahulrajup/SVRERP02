@@ -66,7 +66,7 @@ export function CmsProducts() {
   const filtered = filter === 'all'? products
     : filter === 'visible'? products.filter(p => p.visible)
     : filter === 'featured'? products.filter(p => p.featured)
-    : filter === 'no_recipe'? products.filter(p =>!p.recipe_id)
+    : filter === 'no_recipe'? products.filter(p => !p.recipe_id && p.category !== 'Ingredients')
     : products.filter(p =>!p.in_stock);
 
   return (
@@ -82,9 +82,9 @@ export function CmsProducts() {
       </div>
 
       {/* FSMS Alert */}
-      {products.some(p =>!p.recipe_id) && (
+      {products.some(p => !p.recipe_id && p.category !== 'Ingredients') && (
         <div style={{ background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:10, padding:'12px 18px', marginBottom:20 }}>
-          <div style={{ color:'#EF4444', fontWeight:700, fontSize:13 }}>⚠️ {products.filter(p =>!p.recipe_id).length} product(s) missing Recipe Link</div>
+          <div style={{ color:'#EF4444', fontWeight:700, fontSize:13 }}>⚠️ {products.filter(p => !p.recipe_id && p.category !== 'Ingredients').length} product(s) missing Recipe Link</div>
           <div style={{ color:'var(--bos-text3)', fontSize:12}}>FSMA requires full traceability. Link recipe before production.</div>
         </div>
       )}
@@ -111,9 +111,9 @@ export function CmsProducts() {
       ) : (
         <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
           {filtered.map(p => (
-            <div key={p.id} style={{ display:'grid', gridTemplateColumns:'64px 1fr auto', gap:16, alignItems:'center', padding:'16px 20px', background:'var(--bg-card)', border:`1px solid ${!p.recipe_id? '#EF4444' : 'var(--border)'}`, borderRadius:'var(--radius-md)', transition:'border-color 0.2s' }}
+            <div key={p.id} style={{ display:'grid', gridTemplateColumns:'64px 1fr auto', gap:16, alignItems:'center', padding:'16px 20px', background:'var(--bg-card)', border:`1px solid ${(!p.recipe_id && p.category !== 'Ingredients')? '#EF4444' : 'var(--border)'}`, borderRadius:'var(--radius-md)', transition:'border-color 0.2s' }}
               onMouseEnter={e => (e.currentTarget.style.borderColor='var(--border-gold)')}
-              onMouseLeave={e => (e.currentTarget.style.borderColor =!p.recipe_id? '#EF4444' : 'var(--border)')}>
+              onMouseLeave={e => (e.currentTarget.style.borderColor =(!p.recipe_id && p.category !== 'Ingredients')? '#EF4444' : 'var(--border)')}>
               {/* Thumb */}
               <div style={{ width:64, height:52, borderRadius:'var(--radius-sm)', background:'var(--bg-elevated)', border:'1px solid var(--border)', overflow:'hidden', flexShrink:0 }}>
                 {p.images?.[0]
@@ -135,6 +135,8 @@ export function CmsProducts() {
                 <div style={{ display:'flex', gap:12, flexWrap:'wrap', marginBottom:6 }}>
                   {p.recipe_name? (
                     <span style={{fontSize:11, color:'#22C55E'}}>✓ Recipe: {p.recipe_name} v{p.recipe_version}</span>
+                  ) : p.category === 'Ingredients' ? (
+                    <span style={{fontSize:11, color:'rgba(255,255,255,0.28)'}}>Ingredients (No Recipe required)</span>
                   ) : (
                     <span style={{fontSize:11, color:'#EF4444', fontWeight:700}}>⚠️ NO RECIPE LINKED</span>
                   )}
