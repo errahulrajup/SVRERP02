@@ -1,9 +1,10 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useRecipes, useProducts, useRecipeInputs, useRecipeSteps } from '../../hooks/useBos';
 import { recipesApi, recipeInputsApi, recipeStepsApi, bosProductsApi, recipeQcParamsApi } from '../../lib/bosApi';
 import { useAuth } from '../../hooks';
 import { RecipeQcParam } from '../../types/bos';
 import { RecipeFsmsConfig } from './RecipeFsmsConfig';
+import { showToast } from '../../lib/toast';
 
 const COMMON_QC_PRESETS = [
   { name: 'pH', category: 'Chemical', unit: '', min: '6.5', max: '7.5' },
@@ -39,7 +40,6 @@ export function RecipeEngine() {
   const [sForm, setSForm] = useState({ stepNo: '', name: '', machine: '', instruction: '', tMin: '', tMax: '', dur: '' });
 
   const [qcParams, setQcParams] = useState<RecipeQcParam[]>([]);
-  const [loadingParams, setLoadingParams] = useState(false);
   const [showQcParamForm, setShowQcParamForm] = useState(false);
   const [editQcParamId, setEditQcParamId] = useState<string | null>(null);
   const [qcParamForm, setQcParamForm] = useState({
@@ -54,14 +54,11 @@ export function RecipeEngine() {
       setQcParams([]);
       return;
     }
-    setLoadingParams(true);
     try {
       const res = await recipeQcParamsApi.byRecipe(activeRecipeId);
       if (res.data) setQcParams(res.data);
-    } catch (e: any) {
-      alert('Error: ' + e.message);
-    } finally {
-      setLoadingParams(false);
+    } catch (e: unknown) {
+      showToast('Error: ' + (e as Error).message, 'error');
     }
   }, [activeRecipeId]);
 
@@ -69,14 +66,11 @@ export function RecipeEngine() {
     let cancelled = false;
     const load = async () => {
       if (!activeRecipeId) return setQcParams([]);
-      setLoadingParams(true);
       try {
         const res = await recipeQcParamsApi.byRecipe(activeRecipeId);
         if (!cancelled && res.data) setQcParams(res.data);
-      } catch (e: any) {
-        if (!cancelled) alert('Error: ' + e.message);
-      } finally {
-        if (!cancelled) setLoadingParams(false);
+      } catch (e: unknown) {
+        if (!cancelled) showToast('Error: ' + (e as Error).message, 'error');
       }
     };
     load();
@@ -84,7 +78,7 @@ export function RecipeEngine() {
   }, [activeRecipeId]);
 
   const handleSaveQcParam = async () => {
-    if (!activeRecipeId || !qcParamForm.param_name.trim()) return alert('Parameter name is required');
+    if (!activeRecipeId || !qcParamForm.param_name.trim()) { showToast('Parameter name is required', 'warning'); return; }
     setSavingQcParam(true);
     try {
       const payload = {
@@ -110,9 +104,9 @@ export function RecipeEngine() {
       setShowQcParamForm(false);
       setEditQcParamId(null);
       loadQcParams();
-      alert('✅ Parameter saved');
-    } catch (e: any) {
-      alert(`Error: ${e.message}`);
+      showToast('✅ Parameter saved', 'success');
+    } catch (e: unknown) {
+      showToast(`Error: ${(e as Error).message}`, 'error');
     } finally {
       setSavingQcParam(false);
     }
@@ -138,9 +132,9 @@ export function RecipeEngine() {
     try {
       await recipeQcParamsApi.remove(pid);
       loadQcParams();
-      alert('Parameter removed');
-    } catch (e: any) {
-      alert(`Error: ${e.message}`);
+      showToast('Parameter removed', 'info');
+    } catch (e: unknown) {
+      showToast(`Error: ${(e as Error).message}`, 'error');
     }
   };
 
@@ -149,7 +143,7 @@ export function RecipeEngine() {
   const handleQuickAddQcParam = async (preset: typeof COMMON_QC_PRESETS[number]) => {
     if (addingPreset === preset.name) return;
     if (qcParams.find(p => p.param_name === preset.name)) {
-      return alert('Parameter already exists');
+      showToast('Parameter already exists', 'info'); return;
     }
     setAddingPreset(preset.name);
     try {
@@ -166,8 +160,8 @@ export function RecipeEngine() {
         sort_order: 0
       });
       loadQcParams();
-    } catch (e: any) {
-      alert(`Error: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error: ${(e as Error).message}`, 'error');
     } finally {
       setAddingPreset(null);
     }
@@ -187,7 +181,7 @@ export function RecipeEngine() {
   }, [recipes, products, search]);
 
   const handleSaveProduct = async () => {
-    if (!pForm.name.trim() || !pForm.sku.trim()) return alert('Name and SKU required');
+    if (!pForm.name.trim() || !pForm.sku.trim()) { showToast('Name and SKU required', 'warning'); return; }
     setSaving(true);
     try {
       await bosProductsApi.create({
@@ -198,16 +192,16 @@ export function RecipeEngine() {
         gst_pct: parseFloat(pForm.gst) || 18,
         is_active: true
       });
-      alert('✅ Product created');
+      showToast('✅ Product created', 'success');
       setIsProductModalOpen(false);
       setPForm({ name: '', sku: '', cat: '', unit: 'kg', gst: '18' });
       reloadProducts();
-    } catch (e: any) { alert(`Error: ${e.message}`); }
+    } catch (e: unknown) { showToast(`Error: ${(e as Error).message}`, 'error'); }
     finally { setSaving(false); }
   };
 
   const handleSaveRecipe = async () => {
-    if (!rForm.productId || !rForm.name.trim()) return alert('Product and Name required');
+    if (!rForm.productId || !rForm.name.trim()) { showToast('Product and Name required', 'warning'); return; }
     setSaving(true);
     try {
       const { data: saved, error } = await recipesApi.create({
@@ -226,17 +220,17 @@ export function RecipeEngine() {
         approved_by: null
       });
       if (error || !saved) throw new Error(error?.message ?? 'Recipe creation failed');
-      alert('✅ Recipe created');
+      showToast('✅ Recipe created', 'success');
       setIsRecipeModalOpen(false);
       setRForm({ productId: '', name: '', qty: '', unit: 'kg', loss: '2', shelf: '', storage: '', notes: '' });
       reloadRecipes();
       setActiveRecipeId(saved.id);
-    } catch (e: any) { alert(`Error: ${e.message}`); }
+    } catch (e: unknown) { showToast(`Error: ${(e as Error).message}`, 'error'); }
     finally { setSaving(false); }
   };
 
   const handleSaveInput = async () => {
-    if (!activeRecipeId || !iForm.material.trim() || parseFloat(iForm.qty) <= 0) return alert('Invalid input');
+    if (!activeRecipeId || !iForm.material.trim() || parseFloat(iForm.qty) <= 0) { showToast('Invalid input', 'error'); return; }
     setSaving(true);
     try {
       await recipeInputsApi.create({
@@ -250,17 +244,17 @@ export function RecipeEngine() {
       setIsInputModalOpen(false);
       setIForm({ material: '', qty: '', unit: 'kg', tol: '2', notes: '' });
       reloadInputs();
-    } catch (e: any) { alert(`Error: ${e.message}`); }
+    } catch (e: unknown) { showToast(`Error: ${(e as Error).message}`, 'error'); }
     finally { setSaving(false); }
   };
 
   const handleSaveStep = async () => {
-    if (!activeRecipeId || !sForm.name.trim()) return alert('Invalid step');
+    if (!activeRecipeId || !sForm.name.trim()) { showToast('Invalid step', 'error'); return; }
     setSaving(true);
     const stepNo = parseInt(sForm.stepNo) || activeSteps.length + 1;
     if (activeSteps.find(s => s.step_no === stepNo)) {
       setSaving(false);
-      return alert(`Step number ${stepNo} already exists.`);
+      showToast(`Step number ${stepNo} already exists.`, 'info'); return;
     }
 
     try {
@@ -277,7 +271,7 @@ export function RecipeEngine() {
       setIsStepModalOpen(false);
       setSForm({ stepNo: '', name: '', machine: '', instruction: '', tMin: '', tMax: '', dur: '' });
       reloadSteps();
-    } catch (e: any) { alert(`Error: ${e.message}`); }
+    } catch (e: unknown) { showToast(`Error: ${(e as Error).message}`, 'error'); }
     finally { setSaving(false); }
   };
 
@@ -286,19 +280,19 @@ export function RecipeEngine() {
     if (!confirm('Approve & lock recipe? Only Admin can unlock.')) return;
     try {
       await recipesApi.update(activeRecipeId, { locked: true, approved_by: user?.id || null });
-      alert('✅ Recipe approved & locked!');
+      showToast('✅ Recipe approved & locked!', 'success');
       reloadRecipes();
-    } catch (e: any) { alert(`Error: ${e.message}`); }
+    } catch (e: unknown) { showToast(`Error: ${(e as Error).message}`, 'error'); }
   };
 
   const unlockRecipe = async () => {
-    if (user?.role !== 'ADMIN') return alert('Only ADMIN can unlock approved recipes');
+    if (user?.role !== 'ADMIN') { showToast('Only ADMIN can unlock approved recipes', 'success'); return; }
     if (!activeRecipeId || !confirm('Admin override: Unlock recipe?')) return;
     try {
       await recipesApi.update(activeRecipeId, { locked: false });
-      alert('🔓 Recipe unlocked');
+      showToast('🔓 Recipe unlocked', 'success');
       reloadRecipes();
-    } catch (e: any) { alert(`Error: ${e.message}`); }
+    } catch (e: unknown) { showToast(`Error: ${(e as Error).message}`, 'error'); }
   };
 
   const deleteRecipe = async () => {
@@ -307,17 +301,17 @@ export function RecipeEngine() {
       await recipesApi.remove(activeRecipeId);
       setActiveRecipeId(null);
       reloadRecipes();
-    } catch (e: any) { alert(`Error: ${e.message}`); }
+    } catch (e: unknown) { showToast(`Error: ${(e as Error).message}`, 'error'); }
   };
 
   const deleteInput = async (id: string) => {
     if (!confirm('Delete input?')) return;
-    try { await recipeInputsApi.remove(id); reloadInputs(); } catch(e:any) { alert(`Error: ${e.message}`); }
+    try { await recipeInputsApi.remove(id); reloadInputs(); } catch(e: unknown) { showToast(`Error: ${(e as Error).message}`, 'error'); }
   };
 
   const deleteStep = async (id: string) => {
     if (!confirm('Delete step?')) return;
-    try { await recipeStepsApi.remove(id); reloadSteps(); } catch(e:any) { alert(`Error: ${e.message}`); }
+    try { await recipeStepsApi.remove(id); reloadSteps(); } catch(e: unknown) { showToast(`Error: ${(e as Error).message}`, 'error'); }
   };
 
   if (rLoading || pLoading) return <div style={{ padding: 40, color: '#9AAF96' }}>Loading Recipes...</div>;

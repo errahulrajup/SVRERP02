@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
 import { rndFormulasApi, rndFormulaItemsApi, rndFormulaParamsApi, rndProcessesApi } from '../../lib/rndApi';
 import { recipesApi, recipeInputsApi, recipeQcParamsApi, recipeStepsApi } from '../../lib/bosApi';
 import { useAuth } from '../../hooks';
 import { logAudit } from '../../lib/auditLogger';
 import type { RndFormula } from '../../types/rnd';
+import { showToast } from '../../lib/toast';
 
 export function ProductValidation() {
-  const navigate = useNavigate();
   const { user } = useAuth();
   
   const [formulas, setFormulas] = useState<RndFormula[]>([]);
@@ -22,8 +21,8 @@ export function ProductValidation() {
         // Show APPROVED formulas that are not yet VIABLE/REJECTED
         setFormulas(res.data.filter(f => f.status === 'APPROVED' && f.validation_status !== 'REJECTED' && f.validation_status !== 'VIABLE'));
       }
-    } catch (e: any) {
-      alert('Error: ' + e.message);
+    } catch (e: unknown) {
+      showToast('Error: ' + (e as Error).message, 'error');
     } finally {
       setLoading(false);
     }
@@ -33,7 +32,7 @@ export function ProductValidation() {
 
   const handleValidate = async (id: string, status: 'VIABLE' | 'REJECTED', notes: string) => {
     if (status === 'REJECTED' && !notes.trim()) {
-      return alert("Please provide rejection notes.");
+      showToast("Please provide rejection notes.", 'warning'); return;
     }
     
     setSaving(true);
@@ -42,7 +41,7 @@ export function ProductValidation() {
         validation_status: status,
         validation_notes: notes.trim() || null
       });
-      alert(`Product marked as ${status}`);
+      showToast(`Product marked as ${status}`, 'info');
       logAudit({ user_name: user?.name || user?.email || 'System', action: status === 'VIABLE' ? 'APPROVE' : 'REJECT', module: 'RND', details: `Product validation: ${status} | Notes: ${notes || 'None'}` });
       
       // If VIABLE, trigger promotion to Production Recipe
@@ -50,8 +49,8 @@ export function ProductValidation() {
         await promoteToRecipe(id);
       }
       await load();
-    } catch (e: any) {
-      alert(`Error: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error: ${(e as Error).message}`, 'error');
     } finally {
       setSaving(false);
     }
@@ -63,14 +62,14 @@ export function ProductValidation() {
     const formula = fRes.data;
 
     if (!formula.erp_product_id) {
-      alert('Cannot promote: Formula is not linked to an ERP Finished Product.');
+      showToast('Cannot promote: Formula is not linked to an ERP Finished Product.', 'success');
       return;
     }
 
     try {
       const existing = (recipesApi as any).byProductId ? await (recipesApi as any).byProductId(formula.erp_product_id) : { data: [] };
       if (existing.data?.length) {
-        alert('A recipe already exists for this product.');
+        showToast('A recipe already exists for this product.', 'info');
         return;
       }
     } catch(e) {}
@@ -163,12 +162,12 @@ export function ProductValidation() {
       status: 'LOCKED', locked_by: user?.id || null, locked_at: new Date().toISOString(),
     });
     
-    alert(`Recipe successfully promoted to production! Recipe ID: ${newRecipeId}`);
-    } catch (e: any) {
+    showToast(`Recipe successfully promoted to production! Recipe ID: ${newRecipeId}`, 'success');
+    } catch (e: unknown) {
       if (newRecipeId) {
         await recipesApi.remove(newRecipeId).catch(console.error); // cleanup rollback
       }
-      throw new Error(`Promotion failed: ${e.message}. Partial recipe rolled back.`);
+      throw new Error(`Promotion failed: ${(e as Error).message}. Partial recipe rolled back.`);
     }
   };
 

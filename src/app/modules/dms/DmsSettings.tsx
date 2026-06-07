@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useDmsCompany } from '../../hooks/useDms';
 import type { DmsCompany } from '../../types/dms';
+import { showToast } from '../../lib/toast';
 
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -27,12 +28,12 @@ function ImageUpload({ label, value, onChange, id }: { label: string; value: str
     if (!file) return;
     // BUG-16: Validate file size (max 500KB) and type
     if (!file.type.startsWith('image/')) {
-      alert('Only image files are allowed (PNG, JPG, etc.)');
+      showToast('Only image files are allowed (PNG, JPG, etc.)', 'info');
       e.target.value = '';
       return;
     }
     if (file.size > 512 * 1024) {
-      alert('Image must be smaller than 512KB. Please compress the image and try again.');
+      showToast('Image must be smaller than 512KB. Please compress the image and try again.', 'warning');
       e.target.value = '';
       return;
     }

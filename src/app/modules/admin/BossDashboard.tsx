@@ -1,5 +1,5 @@
 import { useBossDashboard } from '../../hooks/useBos';
-import { fmtINR, fmtDate, daysUntil } from '../../types/bos';
+import { fmtINR } from '../../types/bos';
 import { Link } from 'react-router';
 
 export function BossDashboard() {

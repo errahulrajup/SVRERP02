@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from 'react';
-import { useAllergenMatrix, useProducts } from '../../hooks/useBos';
+import { useState, useMemo } from 'react';
+import { useAllergenMatrix } from '../../hooks/useBos';
 import { supabase } from '../../lib/supabase';
+import { showToast } from '../../lib/toast';
 import { AllergenMatrix } from '../../types/bos';
 import { useAuth } from '../../hooks';
-import { fmtDate } from '../../types/bos';
+
 
 const MAJOR_ALLERGENS = [
   {id:'gluten', label:'Gluten (Wheat/Rye/Barley/Oats)', icon:'🌾', codex:'GLUTEN'},
@@ -31,13 +32,13 @@ const COMPLIANCE_STANDARDS = [
 
 export function AllergenControl() {
   const { items: matrix, loading: mLoading, reload: mReload } = useAllergenMatrix();
-  const { items: products } = useProducts();
+
   const { user } = useAuth();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [showHistory, setShowHistory] = useState<string | null>(null);
+
 
   const [productName, setProductName] = useState('');
   const [declared, setDeclared] = useState(false);
@@ -57,7 +58,7 @@ export function AllergenControl() {
 
   const withAllergen = activeMatrix.filter(p => MAJOR_ALLERGENS.some(a => (p as any)[a.id] === 'present'));
   const withRisk = activeMatrix.filter(p => MAJOR_ALLERGENS.some(a => (p as any)[a.id] === 'risk'));
-  const incomplete = activeMatrix.filter(p =>!p.declared);
+
   const unapproved = activeMatrix.filter(p =>!p.approved_by);
 
   const stats = [
@@ -68,8 +69,8 @@ export function AllergenControl() {
   ];
 
   const handleSave = async () => {
-    if (!productName.trim()) return alert('Product name required');
-    if (!changeReason.trim() && editingId) return alert('Change reason required for updates - FDA 21 CFR Part 11');
+    if (!productName.trim()) return showToast('Product name required', 'warning');
+    if (!changeReason.trim() && editingId) return showToast('Change reason required for updates - FDA 21 CFR Part 11', 'warning');
 
     setSaving(true);
     try {
@@ -85,13 +86,13 @@ export function AllergenControl() {
 
       if (error) throw error;
 
-      alert(`Allergen map saved. Version ${data.version}`);
+      showToast(`Allergen map saved. Version ${data.version}`, 'info');
       setIsFormOpen(false);
       setEditingId(null);
       resetForm();
       mReload();
-    } catch (e: any) {
-      alert(`Error: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error: ${(e as Error).message}`, 'error');
     } finally {
       setSaving(false);
     }
@@ -106,8 +107,8 @@ export function AllergenControl() {
       });
       if (error) throw error;
       mReload();
-    } catch (e: any) {
-      alert(`Error: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error: ${(e as Error).message}`, 'error');
     }
   };
 
@@ -121,7 +122,7 @@ export function AllergenControl() {
     if (risk.length > 0) statement += `May contain: ${risk.join(', ')}.`;
     
     navigator.clipboard.writeText(statement);
-    alert('Copied to clipboard:\n' + statement);
+    showToast('Copied to clipboard:\n' + statement, 'info');
   };
 
   const resetForm = () => {

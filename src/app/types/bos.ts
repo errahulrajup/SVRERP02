@@ -125,6 +125,10 @@ export interface Batch {
   target_pasteurization_temp?: number | null;
   dynamic_params?: Record<string, any> | null;
   unit_cost?: number | null;           // FIX-4: computed during batch completion, used by QC for FG lot costing
+  actual_rm_cost?: number | null;
+  labour?: number | null;
+  overhead?: number | null;
+  total_cost?: number | null;
   created_at: string;
 }
 
@@ -860,3 +864,25 @@ export interface Customer {
   code: string;
   name: string;
 }
+
+export interface Sop {
+  id: string;
+  sop_no: string;
+  title: string;
+  version: string | null;
+  category: string | null;
+  department: string | null;
+  effective_date: string | null;
+  review_date: string | null;
+  status: string | null;
+  prepared_by: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
+  notes: string | null;
+  recipe_id: string | null;
+  compliance_standard: string | null;
+  superseded_by: string | null;
+  parent_sop_id: string | null;
+  created_at: string | null;
+}
+

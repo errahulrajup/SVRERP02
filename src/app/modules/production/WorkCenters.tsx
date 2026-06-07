@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import { workCentersApi } from '../../lib/bosApi';
 import { useAuth } from '../../hooks';
+import { showToast } from '../../lib/toast';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface WorkCenter {
@@ -39,8 +40,8 @@ async function fetchWorkCenters(): Promise<WorkCenter[]> {
     const { data, error } = await workCentersApi.list();
     if (error) throw error;
     return data as WorkCenter[];
-  } catch (e: any) {
-    alert(e.message);
+  } catch (e: unknown) {
+    showToast((e as Error).message, 'info');
     return lsLoad();
   }
 }
@@ -50,8 +51,8 @@ async function saveWorkCenter(wc: Omit<WorkCenter, 'id' | 'created_at'>): Promis
     const { data, error } = await workCentersApi.create(wc);
     if (error) throw error;
     return data as WorkCenter;
-  } catch (e: any) {
-    alert(e.message);
+  } catch (e: unknown) {
+    showToast((e as Error).message, 'info');
     const newWc: WorkCenter = { ...wc, id: `wc-${Date.now()}`, created_at: new Date().toISOString() };
     const existing = lsLoad();
     lsSave([newWc, ...existing]);
@@ -63,8 +64,8 @@ async function updateWorkCenter(id: string, wc: Partial<WorkCenter>): Promise<vo
   try {
     const { error } = await workCentersApi.update(id, wc);
     if (error) throw error;
-  } catch (e: any) {
-    alert(e.message);
+  } catch (e: unknown) {
+    showToast((e as Error).message, 'info');
     const existing = lsLoad().map(x => x.id === id ? { ...x, ...wc } : x);
     lsSave(existing);
   }
@@ -146,16 +147,16 @@ export function WorkCenters() {
   };
 
   const handleSave = async () => {
-    if (!form.name.trim()) return alert('Work Center name is required');
-    if (!form.code.trim()) return alert('Work Center code is required');
+    if (!form.name.trim()) { showToast('Work Center name is required', 'warning'); return; }
+    if (!form.code.trim()) { showToast('Work Center code is required', 'warning'); return; }
     const cap = parseFloat(form.capacity as string) || 0;
-    if (cap < 1) return alert('Capacity too low, min 1');
+    if (cap < 1) { showToast('Capacity too low, min 1', 'info'); return; }
     const shiftHrs = parseFloat(form.shift_hours as string) || 8;
-    if (shiftHrs <= 0 || shiftHrs > 24) return alert('Shift hours must be between 1 and 24');
+    if (shiftHrs <= 0 || shiftHrs > 24) { showToast('Shift hours must be between 1 and 24', 'warning'); return; }
 
     const uCode = form.code.trim().toUpperCase();
     const exists = items.find(w => w.code === uCode && w.id !== editId);
-    if (exists) return alert('Code already exists');
+    if (exists) { showToast('Code already exists', 'info'); return; }
 
     setSaving(true);
     try {
@@ -170,15 +171,15 @@ export function WorkCenters() {
       };
       if (editId) {
         await updateWorkCenter(editId, payload);
-        alert('✅ Work Center updated');
+        showToast('✅ Work Center updated', 'success');
       } else {
         await saveWorkCenter(payload);
-        alert('✅ Work Center created');
+        showToast('✅ Work Center created', 'success');
       }
       await load();
       setModalOpen(false);
-    } catch (e: any) {
-      alert(`Error: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error: ${(e as Error).message}`, 'error');
     } finally {
       setSaving(false);
     }
@@ -189,8 +190,8 @@ export function WorkCenters() {
     try {
       await deleteWorkCenter(id);
       await load();
-    } catch (e: any) {
-      alert(`Error: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error: ${(e as Error).message}`, 'error');
     }
   };
 

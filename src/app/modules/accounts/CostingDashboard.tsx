@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { costCentersApi, utilityConsumptionApi, laborHoursApi, overheadAllocationsApi } from '../../lib/bosApi';
-import { CostCenter, UtilityConsumption, LaborHours, OverheadAllocation, fmtINR, fmtDate } from '../../types/bos';
+import { useState, useEffect, useMemo } from 'react';
+import { costCentersApi, utilityConsumptionApi, overheadAllocationsApi } from '../../lib/bosApi';
+import { CostCenter, UtilityConsumption, OverheadAllocation, fmtINR, fmtDate } from '../../types/bos';
 import { useAuth } from '../../hooks';
 import { supabase } from '../../lib/supabase';
+import { showToast } from '../../lib/toast';
+import { captureException } from '../../lib/observability';
 
 export function CostingDashboard() {
   const { user } = useAuth();
@@ -14,7 +16,7 @@ export function CostingDashboard() {
 
   const [period, setPeriod] = useState<'MTD'|'QTD'|'YTD'>('MTD');
 
-  const [startDate, endDate] = React.useMemo(() => {
+  const [startDate, endDate] = useMemo(() => {
     const now = new Date();
     if (period === 'MTD') return [new Date(now.getFullYear(), now.getMonth(), 1), now];
     if (period === 'QTD') {
@@ -24,14 +26,14 @@ export function CostingDashboard() {
     return [new Date(now.getFullYear(), 0, 1), now]; // YTD
   }, [period]);
 
-  const filteredUtilities = React.useMemo(() =>
+  const filteredUtilities = useMemo(() =>
     utilities.filter(u => {
       const d = new Date(u.reading_date);
       return d >= startDate && d <= endDate;
     }), [utilities, startDate, endDate]
   );
 
-  const filteredAllocations = React.useMemo(() =>
+  const filteredAllocations = useMemo(() =>
     allocations.filter(a => {
       const d = new Date(a.allocation_date);
       return d >= startDate && d <= endDate;
@@ -71,7 +73,7 @@ export function CostingDashboard() {
       setUtilities(uRes.data || []);
       setAllocations(aRes.data || []);
     } catch (e) {
-      console.error(e);
+      captureException(e, { level: 'error', tags: { area: 'module' } });
     } finally {
       setLoading(false);
     }
@@ -82,7 +84,7 @@ export function CostingDashboard() {
   const saveUtility = async () => {
     const qty = parseFloat(uForm.qty_consumed) || 0;
     const rate = parseFloat(uForm.rate) || 0;
-    if (qty <= 0) return alert('Enter valid quantity');
+    if (qty <= 0) { showToast('Enter valid quantity', 'warning'); return; }
     
     try {
       const { error } = await supabase.rpc('record_utility_consumption', {
@@ -95,16 +97,16 @@ export function CostingDashboard() {
         p_user_id: user?.id
       });
       if (error) throw error;
-      alert('Utility recorded successfully');
+      showToast('Utility recorded successfully', 'success');
       setShowUtilModal(false);
       loadData();
-    } catch (e: any) { alert(e.message); }
+    } catch (e: unknown) { showToast((e as Error).message, 'info'); }
   };
 
   const saveOverhead = async () => {
     const amt = parseFloat(ohForm.amount) || 0;
-    if (!ohForm.cost_center_id) return alert('Cost Center required');
-    if (amt <= 0) return alert('Enter valid amount');
+    if (!ohForm.cost_center_id) { showToast('Cost Center required', 'warning'); return; }
+    if (amt <= 0) { showToast('Enter valid amount', 'warning'); return; }
 
     try {
       const { error } = await supabase.rpc('allocate_overhead', {
@@ -115,10 +117,10 @@ export function CostingDashboard() {
         p_user_id: user?.id
       });
       if (error) throw error;
-      alert('Overhead allocated successfully');
+      showToast('Overhead allocated successfully', 'success');
       setShowOhModal(false);
       loadData();
-    } catch (e: any) { alert(e.message); }
+    } catch (e: unknown) { showToast((e as Error).message, 'info'); }
   };
 
   if (loading) return <div style={{ padding: 40, color: '#9AAF96' }}>Loading Costing Data...</div>;

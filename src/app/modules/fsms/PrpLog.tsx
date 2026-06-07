@@ -1,6 +1,7 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { usePrp, useBatches, useRecipeFsmsPrp } from '../../hooks/useBos';
 import { supabase } from '../../lib/supabase';
+import { showToast } from '../../lib/toast';
 import { fmtDate } from '../../types/bos';
 import { useAuth } from '../../hooks';
 
@@ -51,7 +52,6 @@ export function PrpLog() {
   const today = new Date();
   const todayStr = today.toDateString();
   const loggedToday = logs.filter(l => new Date(l.created_at).toDateString() === todayStr).length;
-  const deviations = logs.filter(l => l.result === 'DEVIATION' || l.result === 'Fail');
   const unapproved = logs.filter(l =>!l.approved_by && l.result === 'Pass');
 
   const selectedBatch = batches.find(b => b.batch_no === form.batchNo);
@@ -74,7 +74,7 @@ export function PrpLog() {
   ];
 
   const handleSave = async () => {
-    if (!form.prpId) return alert('Select a PRP to log');
+    if (!form.prpId) return showToast('Select a PRP to log', 'warning');
 
     setSaving(true);
     try {
@@ -101,16 +101,16 @@ export function PrpLog() {
            p_description: `PRP ${data.prp_name} resulted in ${form.result}. Remarks: ${form.remarks || 'None'}`,
            p_user_id: user?.id
          });
-         alert('PRP Logged. DEVIATION DETECTED: CAPA auto-triggered! Please complete Root Cause Analysis.');
+         showToast('PRP Logged. DEVIATION DETECTED: CAPA auto-triggered! Please complete Root Cause Analysis.', 'warning');
       } else {
-         alert('PRP Logged successfully! Pending QC approval.');
+         showToast('PRP Logged successfully! Pending QC approval.', 'warning');
       }
 
       setIsModalOpen(false);
       setForm({ batchNo: '', prpId: availablePrps[0]?.id || '', doneBy: user?.name || '', result: 'Pass', remarks: '', nextDue: '', compliance: 'ISO_22000' });
       reload();
-    } catch (e: any) {
-      alert(`Error: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error: ${(e as Error).message}`, 'error');
     } finally {
       setSaving(false);
     }
@@ -119,7 +119,7 @@ export function PrpLog() {
   const submitCleaningChecklist = async () => {
     const checkedCount = Object.values(cleaningChecklist).filter(Boolean).length;
     const totalCount = cleaningTasks.length;
-    if (checkedCount === 0) return alert("Please check at least one task");
+    if (checkedCount === 0) { showToast("Please check at least one task", 'warning'); return; }
 
     setSaving(true);
     try {
@@ -131,11 +131,11 @@ export function PrpLog() {
         p_checklist: cleaningChecklist,
         p_user_id: user?.id
       });
-      alert(`🧹 Cleaning checklist logged (${checkedCount}/${totalCount})`);
+      showToast(`🧹 Cleaning checklist logged (${checkedCount}/${totalCount})`, 'info');
       setCleaningChecklist({});
       reload();
-    } catch (e: any) {
-      alert(`Error: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error: ${(e as Error).message}`, 'error');
     } finally {
       setSaving(false);
     }
@@ -148,8 +148,8 @@ export function PrpLog() {
        .update({ approved_by: user?.id, approved_at: new Date().toISOString() })
        .eq('id', logId);
       reload();
-    } catch (e: any) {
-      alert(`Error: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error: ${(e as Error).message}`, 'error');
     }
   };
 

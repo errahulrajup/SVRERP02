@@ -1,9 +1,10 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQcChecks, useBatches } from '../../hooks/useBos';
-import { qcChecksApi, batchesApi, fgLotsApi, recipeQcParamsApi } from '../../lib/bosApi';
+import { recipeQcParamsApi } from '../../lib/bosApi';
 import { QcCheck, QcCheckResult, fmtDate, RecipeQcParam } from '../../types/bos';
 import { useAuth } from '../../hooks';
 import { supabase } from '../../lib/supabase';
+import { showToast } from '../../lib/toast';
 
 const DEFAULT_PARAMS: Record<string, string[]> = {
   Physical: ["Appearance", "Colour", "Odour", "Texture", "Particle Size"],
@@ -58,7 +59,7 @@ export function BatchQc() {
           setActiveRecipeParams([]);
         }
       })
-      .catch((err: any) => { alert('Failed: ' + err.message); })
+      .catch((err: any) => { showToast('Failed: ' + (err as Error).message, 'error'); })
       .finally(() => {
         setLoadingParams(false);
       });
@@ -151,12 +152,12 @@ export function BatchQc() {
 
       if (error) throw error;
 
-      alert(verdict === 'PASS' ? `✅ QC Approved — CoA ${data.coa_no} issued!` : '❌ Batch rejected — quarantined.');
+      showToast(verdict === 'PASS' ? `✅ QC Approved — CoA ${data.coa_no} issued!` : '❌ Batch rejected — quarantined.', 'success');
       setActiveBatchId(null);
       await reloadChecks();
       await reloadBatches();
-    } catch (e: any) {
-      alert(`Error submitting QC: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error submitting QC: ${(e as Error).message}`, 'error');
     } finally {
       setSaving(false);
     }
@@ -203,7 +204,7 @@ export function BatchQc() {
     const url = URL.createObjectURL(blob);
     const win = window.open(url, "_blank");
     setTimeout(() => URL.revokeObjectURL(url), 10000);
-    if (!win) alert("⚠️ Popup blocked — please allow popups for this site to view CoA");
+    if (!win) showToast('⚠️ Popup blocked — please allow popups for this site to view CoA', 'warning');
   };
 
   const activeBatch = batches.find(b => b.id === activeBatchId);

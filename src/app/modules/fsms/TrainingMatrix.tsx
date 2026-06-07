@@ -9,7 +9,6 @@ export function TrainingMatrix() {
   const [matrix, setMatrix] = useState<any[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
   const [sops, setSops] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedCell, setSelectedCell] = useState<{emp_id: string, sop_id: string} | null>(null);
   const [score, setScore] = useState(0);
 
@@ -25,7 +24,6 @@ export function TrainingMatrix() {
     setMatrix(matRes.data || []);
     setEmployees(empRes.data || []);
     setSops(sopRes.data || []);
-    setLoading(false);
   };
 
   useEffect(() => { loadData(); }, []);

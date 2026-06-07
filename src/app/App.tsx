@@ -55,6 +55,11 @@ const RecallLog       = lazy(() => import('./modules/fsms/RecallLog').then(m => 
 const SopRegister     = lazy(() => import('./modules/fsms/SopRegister').then(m => ({ default: m.SopRegister })));
 const TrainingMatrix  = lazy(() => import('./modules/fsms/TrainingMatrix').then(m => ({ default: m.TrainingMatrix })));
 
+
+// ── FSMS extended pages (lazy) ────────────────────────────────────────────────
+const CtoDashboard   = lazy(() => import('./modules/fsms/CtoDashboard').then(m => ({ default: m.CtoDashboard })));
+const LiveCcpMonitor = lazy(() => import('./modules/fsms/LiveCcpMonitor').then(m => ({ default: m.LiveCcpMonitor })));
+
 // ── Compliances pages (lazy) ──────────────────────────────────────────────
 import { CompliancesLayout } from './layouts/CompliancesLayout';
 const FssaiLog       = lazy(() => import('./modules/compliances/FssaiLog').then(m => ({ default: m.FssaiLog })));
@@ -102,14 +107,13 @@ const NotFoundPage  = lazy(() => import('./pages/NotFoundPage').then(m => ({ def
 // ── Auth ────────────────────────────────────────────────────────
 import { LoginPage } from './modules/auth/LoginPage';
 import { UnauthorizedPage } from './modules/auth/UnauthorizedPage';
-import { RequireAuth } from './components/RequireAuth';
 
 // ── Admin pages (lazy — never bundled with public site) ───────
 // Content
 import { CmsLayout }       from './layouts/CmsLayout';
 import { CmsDashboard }    from './modules/cms/CmsDashboard';
 import { AdminDashboard }  from './modules/admin/AdminDashboard';
-import { AdminUsers, AdminRoles, AdminPermissions, AdminSettings, AdminAudit, AdminHealth, AdminBackups } from './modules/admin/AdminSystem';
+import { AdminUsers, AdminRoles, AdminSettings, AdminAudit, AdminHealth, AdminBackups } from './modules/admin/AdminSystem';
 const CmsProducts     = lazy(() => import('./modules/cms/CmsProducts').then(m => ({ default: m.CmsProducts })));
 const CmsProductForm  = lazy(() => import('./modules/cms/CmsProductForm').then(m => ({ default: m.CmsProductForm })));
 const CmsCategories   = lazy(() => import('./modules/cms/CmsPages').then(m => ({ default: m.CmsCategories })));
@@ -123,6 +127,7 @@ const CmsMediaLibrary = lazy(() => import('./modules/cms/CmsPages').then(m => ({
 const CmsInquiries    = lazy(() => import('./modules/cms/CmsPages').then(m => ({ default: m.CmsInquiries })));
 const CmsSEO          = lazy(() => import('./modules/cms/CmsPages').then(m => ({ default: m.CmsSEO })));
 const CmsAnalytics    = lazy(() => import('./modules/cms/CmsPages').then(m => ({ default: m.CmsAnalytics })));
+// CmsPages exports its settings component as 'AdminSettings'; aliased here for the /cms/settings route
 const CmsSettings     = lazy(() => import('./modules/cms/CmsPages').then(m => ({ default: m.AdminSettings })));
 
 // ── Loading fallback ──────────────────────────────────────────
@@ -219,8 +224,6 @@ export function App() {
         <Route path="settings"    element={<RoleRoute minRole="ADMIN"><S><AdminSettings /></S></RoleRoute>} />
         <Route path="health"      element={<RoleRoute minRole="ADMIN"><S><AdminHealth /></S></RoleRoute>} />
         <Route path="backups"     element={<RoleRoute minRole="ADMIN"><S><AdminBackups /></S></RoleRoute>} />
-        <Route path="system/activity" element={<RoleRoute minRole="ADMIN"><S><AdminAudit /></S></RoleRoute>} />
-        <Route path="system/users"    element={<RoleRoute minRole="ADMIN"><S><AdminUsers /></S></RoleRoute>} />
         <Route path="activity"        element={<Navigate to="/admin/audit" replace />} />
       </Route>
 
@@ -287,7 +290,6 @@ export function App() {
         <Route index           element={<S><DmsDashboard /></S>} />
         <Route path="records"  element={<S><DmsRecords /></S>} />
         <Route path="create"   element={<S><DmsCreate /></S>} />
-        <Route path="new"      element={<S><DmsCreate /></S>} />
         <Route path="templates" element={<S><DmsTemplates /></S>} />
         <Route path="verify"   element={<S><DmsVerify /></S>} />
         <Route path="settings" element={<S><DmsSettings /></S>} />
@@ -329,6 +331,8 @@ export function App() {
         <Route path="recall"    element={<S><RecallLog /></S>} />
         <Route path="sop"       element={<S><SopRegister /></S>} />
         <Route path="training"  element={<S><TrainingMatrix /></S>} />
+        <Route path="cto"       element={<RoleRoute minRole="MANAGER"><S><CtoDashboard /></S></RoleRoute>} />
+        <Route path="live-ccp"  element={<RoleRoute minRole="QC"><S><LiveCcpMonitor /></S></RoleRoute>} />
       </Route>
 
       <Route path="/compliances" element={

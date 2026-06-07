@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks';
 import { salesReturnsApi, returnQcApi, wastageLogsApi, packagingRunsApi } from '../../lib/bosApi';
+import { showToast } from '../../lib/toast';
 
 type Status = 'OK' | 'DAMAGED';
 type ProductStatus = 'OK' | 'SPOILED';
@@ -64,7 +65,7 @@ export function SalesReturns() {
 
   const handleReturnSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!rForm.fg_lot_id || !rForm.qty) return alert('Batch No and Qty are required');
+    if (!rForm.fg_lot_id || !rForm.qty) { showToast('Batch No and Qty are required', 'warning'); return; }
     setSaving(true);
     try {
       await salesReturnsApi.create({
@@ -157,7 +158,7 @@ export function SalesReturns() {
       // 4. Update return status to DISPOSITIONED
       await salesReturnsApi.update(selectedReturn.id, { status: 'DISPOSITIONED' });
 
-      alert(`✅ Disposition complete!\nAction: ${finalAction}${newLot ? `\nNew Batch No: ${newLot}` : ''}`);
+      showToast(`✅ Disposition complete!\nAction: ${finalAction}${newLot ? `\nNew Batch No: ${newLot}` : ''}`, 'success');
       setIsQcModalOpen(false);
       loadReturns();
     } finally { setSaving(false); }

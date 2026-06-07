@@ -7,6 +7,7 @@ import { bosProductsApi } from '../../lib/bosApi';
 import type { RndFormula, RndFormulaStatus, RndMasterParameter } from '../../types/rnd';
 import type { Product } from '../../types/bos';
 import { fmtDate, fmtCost } from '../../types/rnd';
+import { showToast } from '../../lib/toast';
 
 type FormulaForm = {
   formula_code: string;
@@ -94,7 +95,7 @@ export function FormulationManager() {
 
   const handleCreateProduct = async () => {
     if (!newProductForm.name.trim() || !newProductForm.sku_code.trim()) {
-      alert('Product Name and SKU Code are required');
+      showToast('Product Name and SKU Code are required', 'warning');
       return;
     }
     setProductSaving(true);
@@ -112,10 +113,10 @@ export function FormulationManager() {
         is_active: true,
       } as any);
       if (res.error) {
-        alert('Failed to create product: ' + res.error.message);
+        showToast('Failed to create product: ' + res.error.message, 'error');
         return;
       }
-      alert('Product created successfully and selected!');
+      showToast('Product created successfully and selected!', 'success');
       await reloadProducts();
       setForm(prev => ({
         ...prev,
@@ -124,8 +125,8 @@ export function FormulationManager() {
       }));
       setIsCreatingProduct(false);
       setNewProductForm({ name: '', sku_code: '', category: 'General', unit: 'kg', gst_pct: 18 });
-    } catch (e: any) {
-      alert('Error: ' + e.message);
+    } catch (e: unknown) {
+      showToast('Error: ' + (e as Error).message, 'error');
     } finally {
       setProductSaving(false);
     }
@@ -133,13 +134,13 @@ export function FormulationManager() {
 
   const handleSave = async () => {
     if (!form.formula_code.trim() || !form.name.trim()) {
-      alert('Code and Name are required');
+      showToast('Code and Name are required', 'warning');
       return;
     }
 
     const existing = formulas.find(f => f.formula_code === form.formula_code.trim().toUpperCase());
     if (existing && existing.id !== editingFormula?.id) {
-      alert('Formula code already exists');
+      showToast('Formula code already exists', 'info');
       return;
     }
 
@@ -170,9 +171,9 @@ export function FormulationManager() {
         });
         if (error) {
           if (error.message.includes('duplicate key') || error.message.includes('formula_code')) {
-            alert('Formula code already exists — please choose a different code');
+            showToast('Formula code already exists — please choose a different code', 'warning');
           } else {
-            alert('Failed to save formula: ' + error.message);
+            showToast('Failed to save formula: ' + error.message, 'error');
           }
           return;
         }
@@ -198,8 +199,8 @@ export function FormulationManager() {
       setIsFormOpen(false);
       resetForm();
       reload();
-    } catch (e: any) {
-      alert('Error: ' + e.message);
+    } catch (e: unknown) {
+      showToast('Error: ' + (e as Error).message, 'error');
     } finally {
       setSaving(false);
     }
@@ -210,8 +211,8 @@ export function FormulationManager() {
     try {
       await rndFormulasApi.remove(id);
       reload();
-    } catch (e: any) {
-      alert('Error: ' + e.message);
+    } catch (e: unknown) {
+      showToast('Error: ' + (e as Error).message, 'error');
     }
   };
 

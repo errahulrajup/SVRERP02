@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useLots, useFgLots } from '../../hooks/useBos';
 import { stockLedgerApi, lotsApi, fgLotsApi } from '../../lib/bosApi';
 import { fmtINR, fmtDate, daysUntil, Lot, FgLot, StockLedgerTransaction } from '../../types/bos';
 import { useAuth } from '../../hooks';
+import { showToast } from '../../lib/toast';
 
 export function Store() {
   const { items: lots, loading: rmLoading, reload: reloadLots } = useLots();
@@ -23,8 +24,8 @@ export function Store() {
     try {
       const res = type === 'RM' ? await stockLedgerApi.byLot(item.id) : await stockLedgerApi.byFgLot(item.id);
       setLedgerEntries(res.data || []);
-    } catch (e: any) {
-      alert('Error: ' + e.message);
+    } catch (e: unknown) {
+      showToast('Error: ' + (e as Error).message, 'error');
     } finally {
       setLedgerLoading(false);
     }
@@ -33,9 +34,9 @@ export function Store() {
   const handleAdjustStock = async () => {
     if (!ledgerModal.item) return;
 
-    if (!/^\d*\.?\d+$/.test(adjustForm.qty)) return alert('Invalid quantity format. Enter a positive number.');
+    if (!/^\d*\.?\d+$/.test(adjustForm.qty)) { showToast('Invalid quantity format. Enter a positive number.', 'error'); return; }
     const qty = parseFloat(adjustForm.qty);
-    if (isNaN(qty) || qty <= 0) return alert('Enter valid quantity');
+    if (isNaN(qty) || qty <= 0) { showToast('Enter valid quantity', 'warning'); return; }
 
     const change = adjustForm.type === 'OUT' ? -qty : qty;
     
@@ -62,7 +63,7 @@ export function Store() {
         const currentQty = freshLot.data.remaining_qty || 0;
         
         if (change < 0 && Math.abs(change) > currentQty) {
-          return alert(`Cannot deduct ${Math.abs(change)}. Only ${currentQty} available.`);
+          showToast(`Cannot deduct ${Math.abs(change)}. Only ${currentQty} available.`, 'error'); return;
         }
 
         newQty = currentQty + change;
@@ -78,7 +79,7 @@ export function Store() {
         const currentQty = freshLot.data.available_qty || 0;
         
         if (change < 0 && Math.abs(change) > currentQty) {
-          return alert(`Cannot deduct ${Math.abs(change)}. Only ${currentQty} available.`);
+          showToast(`Cannot deduct ${Math.abs(change)}. Only ${currentQty} available.`, 'error'); return;
         }
 
         newQty = currentQty + change;
@@ -90,14 +91,14 @@ export function Store() {
 
       await stockLedgerApi.create(payload as Omit<StockLedgerTransaction, 'id' | 'created_at'>);
       
-      alert('Stock adjusted successfully!');
+      showToast('Stock adjusted successfully!', 'success');
       setAdjustForm({ qty: '', type: 'OUT', notes: '' });
       
       await openLedger(updatedItem, ledgerModal.type);
       
       ledgerModal.type === 'RM' ? reloadLots() : reloadFgLots();
-    } catch(e:any) {
-      alert(`Error adjusting stock: ${e.message}`);
+    } catch(e: unknown) {
+      showToast(`Error adjusting stock: ${(e as Error).message}`, 'error');
     }
   };
 

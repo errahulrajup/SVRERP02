@@ -1,11 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useCustomerComplaints, useBatches } from '../../hooks/useBos';
 import { customerComplaintsApi, capaApi } from '../../lib/bosApi';
 import { CustomerComplaint } from '../../types/bos';
 import { useAuth } from '../../hooks';
+import { showToast } from '../../lib/toast';
 
 const SEVERITIES = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const;
-const STATUSES = ['OPEN', 'INVESTIGATING', 'CAPA_PENDING', 'CLOSED'] as const;
 
 export function Complaints() {
   const { items: complaints, loading: cLoading, reload } = useCustomerComplaints();
@@ -57,7 +57,7 @@ export function Complaints() {
 
   const handleSave = async () => {
     if (!form.customerName.trim() || !form.issueDescription.trim()) {
-      return alert('Customer Name and Issue Description are required');
+      showToast('Customer Name and Issue Description are required', 'warning'); return;
     }
 
     setSaving(true);
@@ -76,7 +76,7 @@ export function Complaints() {
         logged_by: user?.name || null
       });
 
-      alert(`✅ Complaint ${refNo} logged successfully`);
+      showToast(`✅ Complaint ${refNo} logged successfully`, 'success');
       setIsModalOpen(false);
       setForm({
         customerName: '',
@@ -87,8 +87,8 @@ export function Complaints() {
         correctiveAction: ''
       });
       reload();
-    } catch (e: any) {
-      alert(`Error saving complaint: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error saving complaint: ${(e as Error).message}`, 'error');
     } finally {
       setSaving(false);
     }
@@ -100,18 +100,18 @@ export function Complaints() {
       
       if (newStatus === 'CLOSED') {
         const ca = prompt('Enter final corrective action / resolution details (required to close):');
-        if (!ca) return alert('Resolution details are required to close complaint');
+        if (!ca) { showToast('Resolution details are required to close complaint', 'warning'); return; }
         payload.corrective_action = ca;
       }
 
       await customerComplaintsApi.update(id, payload);
-      alert(`Status updated to: ${newStatus}`);
+      showToast(`Status updated to: ${newStatus}`, 'success');
       reload();
       if (activeComplaint && activeComplaint.id === id) {
         setActiveComplaint(prev => prev ? { ...prev, ...payload } : null);
       }
-    } catch (e: any) {
-      alert(`Error updating status: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error updating status: ${(e as Error).message}`, 'error');
     }
   };
 
@@ -146,13 +146,13 @@ export function Complaints() {
 
       // Update complaint status to CAPA_PENDING
       await customerComplaintsApi.update(complaint.id, { status: 'CAPA_PENDING' });
-      alert(`✅ CAPA ${capaNo} raised and linked successfully`);
+      showToast(`✅ CAPA ${capaNo} raised and linked successfully`, 'success');
       reload();
       if (activeComplaint && activeComplaint.id === complaint.id) {
         setActiveComplaint(prev => prev ? { ...prev, status: 'CAPA_PENDING' } : null);
       }
-    } catch (e: any) {
-      alert(`Error promoting to CAPA: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error promoting to CAPA: ${(e as Error).message}`, 'error');
     }
   };
 

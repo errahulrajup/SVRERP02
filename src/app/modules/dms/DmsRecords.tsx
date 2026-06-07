@@ -4,7 +4,7 @@ import { useAllDmsDocuments, useDocumentActions, useDmsCompany } from '../../hoo
 import { useAuth } from '../../hooks';
 import { generateDocumentPdf } from '../../lib/pdfGenerator';
 import { DOC_TYPE_LABELS } from '../../types/dms';
-import type { DmsDocument, DocStatus, DocTypeCode } from '../../types/dms';
+import type { DmsDocument, DocStatus } from '../../types/dms';
 
 function Badge({ status }: { status: DocStatus }) {
   const styles: Record<DocStatus, string> = {

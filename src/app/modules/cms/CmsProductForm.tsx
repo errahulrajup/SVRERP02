@@ -102,7 +102,7 @@ export function CmsProductForm() {
         data ?? id,
         `${isEdit ? 'Updated' : 'Created'} product "${payload.name}"`,
       );
-      setSaved(true); setTimeout(() => navigate('/admin/content/products'), 900);
+      setSaved(true); setTimeout(() => navigate('/cms/products'), 900);
     }
   };
 
@@ -120,7 +120,7 @@ export function CmsProductForm() {
         </div>
         <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
           {saved && <span className="badge badge-green" style={{ padding:'6px 14px' }}>✓ Saved!</span>}
-          <button className="btn btn-ghost btn-sm" onClick={() => navigate('/admin/content/products')}>Cancel</button>
+          <button className="btn btn-ghost btn-sm" onClick={() => navigate('/cms/products')}>Cancel</button>
           <button className="btn btn-gold" onClick={save} disabled={saving}>{saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Product'}</button>
         </div>
       </div>
@@ -299,7 +299,7 @@ export function CmsProductForm() {
       </div>
 
       <div style={{ display:'flex', gap:12, marginTop:24, justifyContent:'flex-end' }}>
-        <button className="btn btn-ghost" onClick={() => navigate('/admin/content/products')}>Cancel</button>
+        <button className="btn btn-ghost" onClick={() => navigate('/cms/products')}>Cancel</button>
         <button className="btn btn-gold btn-lg" onClick={save} disabled={saving}>{saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Product'}</button>
       </div>
     </div>

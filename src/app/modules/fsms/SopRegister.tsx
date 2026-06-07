@@ -1,10 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useSops, useRecipes } from '../../hooks/useBos';
 import { supabase } from '../../lib/supabase';
+import { showToast } from '../../lib/toast';
 import { useAuth } from '../../hooks';
 
 const CATEGORIES = ['Production', 'Quality', 'Cleaning & Sanitation', 'Pest Control', 'Allergen', 'Dispatch', 'Storage', 'Maintenance', 'Administration', 'Other'];
-const STATUS_OPT = ['Draft', 'Active', 'Under Review', 'Obsolete'];
+
 const COMPLIANCE_STANDARDS = [
   {id: 'ISO_9001', label: 'ISO 9001:2015'},
   {id: 'ISO_22000', label: 'ISO 22000:2018'},
@@ -34,13 +35,13 @@ export function SopRegister() {
   const canApprove = user?.role === 'ADMIN' || user?.role === 'MANAGER';
 
   const handleSave = async () => {
-    if (!form.sop_no.trim()) return alert('SOP No. required');
-    if (!form.title.trim()) return alert('Title required');
-    if (editingId &&!changeReason.trim()) return alert('Change reason required per ISO 9001 Cl. 7.5.3');
+    if (!form.sop_no.trim()) return showToast('SOP No. required', 'warning');
+    if (!form.title.trim()) return showToast('Title required', 'warning');
+    if (editingId &&!changeReason.trim()) return showToast('Change reason required per ISO 9001 Cl. 7.5.3', 'warning');
 
     setSaving(true);
     try {
-      const { data, error } = await supabase.rpc('upsert_sop', {
+      const { error } = await supabase.rpc('upsert_sop', {
         p_sop_id: editingId,
         p_sop_no: form.sop_no,
         p_title: form.title,
@@ -59,13 +60,13 @@ export function SopRegister() {
 
       if (error) throw error;
 
-      alert(`✅ SOP ${form.sop_no} v${form.version} saved. Status: Draft. Send for approval.`);
+      showToast(`✅ SOP ${form.sop_no} v${form.version} saved. Status: Draft. Send for approval.`, 'success');
       setIsOpen(false);
       setEditingId(null);
       setChangeReason('');
       reload();
-    } catch (e: any) {
-      alert(`Error: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error: ${(e as Error).message}`, 'error');
     } finally {
       setSaving(false);
     }
@@ -76,10 +77,10 @@ export function SopRegister() {
     try {
       const { error } = await supabase.rpc('approve_sop', { p_sop_id: id, p_user_id: user?.id });
       if (error) throw error;
-      alert('SOP Approved and Activated');
+      showToast('SOP Approved and Activated', 'warning');
       reload();
-    } catch (e: any) {
-      alert(`Error: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error: ${(e as Error).message}`, 'error');
     }
   };
 

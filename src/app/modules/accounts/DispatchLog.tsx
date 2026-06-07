@@ -1,10 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useDispatches, useFgLots } from '../../hooks/useBos';
-import { dispatchesApi, fgLotsApi, invoicesApi, stockLedgerApi } from '../../lib/bosApi';
-import { DispatchStatus, Dispatch, fmtINR, fmtDate } from '../../types/bos';
+import { dispatchesApi } from '../../lib/bosApi';
+import { DispatchStatus, fmtINR } from '../../types/bos';
 import { useAuth } from '../../hooks';
-import { logAudit } from '../../lib/auditLogger';
 import { supabase } from '../../lib/supabase';
+import { showToast } from '../../lib/toast';
 
 export function DispatchLog() {
   const { items: dispatches, loading: dLoading, reload: reloadDO } = useDispatches();
@@ -44,14 +44,14 @@ export function DispatchLog() {
     const rate = parseFloat(form.rate) || 0;
     const gst = parseFloat(form.gst) || 0;
 
-    if (!form.fgLotId) return alert('Select an FG batch');
-    if (!form.cust.trim()) return alert('Customer required');
-    if (qty <= 0) return alert('Qty must be > 0');
-    if (rate <= 0) return alert('Rate must be > 0');
+    if (!form.fgLotId) { showToast('Select an FG batch', 'warning'); return; }
+    if (!form.cust.trim()) { showToast('Customer required', 'warning'); return; }
+    if (qty <= 0) { showToast('Qty must be > 0', 'warning'); return; }
+    if (rate <= 0) { showToast('Rate must be > 0', 'warning'); return; }
 
     const lot = activeFg.find(l => l.id === form.fgLotId);
-    if (!lot) return alert('FG Lot not found');
-    if ((lot.available_qty || 0) < qty) return alert(`Insufficient stock. Available: ${lot.available_qty}`);
+    if (!lot) { showToast('FG Lot not found', 'info'); return; }
+    if ((lot.available_qty || 0) < qty) { showToast(`Insufficient stock. Available: ${lot.available_qty}`, 'error'); return; }
 
     const sub = Math.round(qty * rate * 100) / 100;
     const gstAmt = Math.round(sub * gst) / 100;
@@ -80,12 +80,12 @@ export function DispatchLog() {
       });
       if (error) throw error;
 
-      alert(`✅ DO ${doNo} created`);
+      showToast(`✅ DO ${doNo} created`, 'success');
       setIsModalOpen(false);
       setForm({ doNo: '', cust: '', fgLotId: '', qty: '', unit: 'kg', rate: '', gst: '18', veh: '', lr: '', trans: '', notes: '' });
       reloadDO();
-    } catch (e: any) {
-      alert(`Error saving DO: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error saving DO: ${(e as Error).message}`, 'error');
     } finally {
       setSaving(false);
     }
@@ -95,9 +95,9 @@ export function DispatchLog() {
     if (next !== 'DISPATCHED') {
       try {
         await dispatchesApi.updateStatus(id, next);
-        alert(`✅ DO ➔ ${next}`);
+        showToast(`✅ DO ➔ ${next}`, 'success');
         reloadDO();
-      } catch (e: any) { alert(`Error: ${e.message}`); }
+      } catch (e: unknown) { showToast(`Error: ${(e as Error).message}`, 'error'); }
       return;
     }
     
@@ -107,11 +107,11 @@ export function DispatchLog() {
         p_user_id: user?.id
       });
       if (error) throw error;
-      alert(`🚀 Dispatched! Invoice ${data.invoice_no} auto-created (${fmtINR(data.invoice_total)})`);
+      showToast(`🚀 Dispatched! Invoice ${data.invoice_no} auto-created (${fmtINR(data.invoice_total)})`, 'success');
       reloadDO();
       reloadFg();
-    } catch (e: any) {
-      alert(`Error: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error: ${(e as Error).message}`, 'error');
     }
   };
 
@@ -120,8 +120,8 @@ export function DispatchLog() {
     try {
       await dispatchesApi.remove(id);
       reloadDO();
-    } catch (e: any) {
-      alert(`Error deleting: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error deleting: ${(e as Error).message}`, 'error');
     }
   };
 

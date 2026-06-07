@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type {
   Grn, Lot, FgLot, Batch, QcCheck, Invoice, Payment, Expense, Dispatch, Recipe, RecipeInput, RecipeStep, Product, AllergenMatrix,
-  AllergenRecord, Capa, HaccpCcp, Prp, Recall, FssaiRecord, FssaiAudit, CustomerComplaint,
+  Capa, HaccpCcp, Prp, Recall, FssaiRecord, FssaiAudit, CustomerComplaint, Sop,
 } from '../types/bos';
 import {
   grnsApi, lotsApi, fgLotsApi, batchesApi, qcChecksApi, invoicesApi, paymentsApi, expensesApi,
@@ -62,7 +62,7 @@ export const usePrp          = makeListHook<Prp>(() => prpApi.list());
 export const useRecalls      = makeListHook<Recall>(() => recallApi.list());
 export const useFssai        = makeListHook<FssaiRecord>(() => fssaiApi.list());
 export const useFssaiAudits  = makeListHook<FssaiAudit>(() => fssaiAuditsApi.list());
-export const useSops         = makeListHook<any>(() => sopApi.list());
+export const useSops         = makeListHook<Sop>(() => sopApi.list());
 export const useTraining     = makeListHook<any>(() => trainingApi.list());
 export const useEmployees    = makeListHook<any>(() => hrEmployeesApi.list());
 export const useTrainingRecords = makeListHook<any>(() => hrTrainingRecordsApi.list());

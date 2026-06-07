@@ -1,14 +1,44 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks';
 import { useRecipeFsmsCcp } from '../../hooks/useBos';
 import { fmtDate } from '../../types/bos';
+import { showToast } from '../../lib/toast';
+
+// Equipment row from DB
+interface Equipment {
+  id: string;
+  equipment_code: string;
+  name: string;
+  next_calibration_due: string;
+}
+// CCP monitoring log entry
+interface CcpLog {
+  id: string;
+  ccp_name: string;
+  reading: string | number;
+  recorded_at: string;
+  recorded_by: string | null;
+  deviation_detected: boolean;
+  logged_at: string;
+  recipe_fsms_ccp?: {
+    ccp_name: string;
+    critical_limit: string | number;
+  } | null;
+  equipment?: {
+    equipment_code: string;
+    name: string;
+  } | null;
+  profiles?: {
+    name: string;
+  } | null;
+}
 
 export function LiveCcpMonitor() {
   const { items: ccps, loading: cLoading } = useRecipeFsmsCcp();
   const { user } = useAuth();
-  const [equipment, setEquipment] = useState<any[]>([]);
-  const [liveLogs, setLiveLogs] = useState<any[]>([]);
+  const [equipment, setEquipment] = useState<Equipment[]>([]);
+  const [liveLogs, setLiveLogs] = useState<CcpLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [isLive, setIsLive] = useState(false);
 
@@ -67,7 +97,7 @@ export function LiveCcpMonitor() {
 
 
   const handleLogReading = async () => {
-    if (!selectedCcp || !selectedEquip || !reading) return alert('Select CCP, Equipment, and enter reading');
+    if (!selectedCcp || !selectedEquip || !reading) { showToast('Select CCP, Equipment, and enter reading', 'warning'); return; }
     
     setSaving(true);
     try {
@@ -81,15 +111,15 @@ export function LiveCcpMonitor() {
       if (error) throw error;
 
       if (data.deviation) {
-        alert('🚨 DEVIATION DETECTED: Reading violated critical limit! CAPA has been auto-triggered. Halt production immediately.');
+        showToast('🚨 DEVIATION DETECTED: Reading violated critical limit! CAPA has been auto-triggered. Halt production immediately.', 'error');
       } else {
-        alert('✅ CCP Reading Logged Successfully');
+        showToast('✅ CCP Reading Logged Successfully', 'success');
       }
 
       setReading('');
       loadData();
-    } catch (e: any) {
-      alert(`Error: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error: ${(e as Error).message}`, 'error');
     } finally {
       setSaving(false);
     }

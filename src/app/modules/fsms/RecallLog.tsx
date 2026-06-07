@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
-import { useRecalls, useBatches, useDispatches } from '../../hooks/useBos';
+import { useState } from 'react';
+import { useRecalls, useBatches } from '../../hooks/useBos';
 import { supabase } from '../../lib/supabase';
-import { Recall, fmtDate } from '../../types/bos';
+import { showToast } from '../../lib/toast';
+import { fmtDate } from '../../types/bos';
 import { useAuth } from '../../hooks';
 
 const RECALL_REASONS = [
@@ -22,7 +23,7 @@ export function RecallLog() {
   const { items: batches } = useBatches();
   const { user } = useAuth();
 
-  const [activeRecall, setActiveRecall] = useState<Recall | null>(null);
+
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isMock, setIsMock] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -65,7 +66,7 @@ export function RecallLog() {
   };
 
   const saveRecall = async () => {
-    if (!form.batchRef) return alert('Select batch to recall');
+    if (!form.batchRef) return showToast('Select batch to recall', 'warning');
 
     setSaving(true);
     try {
@@ -81,13 +82,13 @@ export function RecallLog() {
 
       if (error) throw error;
 
-      alert(`🚨 Recall ${data.recall_no} initiated\n\nAuto-traced: ${data.qty_dispatched} ${traceResult?.batch?.unit} to ${data.customers_count} customers\nFrozen lots: ${data.frozen_lots}\n\n⚠️ Notify FSSAI within 24 hours!`);
+      showToast(`🚨 Recall ${data.recall_no} initiated\n\nAuto-traced: ${data.qty_dispatched} ${traceResult?.batch?.unit} to ${data.customers_count} customers\nFrozen lots: ${data.frozen_lots}\n\n⚠️ Notify FSSAI within 24 hours!`, 'error');
       setIsFormOpen(false);
       setForm({ batchRef: '', reason: RECALL_REASONS[0], desc: '', compliance: 'FSSAI_2020' });
       setTraceResult(null);
       reload();
-    } catch (e: any) {
-      alert(`Error: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error: ${(e as Error).message}`, 'error');
     } finally {
       setSaving(false);
     }
@@ -110,10 +111,10 @@ export function RecallLog() {
         change_reason: 'FSSAI notified via email within 24hr requirement'
       });
 
-      alert('FSSAI notification logged');
+      showToast('FSSAI notification logged', 'warning');
       reload();
-    } catch (e: any) {
-      alert(`Error: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error: ${(e as Error).message}`, 'error');
     }
   };
 
@@ -231,7 +232,7 @@ export function RecallLog() {
                     <td style={{ fontSize: 11 }}>{r.fssai_notified_at? '✅ ' + fmtDate(r.fssai_notified_at) : '❌ Pending'}</td>
                     <td>
                       <div style={{ display: 'flex', gap: 6 }}>
-                        <button className="bos-btn bos-btn-sm" onClick={() => setActiveRecall(r)}>View</button>
+                        <button className="bos-btn bos-btn-sm" onClick={() => showToast(`Recall ${r.recall_no}: ${r.reason}`, 'info')}>View</button>
                         {!r.is_mock &&!r.fssai_notified_at && canEdit && (
                           <button className="bos-btn bos-btn-sm bos-btn-danger" onClick={() => notifyFSSAI(r.id)}>Notify FSSAI</button>
                         )}

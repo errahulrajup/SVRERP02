@@ -39,7 +39,7 @@ export function exportToExcel<T>(
   const ws = XLSX.utils.aoa_to_sheet(worksheetData);
 
   // Auto-fit column widths based on max content length
-  const colWidths = columns.map((c, colIdx) => {
+  const colWidths = columns.map((c) => {
     const maxLen = Math.max(
       c.header.length,
       ...data.map((row) => String(c.getValue(row)).length),

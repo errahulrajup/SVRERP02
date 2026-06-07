@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks';
 import {
   mdItemsApi,
@@ -14,6 +14,8 @@ import type {
   ItemType,
   ItemRelationType,
 } from '../../types/bos';
+import { showToast } from '../../lib/toast';
+import { captureException } from '../../lib/observability';
 
 export function MasterData() {
   const { user } = useAuth();
@@ -74,10 +76,10 @@ export function MasterData() {
     setLoading(true);
     setError(null);
     try {
-      const itemsRes = await mdItemsApi.list().catch((e: any) => ({ error: e, data: null }));
-      const skusRes = await mdSkusApi.list().catch((e: any) => ({ error: e, data: null }));
-      const relRes = await mdItemRelationshipsApi.list().catch((e: any) => ({ error: e, data: null }));
-      const sitesRes = await mdSitesApi.list().catch((e: any) => ({ error: e, data: null }));
+      const itemsRes = await mdItemsApi.list().catch((e: unknown) => ({ error: e, data: null }));
+      const skusRes = await mdSkusApi.list().catch((e: unknown) => ({ error: e, data: null }));
+      const relRes = await mdItemRelationshipsApi.list().catch((e: unknown) => ({ error: e, data: null }));
+      const sitesRes = await mdSitesApi.list().catch((e: unknown) => ({ error: e, data: null }));
 
       if (itemsRes.error) console.error('Items load failed:', itemsRes.error);
       if (skusRes.error) console.error('SKUs load failed:', skusRes.error);
@@ -106,9 +108,9 @@ export function MasterData() {
           child_item_id: itemsData[1]?.id || '',
         }));
       }
-    } catch (e: any) {
-      console.error(e);
-      setError(e.message || 'Failed to fetch Master Data.');
+    } catch (e: unknown) {
+      captureException(e, { level: 'error', tags: { area: 'module' } });
+      setError((e as Error).message || 'Failed to fetch Master Data.');
     } finally {
       setLoading(false);
     }
@@ -134,10 +136,10 @@ export function MasterData() {
         setRelForm(prev => ({ ...prev, site_id: res.data!.id }));
       }
       
-      alert('Default site initialized successfully!');
+      showToast('Default site initialized successfully!', 'success');
       await loadAllData();
-    } catch (e: any) {
-      alert(`Initialization failed: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Initialization failed: ${(e as Error).message}`, 'error');
     } finally {
       setLoading(false);
     }
@@ -147,7 +149,7 @@ export function MasterData() {
   const handleCreateItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!itemForm.code.trim() || !itemForm.name.trim()) {
-      return alert('Code and Name are required.');
+      showToast('Code and Name are required.', 'warning'); return;
     }
     try {
       const allergensArr = itemForm.allergens
@@ -168,7 +170,7 @@ export function MasterData() {
       const res = await mdItemsApi.create(payload);
       if (res.error) throw new Error(res.error.message);
 
-      alert('Item registered successfully!');
+      showToast('Item registered successfully!', 'success');
       setItemForm({
         code: '',
         name: '',
@@ -179,23 +181,23 @@ export function MasterData() {
         is_active: true,
       });
       loadAllData();
-    } catch (e: any) {
-      alert(`Error: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error: ${(e as Error).message}`, 'error');
     }
   };
 
   const handleCreateSku = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!/^\d+(\.\d{1,3})?$/.test(skuForm.pack_size_kg)) return alert('Invalid pack size format.');
+    if (!/^\d+(\.\d{1,3})?$/.test(skuForm.pack_size_kg)) { showToast('Invalid pack size format.', 'error'); return; }
     const packSize = parseFloat(skuForm.pack_size_kg);
     if (!skuForm.code.trim() || !skuForm.name.trim() || isNaN(packSize) || packSize <= 0) {
-      return alert('Enter valid Code, Name, and Pack Size.');
+      showToast('Enter valid Code, Name, and Pack Size.', 'warning'); return;
     }
     if (!skuForm.site_id) {
-      return alert('A Site must be selected. Create a site first.');
+      showToast('A Site must be selected. Create a site first.', 'warning'); return;
     }
     if (!skuForm.item_id) {
-      return alert('A Base Item must be selected. Register an item first.');
+      showToast('A Base Item must be selected. Register an item first.', 'warning'); return;
     }
 
     try {
@@ -213,7 +215,7 @@ export function MasterData() {
       const res = await mdSkusApi.create(payload);
       if (res.error) throw new Error(res.error.message);
 
-      alert('SKU configured successfully!');
+      showToast('SKU configured successfully!', 'success');
       setSkuForm((prev) => ({
         ...prev,
         code: '',
@@ -221,21 +223,21 @@ export function MasterData() {
         pack_size_kg: '',
       }));
       loadAllData();
-    } catch (e: any) {
-      alert(`Error: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error: ${(e as Error).message}`, 'error');
     }
   };
 
   const handleCreateRelationship = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!relForm.parent_item_id || !relForm.child_item_id) {
-      return alert('Both Parent and Child items are required.');
+      showToast('Both Parent and Child items are required.', 'warning'); return;
     }
     if (relForm.parent_item_id === relForm.child_item_id) {
-      return alert('Parent and Child items cannot be the same.');
+      showToast('Parent and Child items cannot be the same.', 'error'); return;
     }
     if (!relForm.site_id) {
-      return alert('A Site must be selected.');
+      showToast('A Site must be selected.', 'warning'); return;
     }
 
     try {
@@ -250,17 +252,17 @@ export function MasterData() {
       const res = await mdItemRelationshipsApi.create(payload);
       if (res.error) throw new Error(res.error.message);
 
-      alert('Item relationship registered successfully!');
+      showToast('Item relationship registered successfully!', 'success');
       loadAllData();
-    } catch (e: any) {
-      alert(`Error: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error: ${(e as Error).message}`, 'error');
     }
   };
 
   const handleCreateSite = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!siteForm.code.trim() || !siteForm.name.trim()) {
-      return alert('Site Code and Name are required.');
+      showToast('Site Code and Name are required.', 'warning'); return;
     }
     try {
       const payload = {
@@ -272,11 +274,11 @@ export function MasterData() {
       const res = await mdSitesApi.create(payload);
       if (res.error) throw new Error(res.error.message);
 
-      alert('Site registered successfully!');
+      showToast('Site registered successfully!', 'success');
       setSiteForm({ code: '', name: '' });
       loadAllData();
-    } catch (e: any) {
-      alert(`Error: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error: ${(e as Error).message}`, 'error');
     }
   };
 
@@ -284,7 +286,7 @@ export function MasterData() {
   const handleRemoveItem = async (id: string) => {
     const skusUsingItem = skus.filter(s => s.item_id === id);
     if (skusUsingItem.length > 0) {
-      return alert(`Cannot delete. Used in ${skusUsingItem.length} SKU(s). Delete SKUs first.`);
+      showToast(`Cannot delete. Used in ${skusUsingItem.length} SKU(s). Delete SKUs first.`, 'error'); return;
     }
     if (!confirm('Are you sure you want to delete this Item?')) return;
     
@@ -292,8 +294,8 @@ export function MasterData() {
     try {
       const res = await mdItemsApi.remove(id);
       if (res.error) throw new Error(res.error.message);
-    } catch (e: any) {
-      alert(`Delete failed: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Delete failed: ${(e as Error).message}`, 'error');
       loadAllData();
     }
   };
@@ -305,8 +307,8 @@ export function MasterData() {
     try {
       const res = await mdSkusApi.remove(id);
       if (res.error) throw new Error(res.error.message);
-    } catch (e: any) {
-      alert(`Delete failed: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Delete failed: ${(e as Error).message}`, 'error');
       loadAllData();
     }
   };
@@ -317,8 +319,8 @@ export function MasterData() {
       const res = await mdItemRelationshipsApi.remove(id);
       if (res.error) throw new Error(res.error.message);
       loadAllData();
-    } catch (e: any) {
-      alert(`Delete failed: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Delete failed: ${(e as Error).message}`, 'error');
     }
   };
 
@@ -328,8 +330,8 @@ export function MasterData() {
       const res = await mdSitesApi.remove(id);
       if (res.error) throw new Error(res.error.message);
       loadAllData();
-    } catch (e: any) {
-      alert(`Delete failed: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Delete failed: ${(e as Error).message}`, 'error');
     }
   };
 

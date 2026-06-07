@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks';
 import {
   fgLotsApi,
@@ -12,6 +12,8 @@ import {
   mdItemsApi,
 } from '../../lib/bosApi';
 import type { Pallet, PalletItem, Site, Item } from '../../types/bos';
+import { showToast } from '../../lib/toast';
+import { captureException } from '../../lib/observability';
 
 type HoldingStatus = 'INCUBATION' | 'MATURATION' | 'RELEASED' | 'QUARANTINE' | 'HOLD';
 
@@ -112,7 +114,7 @@ export function FgStore() {
         setPForm((prev) => ({ ...prev, site_id: sRes.data![0].id }));
       }
     } catch (e) {
-      console.error(e);
+      captureException(e, { level: 'error', tags: { area: 'module' } });
     } finally {
       setLoading(false);
     }
@@ -124,7 +126,7 @@ export function FgStore() {
       const res = await logisticsPalletItemsApi.byPallet(pallet.id);
       setPalletItems(res.data || []);
     } catch (e) {
-      console.error(e);
+      captureException(e, { level: 'error', tags: { area: 'module' } });
     }
   };
 
@@ -133,7 +135,7 @@ export function FgStore() {
       const res = await logisticsPalletItemsApi.byPallet(palletId);
       setPalletItems(res.data || []);
     } catch (e) {
-      console.error(e);
+      captureException(e, { level: 'error', tags: { area: 'module' } });
     }
   };
 
@@ -142,7 +144,7 @@ export function FgStore() {
     e.preventDefault();
     const tare = parseFloat(pForm.tare_weight);
     if (!pForm.pallet_code.trim() || isNaN(tare) || !pForm.site_id) {
-      return alert('Enter valid code, tare weight, and select site.');
+      showToast('Enter valid code, tare weight, and select site.', 'warning'); return;
     }
     try {
       setSaving(true);
@@ -155,11 +157,11 @@ export function FgStore() {
         gross_weight: null,
       });
       if (res.error) throw new Error(res.error.message);
-      alert('Pallet registered successfully!');
+      showToast('Pallet registered successfully!', 'success');
       setPForm((prev) => ({ ...prev, pallet_code: '' }));
       loadAll();
-    } catch (err: any) {
-      alert(`Error creating pallet: ${err.message}`);
+    } catch (err: unknown) {
+      showToast(`Error creating pallet: ${(err as Error).message}`, 'error');
     } finally {
       setSaving(false);
     }
@@ -169,9 +171,9 @@ export function FgStore() {
   const handleStowItem = async (e: React.FormEvent) => {
     e.preventDefault();
     const qty = parseInt(stowForm.qty_packed, 10);
-    if (!selectedPallet) return alert('Select a pallet first.');
+    if (!selectedPallet) { showToast('Select a pallet first.', 'warning'); return; }
     if (!stowForm.fg_lot_id || isNaN(qty) || qty <= 0) {
-      return alert('Select a lot and enter valid quantity.');
+      showToast('Select a lot and enter valid quantity.', 'warning'); return;
     }
 
     try {
@@ -182,12 +184,12 @@ export function FgStore() {
         qty_packed: qty,
       });
       if (res.error) throw new Error(res.error.message);
-      alert('Lot stowed successfully onto pallet.');
+      showToast('Lot stowed successfully onto pallet.', 'success');
       setStowForm({ fg_lot_id: '', qty_packed: '' });
       loadPalletItems(selectedPallet.id);
       loadAll();
-    } catch (err: any) {
-      alert(`Error stowing lot: ${err.message}`);
+    } catch (err: unknown) {
+      showToast(`Error stowing lot: ${(err as Error).message}`, 'error');
     } finally {
       setSaving(false);
     }
@@ -201,8 +203,8 @@ export function FgStore() {
       if (res.error) throw new Error(res.error.message);
       if (selectedPallet) loadPalletItems(selectedPallet.id);
       loadAll();
-    } catch (err: any) {
-      alert(`Unstow failed: ${err.message}`);
+    } catch (err: unknown) {
+      showToast(`Unstow failed: ${(err as Error).message}`, 'error');
     }
   };
 
@@ -215,8 +217,8 @@ export function FgStore() {
       setSelectedPallet(null);
       setPalletItems([]);
       loadAll();
-    } catch (err: any) {
-      alert(`Dismantle failed: ${err.message}`);
+    } catch (err: unknown) {
+      showToast(`Dismantle failed: ${(err as Error).message}`, 'error');
     }
   };
 

@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useInvoices, usePayments } from '../../hooks/useBos';
-import { invoicesApi, paymentsApi } from '../../lib/bosApi';
 import { fmtINR, fmtDate } from '../../types/bos';
 import { useAuth } from '../../hooks';
 import { supabase } from '../../lib/supabase';
+import { showToast } from '../../lib/toast';
 
 export function Invoices() {
   const { items: invoices, loading: iLoading, reload: reloadInv } = useInvoices();
@@ -18,8 +18,8 @@ export function Invoices() {
 
   const handleSavePayment = async () => {
     const amt = parseFloat(pForm.amt) || 0;
-    if (!pForm.invId) return alert('Select an invoice');
-    if (amt <= 0) return alert('Amount must be > 0');
+    if (!pForm.invId) { showToast('Select an invoice', 'warning'); return; }
+    if (amt <= 0) { showToast('Amount must be > 0', 'warning'); return; }
 
     setSaving(true);
     try {
@@ -35,12 +35,12 @@ export function Invoices() {
 
       if (error) throw error;
 
-      alert(`✅ Payment ${fmtINR(amt)} recorded. Outstanding: ${fmtINR(data.outstanding)}`);
+      showToast(`✅ Payment ${fmtINR(amt)} recorded. Outstanding: ${fmtINR(data.outstanding)}`, 'success');
       setIsPaymentModalOpen(false);
       setPForm({ invId: '', amt: '', mode: 'BANK', ref: '', date: new Date().toISOString().split('T')[0], notes: '' });
       await Promise.all([reloadInv(), reloadPay()]);
-    } catch (e: any) {
-      alert(`Error: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error: ${(e as Error).message}`, 'error');
     } finally {
       setSaving(false);
     }

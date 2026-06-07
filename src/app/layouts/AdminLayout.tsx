@@ -42,13 +42,7 @@ const DASHBOARD_NAV = [
   },
 ];
 
-function AdminModuleIcon() {
-  const { settings } = useSiteSettings();
-  const src = settings.site_logo;
-  return src
-    ? <img src={src} width={16} height={16} style={{ objectFit: 'contain' }} alt="Logo" />
-    : <img src="/favicon.svg" width={16} height={16} alt="Logo" />;
-}
+
 
 export function AdminLayout() {
   const { settings } = useSiteSettings();

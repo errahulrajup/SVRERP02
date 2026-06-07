@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { supabase } from '../../lib/supabase';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { dailyLogsApi } from '../../lib/bosApi';
 import { useAuth } from '../../hooks';
-import { fmtDate, fmtDateTime } from '../../types/bos';
+import { fmtDate } from '../../types/bos';
+import { showToast } from '../../lib/toast';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface DailyLog {
@@ -60,7 +60,7 @@ async function fetchDailyLogs(): Promise<DailyLog[]> {
     const { data, error } = await dailyLogsApi.list();
     if (error) throw error;
     return data as DailyLog[];
-  } catch (e: any) { alert(e.message); return lsLoad(); }
+  } catch (e: unknown) { showToast((e as Error).message, 'info'); return lsLoad(); }
 }
 
 async function saveDailyLog(log: Omit<DailyLog, 'id' | 'created_at'>): Promise<DailyLog> {
@@ -68,8 +68,8 @@ async function saveDailyLog(log: Omit<DailyLog, 'id' | 'created_at'>): Promise<D
     const { data, error } = await dailyLogsApi.create(log);
     if (error) throw error;
     return data as DailyLog;
-  } catch (e: any) {
-    alert(e.message);
+  } catch (e: unknown) {
+    showToast((e as Error).message, 'info');
     const newLog: DailyLog = { ...log, id: `dl-${Date.now()}`, created_at: new Date().toISOString() };
     lsSave([newLog, ...lsLoad()]);
     return newLog;
@@ -80,8 +80,8 @@ async function updateDailyLog(id: string, log: Partial<DailyLog>): Promise<void>
   try {
     const { error } = await dailyLogsApi.update(id, log);
     if (error) throw error;
-  } catch (e: any) {
-    alert(e.message);
+  } catch (e: unknown) {
+    showToast((e as Error).message, 'info');
     lsSave(lsLoad().map(x => x.id === id ? { ...x, ...log } : x));
   }
 }
@@ -90,8 +90,8 @@ async function deleteDailyLog(id: string): Promise<void> {
   try {
     const { error } = await dailyLogsApi.remove(id);
     if (error) throw error;
-  } catch (e: any) {
-    alert(e.message);
+  } catch (e: unknown) {
+    showToast((e as Error).message, 'info');
     lsSave(lsLoad().filter(x => x.id !== id));
   }
 }
@@ -198,24 +198,24 @@ export function DailyLogs() {
   };
 
   const handleSave = async () => {
-    if (!form.log_date) return alert('Date is required');
-    if (!form.work_center.trim()) return alert('Work Center is required');
-    if (!form.operator.trim()) return alert('Operator is required');
+    if (!form.log_date) { showToast('Date is required', 'warning'); return; }
+    if (!form.work_center.trim()) { showToast('Work Center is required', 'warning'); return; }
+    if (!form.operator.trim()) { showToast('Operator is required', 'warning'); return; }
     const planned = parseFloat(form.planned_output as string) || 0;
     const actual = parseFloat(form.actual_output as string) || 0;
     const reject = parseFloat(form.reject_qty as string) || 0;
     const checksDone = parseInt(form.qc_checks_done as string) || 0;
     
-    if (planned <= 0 || form.planned_output === '') return alert('Planned output must be > 0');
-    if (actual < 0 || form.actual_output === '') return alert('Actual output cannot be negative or empty');
-    if (reject < 0) return alert('Reject quantity cannot be negative');
+    if (planned <= 0 || form.planned_output === '') { showToast('Planned output must be > 0', 'warning'); return; }
+    if (actual < 0 || form.actual_output === '') { showToast('Actual output cannot be negative or empty', 'error'); return; }
+    if (reject < 0) { showToast('Reject quantity cannot be negative', 'error'); return; }
 
     if (actual + reject > planned) {
       if (!confirm(`Total actual + reject (${actual + reject}) is greater than planned (${planned}). Are you sure?`)) return;
     }
     
     if (checksDone === 0 && form.qc_issues.trim()) {
-      return alert('Contradiction: You logged QC issues but 0 QC checks done.');
+      showToast('Contradiction: You logged QC issues but 0 QC checks done.', 'success'); return;
     }
 
     const yld = yieldPct(planned, actual);
@@ -243,14 +243,14 @@ export function DailyLogs() {
       };
       if (editId) {
         await updateDailyLog(editId, payload);
-        alert('✅ Daily Log updated');
+        showToast('✅ Daily Log updated', 'success');
       } else {
         await saveDailyLog(payload);
-        alert('✅ Daily Log submitted');
+        showToast('✅ Daily Log submitted', 'success');
       }
       await load();
-    } catch (e: any) {
-      alert(`Error: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error: ${(e as Error).message}`, 'error');
     } finally {
       setSaving(false);
       setModalOpen(false);

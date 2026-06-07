@@ -1,10 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks';
+import { captureException } from '../../lib/observability';
+
+// Typed shape returned by get_cto_dashboard_metrics RPC
+interface CtoMetrics {
+  oee_pct: number;
+  yield_variance_pct: number;
+  open_capas: number;
+  ccp_compliance_pct: number;
+  avg_mock_recall_mins: number;
+}
 
 export function CtoDashboard() {
   const { user } = useAuth();
-  const [metrics, setMetrics] = useState<any>(null);
+  const [metrics, setMetrics] = useState<CtoMetrics | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -14,7 +24,7 @@ export function CtoDashboard() {
         p_user_id: user?.id
       });
       if (data) setMetrics(data);
-      if (error) console.error('Error fetching CTO metrics', error);
+      if (error) captureException(error, { level: 'error', tags: { area: 'module' } });
       setLoading(false);
     }
     fetchMetrics();

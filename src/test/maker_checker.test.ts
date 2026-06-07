@@ -20,7 +20,7 @@ describe('Maker-Checker Workflow Security', () => {
 
   it('should reject approval from unauthorized roles or anonymous users', async () => {
     // Attempt to call the approval RPC using the anon key (which has no role)
-    const { data, error } = await supabase.rpc('approve_payment', {
+    const { error } = await supabase.rpc('approve_payment', {
       p_payment_id: '00000000-0000-0000-0000-000000000000',
       p_status: 'APPROVED'
     });

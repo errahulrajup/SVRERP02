@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useBatches } from '../../hooks/useBos';
 
 export function FloorMonitor() {

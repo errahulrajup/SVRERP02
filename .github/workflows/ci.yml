@@ -2,32 +2,36 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [main, develop]
   pull_request:
-    branches: [ "main" ]
+    branches: [main]
 
 jobs:
-  build-and-test:
+  type-check-and-build:
+    name: Type Check & Build
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'npm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Run Type Check
-      run: npm run type-check
+      - name: Type check
+        run: npm run type-check
 
-    - name: Build Project
-      run: npm run build
-      
-    # Note: Automated testing steps (Jest/Vitest) will be added here
-    # once the test suite is implemented in the codebase.
+      - name: Run unit tests
+        run: npm test
+
+      - name: Build (production)
+        run: npm run build:local
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}

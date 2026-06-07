@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks';
 import { supabase } from '../../lib/supabase';
-import { packagingRunsApi, stockTransfersApi } from '../../lib/bosApi';
+import { packagingRunsApi } from '../../lib/bosApi';
+import { showToast } from '../../lib/toast';
 
 export function PackagingHouse() {
   const { user } = useAuth();
@@ -46,8 +47,8 @@ export function PackagingHouse() {
     try {
       const { data } = await packagingRunsApi.list();
       setRuns(data || []);
-    } catch (err: any) {
-      alert('Error: ' + err.message);
+    } catch (err: unknown) {
+      showToast('Error: ' + (err as Error).message, 'error');
     } finally {
       setLoading(false);
     }
@@ -55,7 +56,7 @@ export function PackagingHouse() {
 
   const handlePackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pForm.bulkLotId || !pForm.fgLotId || !pForm.bulkQty) return alert('Fill required fields');
+    if (!pForm.bulkLotId || !pForm.fgLotId || !pForm.bulkQty) { showToast('Fill required fields', 'warning'); return; }
     setSaving(true);
     try {
       const { data: batch } = await supabase.from('batches').select('status').eq('batch_no', pForm.bulkLotId).single();
@@ -68,7 +69,7 @@ export function PackagingHouse() {
 
       const { data: bulkLot } = await supabase.from('lots').select('remaining_qty').eq('id', pForm.bulkLotId).single();
       if (bulkLot && bulkLot.remaining_qty < parseFloat(pForm.bulkQty)) {
-        alert(`Only ${bulkLot.remaining_qty}kg available in bulk lot.`);
+        showToast(`Only ${bulkLot.remaining_qty}kg available in bulk lot.`, 'info');
         setSaving(false);
         return;
       }
@@ -83,12 +84,12 @@ export function PackagingHouse() {
       });
       if (rpcErr) throw rpcErr;
 
-      alert('Packaging Run completed successfully!');
+      showToast('Packaging Run completed successfully!', 'success');
       await loadRuns();
       setIsPackModalOpen(false);
       setPForm({ ...pForm, bulkLotId: '', fgLotId: '', bulkQty: '', pmQty: '' });
-    } catch (err: any) {
-      alert('Error: ' + err.message);
+    } catch (err: unknown) {
+      showToast('Error: ' + (err as Error).message, 'error');
     } finally {
       setSaving(false);
     }
@@ -96,7 +97,7 @@ export function PackagingHouse() {
 
   const handleConvertSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!cForm.sourceFgLotId || !cForm.targetFgLotId || !cForm.qtyToConvert) return alert('Fill required fields');
+    if (!cForm.sourceFgLotId || !cForm.targetFgLotId || !cForm.qtyToConvert) { showToast('Fill required fields', 'warning'); return; }
     setSaving(true);
     try {
       const { error: rpcErr } = await supabase.rpc('convert_sku', {
@@ -108,11 +109,11 @@ export function PackagingHouse() {
       });
       if (rpcErr) throw rpcErr;
 
-      alert('SKU Conversion completed successfully!');
+      showToast('SKU Conversion completed successfully!', 'success');
       setIsConvertModalOpen(false);
       setCForm({ ...cForm, sourceFgLotId: '', targetFgLotId: '', qtyToConvert: '', pmWastageLotId: '', pmWastageQty: '' });
-    } catch (err: any) {
-      alert('Error: ' + err.message);
+    } catch (err: unknown) {
+      showToast('Error: ' + (err as Error).message, 'error');
     } finally {
       setSaving(false);
     }

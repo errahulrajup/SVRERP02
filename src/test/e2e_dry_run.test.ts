@@ -7,9 +7,7 @@ import { supabase } from './setup';
 
 describe.skip('ERP 6-Scenario End-to-End Dry Run', () => {
   let createdGrnId: string;
-  let createdLotId: string;
   let createdBatchId: string;
-  let createdFgLotId: string;
   let createdDispatchId: string;
   let createdInvoiceId: string;
 
@@ -48,7 +46,7 @@ describe.skip('ERP 6-Scenario End-to-End Dry Run', () => {
     }).select('id').single();
 
     expect(error).toBeNull();
-    createdLotId = data!.id;
+    expect(data?.id).toBeDefined();
   });
 
   it('Scenario 3: Manufacturing Batch (Consumption via FEFO)', async () => {
@@ -84,7 +82,7 @@ describe.skip('ERP 6-Scenario End-to-End Dry Run', () => {
     }).select('id').single();
 
     expect(error).toBeNull();
-    createdFgLotId = data!.id;
+    expect(data?.id).toBeDefined();
   });
 
   it('Scenario 5: Dispatch Workflow', async () => {
@@ -119,10 +117,10 @@ describe.skip('ERP 6-Scenario End-to-End Dry Run', () => {
     createdInvoiceId = invData!.id;
 
     // Create Payment (Maker)
-    const { data: payData, error: payError } = await supabase.from('payments').insert({
+    const { error: payError } = await supabase.from('payments').insert({
       invoice_id: createdInvoiceId,
       amount: 2000
-    }).select('id').single();
+    });
 
     expect(payError).toBeNull();
 

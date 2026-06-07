@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useDispatchOrders, useAuth } from '../../hooks';
 import { dispatchOrdersApi, dispatchLinesApi, logisticsPalletsApi, logisticsPalletItemsApi, fgLotsApi, stockLedgerApi, invoicesApi } from '../../lib/bosApi';
 import { DispatchOrder, DispatchLine, DispatchOrderStatus, Pallet, FgLot, fmtINR } from '../../types/bos';
 import { supabase } from '../../lib/supabase';
+import { showToast } from '../../lib/toast';
+import { captureException } from '../../lib/observability';
 
 export function DispatchOrders() {
   const { items: dispatches, loading: dLoading, reload: reloadDO } = useDispatchOrders();
@@ -17,6 +19,7 @@ export function DispatchOrders() {
   const [lines, setLines] = useState<DispatchLine[]>([]);
   const [pallets, setPallets] = useState<Pallet[]>([]);
   const [lots, setLots] = useState<FgLot[]>([]);
+  const [customers, setCustomers] = useState<any[]>([]);
   
   // New DO Form
   const [form, setForm] = useState({
@@ -29,6 +32,18 @@ export function DispatchOrders() {
   });
 
   const canEdit = user?.role === 'ADMIN' || user?.role === 'MANAGER' || user?.role === 'OPERATOR';
+
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        const { data } = await supabase.schema('md').from('customers').select('id, name, code');
+        if (data) setCustomers(data);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchCustomers();
+  }, []);
 
   useEffect(() => {
     if (activeTab === 'NEW') {
@@ -51,7 +66,7 @@ export function DispatchOrders() {
       setPallets(palletsRes.data || []);
       setLots(lotsRes.data || []);
     } catch (e) {
-      console.error(e);
+      captureException(e, { level: 'error', tags: { area: 'module' } });
     }
   };
 
@@ -60,7 +75,7 @@ export function DispatchOrders() {
       const res = await dispatchLinesApi.byOrder(doId);
       setLines(res.data || []);
     } catch (e) {
-      console.error(e);
+      captureException(e, { level: 'error', tags: { area: 'module' } });
     }
   };
 
@@ -71,7 +86,7 @@ export function DispatchOrders() {
   }, [dispatches, filter]);
 
   const handleCreateDO = async () => {
-    if (!form.customerId.trim()) return alert('Customer ID is required');
+    if (!form.customerId.trim()) { showToast('Customer ID is required', 'warning'); return; }
 
     setSaving(true);
     try {
@@ -87,14 +102,14 @@ export function DispatchOrders() {
 
       if (error) throw new Error(error.message);
 
-      alert(`✅ DO ${doCode} created`);
+      showToast(`✅ DO ${doCode} created`, 'success');
       setForm({ doCode: '', customerId: '', challanNo: '', notes: '' });
       await reloadDO();              // FIX: await so list refreshes before user acts
       await loadDependencies();      // FIX-4: load lots/pallets so line-add works immediately
       setSelectedDO(newDORes);
       setActiveTab('LIST');
-    } catch (e: any) {
-      alert(`Error creating DO: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error creating DO: ${(e as Error).message}`, 'error');
     } finally {
       setSaving(false);
     }
@@ -108,7 +123,7 @@ export function DispatchOrders() {
       try {
         const palletItemsRes = await logisticsPalletItemsApi.byPallet(lineForm.palletId);
         const palletItems = palletItemsRes.data;
-        if (!palletItems || palletItems.length === 0) return alert('Pallet is empty');
+        if (!palletItems || palletItems.length === 0) { showToast('Pallet is empty', 'info'); return; }
         
         for (const pi of palletItems) {
            // FIX-1/2: re-check lot from freshly loaded lots state; guard UNKNOWN
@@ -129,12 +144,12 @@ export function DispatchOrders() {
              line_total: amount
            });
         }
-        alert('✅ Pallet items added to DO');
+        showToast('✅ Pallet items added to DO', 'success');
         await loadDependencies(); // FIX-1: refresh lots so subsequent adds see updated stock
         loadLines(selectedDO.id);
         setLineForm({ itemId: '', lotId: '', qty: '', rate: lineForm.rate, gstPct: lineForm.gstPct, palletId: '' });
-      } catch (e: any) {
-        alert('Error adding pallet: ' + e.message);
+      } catch (e: unknown) {
+        showToast('Error adding pallet: ' + (e as Error).message, 'error');
       }
       return;
     }
@@ -144,8 +159,8 @@ export function DispatchOrders() {
     const rate = parseFloat(lineForm.rate) || 0;
     const gst = parseFloat(lineForm.gstPct) || 18;
 
-    if (!lineForm.lotId) return alert('Select a Lot or Pallet');
-    if (qty <= 0) return alert('Qty must be > 0');
+    if (!lineForm.lotId) { showToast('Select a Lot or Pallet', 'warning'); return; }
+    if (qty <= 0) { showToast('Qty must be > 0', 'warning'); return; }
 
     try {
       const lot = lots.find(l => l.id === lineForm.lotId);
@@ -163,8 +178,8 @@ export function DispatchOrders() {
 
       loadLines(selectedDO.id);
       setLineForm({ itemId: '', lotId: '', qty: '', rate: '', gstPct: '18', palletId: '' });
-    } catch (e: any) {
-      alert(`Error adding line: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error adding line: ${(e as Error).message}`, 'error');
     }
   };
 
@@ -173,8 +188,8 @@ export function DispatchOrders() {
     try {
       await dispatchLinesApi.remove(lineId);
       if (selectedDO) loadLines(selectedDO.id); // FIX-6: safe null check, no ! assertion
-    } catch (e: any) {
-      alert(`Error removing line: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error removing line: ${(e as Error).message}`, 'error');
     }
   };
 
@@ -186,28 +201,30 @@ export function DispatchOrders() {
       if (next === 'SHIPPED') {
         const myLinesRes = await dispatchLinesApi.byOrder(d.id);
         const myLines = myLinesRes.data;
-        if (!myLines || myLines.length === 0) return alert('Cannot ship an empty DO.');
+        if (!myLines || myLines.length === 0) { showToast('Cannot ship an empty DO.', 'error'); return; }
 
         // FIX-3: Deduct FG stock on shipment — this is the critical inventory OUT event
         for (const line of myLines) {
-          if (!line.lot_id) continue;
+          const lotId = line.lot_id;
+          if (!lotId) continue;
 
           // 3a. Write OUT entry to stock ledger
           await stockLedgerApi.create({
             lot_id:           null,
-            fg_lot_id:        line.lot_id,
+            fg_lot_id:        lotId,
             erp_product_id:   null,
             transaction_type: 'OUT',
             qty_change:       -Math.abs(line.qty),
             reference_id:     d.id,
-            notes:            `DO ${d.do_code} — shipped to ${d.customer_id}`,
+            notes:            `DO ${d.do_code} — shipped to ${customers.find(c => c.id === d.customer_id)?.name || d.customer_id}`,
             created_by:       user?.name || null,
           });
 
           // 3b. Decrement fg_lots.available_qty
-          const { data: fgLot } = await fgLotsApi.byId(line.lot_id);
+          const fgLotRes = await fgLotsApi.byId(lotId);
+          const fgLot = fgLotRes.data;
           if (fgLot) {
-            await fgLotsApi.update(line.lot_id, {
+            await fgLotsApi.update(lotId, {
               available_qty: Math.max(0, (fgLot.available_qty ?? fgLot.qty) - line.qty),
             });
           }
@@ -254,17 +271,17 @@ export function DispatchOrders() {
           notes:        `Auto-generated on shipment of DO ${d.do_code}`,
         });
 
-        alert(`🚀 Dispatched! Invoice ${invoiceNo} auto-created. Stock deducted.`);
+        showToast(`🚀 Dispatched! Invoice ${invoiceNo} auto-created. Stock deducted.`, 'success');
       } else {
         const updateRes = await dispatchOrdersApi.update(id, { status: next });
         if (updateRes.error) throw new Error(updateRes.error.message);
-        alert(`✅ DO ➔ ${next}`);
+        showToast(`✅ DO ➔ ${next}`, 'success');
       }
       
       if (selectedDO?.id === id) setSelectedDO(null);
       await reloadDO(); // FIX: await reload
-    } catch (e: any) {
-      alert(`Error moving DO: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error moving DO: ${(e as Error).message}`, 'error');
     }
   };
 
@@ -292,7 +309,19 @@ export function DispatchOrders() {
           <h2 style={{ marginBottom: 16 }}>Create Dispatch Order</h2>
           <div className="bos-form-grid">
             <div className="bos-form-group"><label className="bos-form-label">DO Code (auto if blank)</label><input className="bos-form-field" placeholder="DO-..." value={form.doCode} onChange={e=>setForm({...form, doCode: e.target.value})} /></div>
-            <div className="bos-form-group"><label className="bos-form-label">Customer ID *</label><input className="bos-form-field" value={form.customerId} onChange={e=>setForm({...form, customerId: e.target.value})} /></div>
+            <div className="bos-form-group">
+              <label className="bos-form-label">Customer *</label>
+              <select
+                className="bos-form-field"
+                value={form.customerId}
+                onChange={e => setForm({...form, customerId: e.target.value})}
+              >
+                <option value="">-- Choose Customer --</option>
+                {customers.map(c => (
+                  <option key={c.id} value={c.id}>{c.name} ({c.code})</option>
+                ))}
+              </select>
+            </div>
             <div className="bos-form-group"><label className="bos-form-label">Challan No.</label><input className="bos-form-field" value={form.challanNo} onChange={e=>setForm({...form, challanNo: e.target.value})} /></div>
           </div>
           <button className="bos-btn bos-btn-primary" style={{ marginTop: 16 }} onClick={handleCreateDO} disabled={saving}>{saving ? 'Saving...' : 'Create DO →'}</button>
@@ -330,7 +359,7 @@ export function DispatchOrders() {
                         return (
                           <tr key={d.id} style={{ background: isSelected ? 'rgba(212,168,67,0.1)' : 'transparent', cursor: 'pointer' }} onClick={() => { setSelectedDO(d); loadDependencies(); }}>
                             <td><span style={{ fontFamily: 'monospace', color: '#D4A843' }}>{d.do_code}</span></td>
-                            <td style={{ color: '#F0EDE6', fontWeight: 500 }}>{d.customer_id}</td>
+                            <td style={{ color: '#F0EDE6', fontWeight: 500 }}>{customers.find(c => c.id === d.customer_id)?.name || d.customer_id}</td>
                             <td>{d.challan_no || '—'}</td>
                             <td><span className={`bos-badge ${sClass}`}>{d.status}</span></td>
                             <td>

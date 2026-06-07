@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useExpenses } from '../../hooks/useBos';
-import { expensesApi } from '../../lib/bosApi';
 import { fmtINR } from '../../types/bos';
 import { useAuth } from '../../hooks';
 import { supabase } from '../../lib/supabase';
+import { showToast } from '../../lib/toast';
 
 const EXPENSE_CATS = [
   "Raw Material","Packaging","Labour","Electricity","Transport","Rent",
@@ -22,8 +22,8 @@ export function Expenses() {
 
   const handleSaveExpense = async () => {
     const amt = parseFloat(eForm.amt) || 0;
-    if (!eForm.desc.trim()) return alert('Description required');
-    if (amt <= 0) return alert('Amount must be > 0');
+    if (!eForm.desc.trim()) { showToast('Description required', 'warning'); return; }
+    if (amt <= 0) { showToast('Amount must be > 0', 'warning'); return; }
 
     setSaving(true);
     try {
@@ -36,19 +36,19 @@ export function Expenses() {
         p_user_id: user?.id
       });
       if (error) throw error;
-      alert(`✅ Expense ${fmtINR(amt)} recorded`);
+      showToast(`✅ Expense ${fmtINR(amt)} recorded`, 'success');
       setIsExpenseModalOpen(false);
       setEForm({ cat: EXPENSE_CATS[0], date: new Date().toISOString().split('T')[0], desc: '', amt: '', notes: '' });
       reloadExp();
-    } catch (e: any) {
-      alert(`Error saving expense: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error saving expense: ${(e as Error).message}`, 'error');
     } finally {
       setSaving(false);
     }
   };
 
   const deleteExpense = async (id: string) => {
-    if (user?.role !== 'ADMIN') return alert('Only ADMIN can delete expense entries');
+    if (user?.role !== 'ADMIN') { showToast('Only ADMIN can delete expense entries', 'info'); return; }
     if (!confirm('Delete this expense?')) return;
     try {
       const { error } = await supabase.rpc('delete_expense', {
@@ -57,7 +57,7 @@ export function Expenses() {
       });
       if (error) throw error;
       reloadExp();
-    } catch (e: any) { alert(`Error: ${e.message}`); }
+    } catch (e: unknown) { showToast(`Error: ${(e as Error).message}`, 'error'); }
   };
 
   if (eLoading) return <div style={{ padding: 40, color: '#9AAF96' }}>Loading Expenses...</div>;

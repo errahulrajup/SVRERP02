@@ -4,9 +4,6 @@ import { inquiriesApi } from '../lib/supabase';
 import { useSiteSettings, usePageSeo } from '../hooks';
 import { SEO } from '../components/SEO';
 
-const FI = { hidden: { opacity: 0, y: 24 }, show: { opacity: 1, y: 0 } };
-const FC = { hidden: {}, show: { transition: { staggerChildren: 0.1 } } };
-
 const SUBJECTS = ['Product Enquiry','Bulk / HoReCa Order','Sample Request','Retail Partnership','Distribution','Other'];
 
 // Premium SVG icons — consistent gold stroke, no emoji

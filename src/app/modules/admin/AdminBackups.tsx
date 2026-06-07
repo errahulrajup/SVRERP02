@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { metricsApi } from '../../lib/bosApi';
+import { showToast } from '../../lib/toast';
 
 function PageShell({ eyebrow, title, sub, action }: {
   eyebrow: string; title: string; sub: string; action?: React.ReactNode;
@@ -57,8 +58,8 @@ export function AdminBackups() {
         { table: label, rows: (data || []).length, time: new Date().toLocaleTimeString('en-IN'), size: `${sizeKb} KB` },
         ...prev.slice(0, 9),
       ]);
-    } catch (e: any) {
-      alert(`Export failed: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Export failed: ${(e as Error).message}`, 'error');
     } finally {
       setExporting(null);
     }

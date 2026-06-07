@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from '../../lib/supabase';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { equipmentApi } from '../../lib/bosApi';
 import { useAuth } from '../../hooks';
 import { fmtDate } from '../../types/bos';
+import { showToast } from '../../lib/toast';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Equipment {
@@ -44,7 +44,7 @@ async function fetchEquipment(): Promise<Equipment[]> {
     const { data, error } = await equipmentApi.list();
     if (error) throw error;
     return data as Equipment[];
-  } catch (e: any) { alert(e.message); return lsLoad(); }
+  } catch (e: unknown) { showToast((e as Error).message, 'info'); return lsLoad(); }
 }
 
 async function saveEquipment(eq: Omit<Equipment, 'id' | 'created_at'>): Promise<Equipment> {
@@ -52,8 +52,8 @@ async function saveEquipment(eq: Omit<Equipment, 'id' | 'created_at'>): Promise<
     const { data, error } = await equipmentApi.create(eq);
     if (error) throw error;
     return data as Equipment;
-  } catch (e: any) {
-    alert(e.message);
+  } catch (e: unknown) {
+    showToast((e as Error).message, 'info');
     const newEq: Equipment = { ...eq, id: `eq-${Date.now()}`, created_at: new Date().toISOString() };
     lsSave([newEq, ...lsLoad()]);
     return newEq;
@@ -64,8 +64,8 @@ async function updateEquipment(id: string, eq: Partial<Equipment>): Promise<void
   try {
     const { error } = await equipmentApi.update(id, eq);
     if (error) throw error;
-  } catch (e: any) {
-    alert(e.message);
+  } catch (e: unknown) {
+    showToast((e as Error).message, 'info');
     lsSave(lsLoad().map(x => x.id === id ? { ...x, ...eq } : x));
   }
 }
@@ -74,8 +74,8 @@ async function deleteEquipment(id: string): Promise<void> {
   try {
     const { error } = await equipmentApi.remove(id);
     if (error) throw error;
-  } catch (e: any) {
-    alert(e.message);
+  } catch (e: unknown) {
+    showToast((e as Error).message, 'info');
     lsSave(lsLoad().filter(x => x.id !== id));
   }
 }
@@ -174,8 +174,8 @@ export function Equipment() {
   };
 
   const handleSave = async () => {
-    if (!form.name.trim()) return alert('Equipment name is required');
-    if (!form.asset_code.trim()) return alert('Asset code is required');
+    if (!form.name.trim()) { showToast('Equipment name is required', 'warning'); return; }
+    if (!form.asset_code.trim()) { showToast('Asset code is required', 'warning'); return; }
     setSaving(true);
     try {
       const freqRaw = parseInt(form.maintenance_freq_days as string);
@@ -192,15 +192,15 @@ export function Equipment() {
       };
       if (editId) {
         await updateEquipment(editId, payload);
-        alert('✅ Equipment updated');
+        showToast('✅ Equipment updated', 'success');
       } else {
         await saveEquipment(payload);
-        alert('✅ Equipment added');
+        showToast('✅ Equipment added', 'success');
       }
       setModalOpen(false);
       load();
-    } catch (e: any) {
-      alert(`Error: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error: ${(e as Error).message}`, 'error');
     } finally {
       setSaving(false);
     }
@@ -225,7 +225,7 @@ export function Equipment() {
   };
 
   const saveMaintLog = async () => {
-    if (!mTarget || !mDate) return alert('Date is required');
+    if (!mTarget || !mDate) { showToast('Date is required', 'warning'); return; }
     setSaving(true);
     try {
       // Compute next maintenance date
@@ -240,11 +240,11 @@ export function Equipment() {
         status: 'Operational',
         notes: mTarget.notes ? `${mTarget.notes}\n[Maintenance ${mDate}]: ${mNotes}` : `[Maintenance ${mDate}]: ${mNotes}`,
       });
-      alert(`✅ Maintenance logged. Next due: ${fmtDate(next)}`);
+      showToast(`✅ Maintenance logged. Next due: ${fmtDate(next)}`, 'success');
       setMLogOpen(false);
       load();
-    } catch (e: any) {
-      alert(`Error: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error: ${(e as Error).message}`, 'error');
     } finally {
       setSaving(false);
     }

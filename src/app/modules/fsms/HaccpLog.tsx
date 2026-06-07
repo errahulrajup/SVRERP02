@@ -1,8 +1,8 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useHaccp, useBatches, useRecipeFsmsCcp } from '../../hooks/useBos';
 import { haccpApi } from '../../lib/bosApi';
-import { fmtDate } from '../../types/bos';
 import { useAuth } from '../../hooks';
+import { showToast } from '../../lib/toast';
 
 export function HaccpLog() {
   const { items: logs, loading: lLoading, reload } = useHaccp();
@@ -64,8 +64,8 @@ export function HaccpLog() {
   }, [logs]);
 
   const handleSave = async () => {
-    if (!form.reading) return alert('Reading value required');
-    if (!form.ccpId) return alert('CCP is required');
+    if (!form.reading) return showToast('Reading value required', 'warning');
+    if (!form.ccpId) return showToast('CCP is required', 'warning');
     
     const ccp = allCcps.find(c => c.id === form.ccpId);
     if (!ccp) return;
@@ -110,11 +110,11 @@ export function HaccpLog() {
         remarks: form.remarks.trim() || null,
         status: result
       });
-      alert(result === 'OK' ? "✅ CCP reading logged — Within limits" : "🚨 DEVIATION recorded — Add corrective action!");
+      showToast(result === 'OK' ? "✅ CCP reading logged — Within limits" : "🚨 DEVIATION recorded — Add corrective action!", 'success');
       setIsModalOpen(false);
       setForm({ ccpId: availableCcps[0]?.id || '', batchNo: '', reading: '', checkedBy: user?.name || '', remarks: '' });
       reload();
-    } catch (e: any) { alert(`Error: ${e.message}`); }
+    } catch (e: unknown) { showToast(`Error: ${(e as Error).message}`, 'error'); }
     finally { setSaving(false); }
   };
 
@@ -122,11 +122,11 @@ export function HaccpLog() {
     if (!caModalOpen || !caText.trim()) return;
     try {
       await haccpApi.update(caModalOpen, { corrective_action: caText });
-      alert("Corrective action saved");
+      showToast("Corrective action saved", 'success');
       setCaModalOpen(null);
       setCaText('');
       reload();
-    } catch (e: any) { alert(`Error: ${e.message}`); }
+    } catch (e: unknown) { showToast(`Error: ${(e as Error).message}`, 'error'); }
   };
 
   const selectedCcp = allCcps.find(c => c.id === form.ccpId);

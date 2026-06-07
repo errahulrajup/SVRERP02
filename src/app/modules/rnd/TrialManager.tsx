@@ -17,6 +17,7 @@ import {
 } from '../../lib/bosApi';
 import type { RndTrial, RndTrialStatus, RndTrialWithFormula, RndProcess, RndFormulaParam } from '../../types/rnd';
 import { fmtDate } from '../../types/rnd';
+import { showToast } from '../../lib/toast';
 
 const EMPTY_TRIAL = {
   trial_no: '',
@@ -122,8 +123,8 @@ export function TrialManager() {
       });
       setMeasuredReadings(prepReadings);
       setMeasuredNotes(prepNotes);
-    } catch (e: any) {
-      setRunnerError(e.message);
+    } catch (e: unknown) {
+      setRunnerError((e as Error).message);
     } finally {
       setRunnerLoading(false);
     }
@@ -194,11 +195,11 @@ export function TrialManager() {
         });
       }));
 
-      alert('Trial logs saved successfully!');
+      showToast('Trial logs saved successfully!', 'success');
       setActiveRunnerTrial(null);
       tReload();
-    } catch (e: any) {
-      alert('Error saving trial details: ' + e.message);
+    } catch (e: unknown) {
+      showToast('Error saving trial details: ' + (e as Error).message, 'error');
     } finally {
       setSaving(false);
     }
@@ -314,11 +315,11 @@ export function TrialManager() {
       // Lock formula
       await rndFormulasApi.update(runnerFormula.id, { status: 'LOCKED' });
 
-      alert('🎉 Trial promoted to Production Recipe successfully! R&D Formulation locked.');
+      showToast('🎉 Trial promoted to Production Recipe successfully! R&D Formulation locked.', 'success');
       setActiveRunnerTrial(null);
       tReload();
-    } catch (e: any) {
-      alert('Error promoting to production recipe: ' + e.message);
+    } catch (e: unknown) {
+      showToast('Error promoting to production recipe: ' + (e as Error).message, 'error');
     } finally {
       setPromoting(false);
     }
@@ -381,14 +382,14 @@ export function TrialManager() {
 
   const handleSave = async () => {
     if (!form.trial_no.trim() || !form.formula_id) {
-      alert('Trial No and Formula are required');
+      showToast('Trial No and Formula are required', 'warning');
       return;
     }
 
     // RND-12 FIX: Validate COMPLETED status requires result data
     if (form.status === 'COMPLETED') {
       if (form.actual_yield_kg === '' || form.actual_yield_kg == null || form.actual_ph === '' || form.actual_ph == null) {
-        alert('Please enter at least Yield (kg) and pH before marking as COMPLETED');
+        showToast('Please enter at least Yield (kg) and pH before marking as COMPLETED', 'success');
         return;
       }
     }
@@ -427,8 +428,8 @@ export function TrialManager() {
       setIsFormOpen(false);
       resetForm();
       tReload();
-    } catch (e: any) {
-      alert('Error: ' + e.message);
+    } catch (e: unknown) {
+      showToast('Error: ' + (e as Error).message, 'error');
     } finally {
       setSaving(false);
     }
@@ -439,8 +440,8 @@ export function TrialManager() {
     try {
       await rndTrialsApi.remove(id);
       tReload();
-    } catch (e: any) {
-      alert('Error: ' + e.message);
+    } catch (e: unknown) {
+      showToast('Error: ' + (e as Error).message, 'error');
     }
   };
 

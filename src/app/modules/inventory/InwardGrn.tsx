@@ -1,14 +1,17 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useGrns } from '../../hooks/useBos';
 import { grnsApi } from '../../lib/bosApi';
 import { fmtINR, daysUntil, GrnStatus } from '../../types/bos';
 import { useAuth } from '../../hooks';
+import { showToast } from '../../lib/toast';
+import { supabase } from '../../lib/supabase';
 
 export function InwardGrn() {
   const { items: grns, loading, reload } = useGrns();
   const { user } = useAuth();
   const [filter, setFilter] = useState<GrnStatus | 'ALL'>('ALL');
   const [search, setSearch] = useState('');
+  const [processingId, setProcessingId] = useState<string | null>(null);
   
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -40,6 +43,42 @@ export function InwardGrn() {
   }, [grns, filter, search]); // FIX-3: search added to deps
 
   const canDelete = user?.role === 'ADMIN' || user?.role === 'MANAGER';
+  const canApproveReject = user?.role === 'ADMIN' || user?.role === 'MANAGER' || user?.role === 'QC';
+
+  const handleApprove = async (grnId: string) => {
+    if (!confirm('Are you sure you want to approve this GRN and generate a new Lot?')) return;
+    setProcessingId(grnId);
+    try {
+      const { error } = await supabase.rpc('approve_grn_and_create_lot', { p_grn_id: grnId });
+      if (error) throw error;
+      showToast('GRN Approved successfully and Lot generated!', 'success');
+      reload();
+    } catch (err: any) {
+      showToast(`Error approving GRN: ${err.message || err}`, 'error');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleReject = async (grnId: string) => {
+    const reason = prompt('Enter rejection reason:');
+    if (reason === null) return; // cancelled
+    if (!reason.trim()) {
+      showToast('Rejection reason is required.', 'warning');
+      return;
+    }
+    setProcessingId(grnId);
+    try {
+      const { error } = await supabase.rpc('reject_grn', { p_grn_id: grnId, p_reject_reason: reason.trim() });
+      if (error) throw error;
+      showToast('GRN Rejected.', 'info');
+      reload();
+    } catch (err: any) {
+      showToast(`Error rejecting GRN: ${err.message || err}`, 'error');
+    } finally {
+      setProcessingId(null);
+    }
+  };
 
   // Stats
   const stats = [
@@ -54,14 +93,14 @@ export function InwardGrn() {
     const rate = parseFloat(form.rate) || 0;
     const gst = parseFloat(form.gst) || 0;
 
-    if (!form.material.trim()) return alert('Material is required');
-    if (!form.supplier.trim()) return alert('Supplier is required');
-    if (qty <= 0) return alert('Quantity must be > 0');
-    if (rate <= 0) return alert('Rate must be > 0');
+    if (!form.material.trim()) { showToast('Material is required', 'warning'); return; }
+    if (!form.supplier.trim()) { showToast('Supplier is required', 'warning'); return; }
+    if (qty <= 0) { showToast('Quantity must be > 0', 'warning'); return; }
+    if (rate <= 0) { showToast('Rate must be > 0', 'warning'); return; }
 
     // FIX-4: use Date objects instead of string comparison to avoid timezone/format edge cases
     if (form.mfgDate && form.expDate && new Date(form.mfgDate) > new Date(form.expDate)) {
-      return alert('Manufacturing date cannot be after expiry date');
+      showToast('Manufacturing date cannot be after expiry date', 'error'); return;
     }
 
     setSaving(true);
@@ -105,12 +144,12 @@ export function InwardGrn() {
       // but Supabase DB schema for `grns` might not have `lot_no`. We'll just pass it in notes if needed, 
       // or wait until approveGRN to use `grn_no` as `lot_no`. 
       
-      alert(`✅ GRN ${grnNo} recorded. Awaiting QC.`);
+      showToast(`✅ GRN ${grnNo} recorded. Awaiting QC.`, 'success');
       setIsModalOpen(false);
       setForm({ grnNo:'', supplier:'', material:'', lotNo:'', qty:'', uom:'kg', rate:'', gst:'18', mfgDate:'', expDate:'', invNo:'', vehNo:'', remarks:'' });
       reload();
-    } catch (e: any) {
-      alert(`Error saving GRN: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error saving GRN: ${(e as Error).message}`, 'error');
     } finally {
       setSaving(false);
     }
@@ -119,14 +158,14 @@ export function InwardGrn() {
   const deleteGRN = async (id: string) => {
     const grn = grns.find(g => g.id === id);
     if (grn?.status === 'APPROVED') {
-      return alert('Cannot delete approved GRN. It has been converted to a Lot. Please reverse the Lot first.');
+      showToast('Cannot delete approved GRN. It has been converted to a Lot. Please reverse the Lot first.', 'success'); return;
     }
     if (!confirm('Delete this GRN?')) return;
     setDeletingId(id);
     try {
       await grnsApi.remove(id);
       reload();
-    } catch(e:any) { alert(`Error deleting: ${e.message}`); }
+    } catch(e: unknown) { showToast(`Error deleting: ${(e as Error).message}`, 'error'); }
     finally { setDeletingId(null); }
   };
 
@@ -214,6 +253,12 @@ export function InwardGrn() {
                       <td><span className={`bos-badge ${sClass}`}>{g.status}</span></td>
                       <td>
                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          {canApproveReject && g.status === 'QC_PENDING' && (
+                            <>
+                              <button className="bos-btn bos-btn-sm" style={{ background: '#2B4A34', color: '#88C096' }} onClick={() => handleApprove(g.id)} disabled={processingId !== null}>✓ Approve</button>
+                              <button className="bos-btn bos-btn-sm" style={{ background: '#4A2B2B', color: '#C08888' }} onClick={() => handleReject(g.id)} disabled={processingId !== null}>✕ Reject</button>
+                            </>
+                          )}
                           {canDelete && (
                             <button className="bos-btn bos-btn-danger bos-btn-sm" onClick={() => deleteGRN(g.id)} disabled={deletingId === g.id}>🗑</button>
                           )}

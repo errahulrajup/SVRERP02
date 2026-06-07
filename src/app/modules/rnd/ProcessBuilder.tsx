@@ -4,6 +4,8 @@ import { useRndFormulas } from '../../hooks';
 import { rndProcessesApi } from '../../lib/rndApi';
 import { equipmentApi } from '../../lib/bosApi';
 import type { RndProcess } from '../../types/rnd';
+import { showToast } from '../../lib/toast';
+import { captureException } from '../../lib/observability';
 
 export function ProcessBuilder() {
   const location = useLocation();
@@ -29,7 +31,7 @@ export function ProcessBuilder() {
       const { data } = await rndProcessesApi.byFormula(formulaId);
       setSteps(data || []);
       setForm(prev => ({ ...prev, step_no: (data?.length || 0) + 1 }));
-    } catch (e: any) { alert('Error: ' + e.message); }
+    } catch (e: unknown) { showToast('Error: ' + (e as Error).message, 'error'); }
     finally { setPLoad(false); }
   };
 
@@ -37,8 +39,8 @@ export function ProcessBuilder() {
     try {
       const { data } = await equipmentApi.list();
       setEquipment((data || []).filter((eq: any) => eq.status !== 'Retired'));
-    } catch (e: any) {
-      console.error('Error loading equipment:', e);
+    } catch (e: unknown) {
+      captureException(e, { level: 'error', tags: { area: 'module' } });
     }
   };
 
@@ -62,15 +64,15 @@ export function ProcessBuilder() {
   }, [selectedFormula]);
 
   const handleSave = async () => {
-    if (!selectedFormula) return alert('Select a formula first');
-    if (!form.description.trim()) return alert('Description is required');
+    if (!selectedFormula) { showToast('Select a formula first', 'warning'); return; }
+    if (!form.description.trim()) { showToast('Description is required', 'warning'); return; }
     
     if (steps.some(s => s.step_no === form.step_no)) {
-      return alert(`Step ${form.step_no} already exists. Please delete it first or use a different number.`);
+      showToast(`Step ${form.step_no} already exists. Please delete it first or use a different number.`, 'warning'); return;
     }
 
     if (form.ccp && !form.temp_c && !form.pressure_bar && !form.duration_min) {
-      return alert('CCP steps must have at least one critical parameter defined (Temp, Pressure, or Duration)');
+      showToast('CCP steps must have at least one critical parameter defined (Temp, Pressure, or Duration)', 'info'); return;
     }
 
     setSaving(true);
@@ -88,12 +90,12 @@ export function ProcessBuilder() {
         machine: form.machine || null
       });
       if (res.error) {
-        alert('Failed to save step: ' + res.error.message);
+        showToast('Failed to save step: ' + res.error.message, 'error');
         return;
       }
       setForm({ step_no: form.step_no + 1, step_type: 'Mix', description: '', duration_min: '', temp_c: '', rpm: '', pressure_bar: '', ccp: false, machine: '' });
       await loadSteps(selectedFormula);
-    } catch (e: any) { alert('Error: ' + e.message); }
+    } catch (e: unknown) { showToast('Error: ' + (e as Error).message, 'error'); }
     finally { setSaving(false); }
   };
 
@@ -108,7 +110,7 @@ export function ProcessBuilder() {
       ));
       
       await loadSteps(selectedFormula);
-    } catch (e: any) { alert('Error: ' + e.message); }
+    } catch (e: unknown) { showToast('Error: ' + (e as Error).message, 'error'); }
   };
 
   if (fLoad) return <div className="bos-page"><div className="bos-loading"><div className="bos-spinner"/>Loading Formulations...</div></div>;

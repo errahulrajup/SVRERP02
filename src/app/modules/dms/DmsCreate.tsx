@@ -6,6 +6,7 @@ import { dmsDocumentsApi } from '../../lib/dmsApi';
 import { generateDocumentPdf } from '../../lib/pdfGenerator';
 import { DMS_TEMPLATES, DOC_TYPE_LABELS } from '../../types/dms';
 import type { DocTypeCode, DmsDocument, DocStatus } from '../../types/dms';
+import { showToast } from '../../lib/toast';
 
 const DOC_TYPES: { value: DocTypeCode; label: string }[] = [
   { value: 'BL', label: 'Business Letter' },
@@ -95,10 +96,10 @@ export function DmsCreate() {
   }), [docId, company.id, date, typeCode, priority, refNo, toName, toCompany, toAddress, toCity, salutation, subject, content, closing, issuedBy, designation, user]);
 
   const validate = () => {
-    if (!toName.trim()) { alert('Recipient name is required'); return false; }
-    if (!subject.trim()) { alert('Subject is required'); return false; }
-    if (!content.trim()) { alert('Body content is required'); return false; }
-    if (!issuedBy.trim()) { alert('Signatory name is required'); return false; }
+    if (!toName.trim()) { showToast('Recipient name is required', 'warning'); return false; }
+    if (!subject.trim()) { showToast('Subject is required', 'warning'); return false; }
+    if (!content.trim()) { showToast('Body content is required', 'warning'); return false; }
+    if (!issuedBy.trim()) { showToast('Signatory name is required', 'warning'); return false; }
     return true;
   };
 
@@ -107,13 +108,13 @@ export function DmsCreate() {
     setBusy(true);
     const doc = buildDoc('issued');
     const { error } = await dmsDocumentsApi.create(doc);
-    if (error) { alert('Failed to save document'); setBusy(false); return; }
+    if (error) { showToast('Failed to save document', 'error'); setBusy(false); return; }
     try {
       await generateDocumentPdf({ doc: doc as DmsDocument, company });
-      alert(`Document ${docId} issued successfully!`);
+      showToast(`Document ${docId} issued successfully!`, 'success');
       navigate('/dms/records');
     } catch {
-      alert('PDF generation failed. Document saved.');
+      showToast('PDF generation failed. Document saved.', 'success');
     }
     setBusy(false);
   };
@@ -123,16 +124,16 @@ export function DmsCreate() {
     setBusy(true);
     const doc = buildDoc('pending_approval');
     const { error } = await dmsDocumentsApi.create(doc);
-    if (error) { alert('Failed to save document'); } else { alert('Document submitted for approval!'); navigate('/dms/records'); }
+    if (error) { showToast('Failed to save document', 'error'); } else { showToast('Document submitted for approval!', 'success'); navigate('/dms/records'); }
     setBusy(false);
   };
 
   const handleDraft = async () => {
-    if (!toName.trim() || !subject.trim()) { alert('Recipient and subject are required for draft'); return; }
+    if (!toName.trim() || !subject.trim()) { showToast('Recipient and subject are required for draft', 'warning'); return; }
     setBusy(true);
     const doc = buildDoc('draft');
     const { error } = await dmsDocumentsApi.create(doc);
-    if (error) { alert('Failed to save draft'); } else { alert('Draft saved!'); navigate('/dms/records'); }
+    if (error) { showToast('Failed to save draft', 'error'); } else { showToast('Draft saved!', 'success'); navigate('/dms/records'); }
     setBusy(false);
   };
 

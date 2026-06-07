@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks';
 import { lotsApi, locationsApi, stockTransfersApi, wastageLogsApi } from '../../lib/bosApi';
 
-type QcStatus = 'pending' | 'approved' | 'rejected' | 'QC_HOLD' | 'QA_HOLD' | 'HOLD';
+
 
 const QC_BADGE: Record<string, { label: string; color: string; bg: string }> = {
   approved:  { label: '✓ Approved',  color: '#4ade80', bg: 'rgba(74,222,128,0.12)' },

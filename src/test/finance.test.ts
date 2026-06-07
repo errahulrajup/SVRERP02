@@ -9,7 +9,7 @@ describe('Finance Double-Entry Validation', () => {
     
     // Simulate API call for finance entry
     // We expect an error either from RLS, foreign key, or the balance check trigger
-    const { data, error } = await supabase.from('journal_entries').insert({
+    const { error } = await supabase.from('journal_entries').insert({
         org_id: dummyOrgId,
         reference: 'TEST-001',
         description: 'Unbalanced Entry',

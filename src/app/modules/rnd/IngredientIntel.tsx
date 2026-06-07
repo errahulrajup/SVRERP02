@@ -3,6 +3,7 @@ import { useRndIngredients } from '../../hooks';
 import { rndIngredientsApi } from '../../lib/rndApi';
 import type { RndIngredient } from '../../types/rnd';
 import { fmtCost } from '../../types/rnd';
+import { showToast } from '../../lib/toast';
 
 const EMPTY_INGREDIENT = {
   name: '',
@@ -90,17 +91,17 @@ export function IngredientIntel() {
 
   const handleSave = async () => {
     if (!form.name.trim()) {
-      alert('Name is required');
+      showToast('Name is required', 'warning');
       return;
     }
 
     if (activeParams.ph && form.ph_min !== '' && form.ph_max !== '' && Number(form.ph_min) > Number(form.ph_max)) {
-      alert('pH Min cannot be greater than pH Max');
+      showToast('pH Min cannot be greater than pH Max', 'error');
       return;
     }
 
     if (activeParams.usage && form.usage_min_pct !== '' && form.usage_max_pct !== '' && Number(form.usage_min_pct) > Number(form.usage_max_pct)) {
-      alert('Usage Min % cannot be greater than Usage Max %');
+      showToast('Usage Min % cannot be greater than Usage Max %', 'error');
       return;
     }
 
@@ -133,8 +134,8 @@ export function IngredientIntel() {
       setIsFormOpen(false);
       resetForm();
       await reload();
-    } catch (e: any) {
-      alert('Error: ' + e.message);
+    } catch (e: unknown) {
+      showToast('Error: ' + (e as Error).message, 'error');
     } finally {
       setSaving(false);
     }
@@ -145,11 +146,11 @@ export function IngredientIntel() {
     try {
       await rndIngredientsApi.remove(id);
       await reload();
-    } catch (e: any) {
-      if (e.message?.toLowerCase().includes('foreign key constraint')) {
-        alert('Cannot delete: This ingredient is currently used in one or more formulations.');
+    } catch (e: unknown) {
+      if ((e as Error).message?.toLowerCase().includes('foreign key constraint')) {
+        showToast('Cannot delete: This ingredient is currently used in one or more formulations.', 'error');
       } else {
-        alert('Error: ' + e.message);
+        showToast('Error: ' + (e as Error).message, 'error');
       }
     }
   };

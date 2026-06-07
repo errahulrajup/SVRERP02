@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { siteSettingsApi } from '../../lib/bosApi';
 import { supabase } from '../../lib/supabase';
+import { showToast } from '../../lib/toast';
 import { useAuth } from '../../hooks';
 
 function PageShell({ eyebrow, title, sub, action }: {
@@ -77,8 +78,8 @@ export function AdminSettings() {
       }
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
-    } catch (e: any) {
-      alert(e.message);
+    } catch (e: unknown) {
+      showToast((e as Error).message, 'info');
     } finally {
       setSaving(false);
     }

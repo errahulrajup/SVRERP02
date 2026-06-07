@@ -3,6 +3,7 @@ import { useAuth } from '../../hooks';
 import { rndMasterParamsApi } from '../../lib/rndApi';
 import { equipmentApi } from '../../lib/bosApi';
 import type { RndMasterParameter } from '../../types/rnd';
+import { showToast } from '../../lib/toast';
 
 export function RndSettings() {
   const { user } = useAuth();
@@ -23,7 +24,7 @@ export function RndSettings() {
     try {
       const { data } = await rndMasterParamsApi.list();
       setParams(data || []);
-    } catch (e: any) { alert(e.message); }
+    } catch (e: unknown) { showToast((e as Error).message, 'info'); }
     finally { setPLoad(false); }
   };
 
@@ -32,7 +33,7 @@ export function RndSettings() {
     try {
       const { data } = await equipmentApi.list();
       setMachines(data || []);
-    } catch (e: any) { alert(e.message); }
+    } catch (e: unknown) { showToast((e as Error).message, 'info'); }
     finally { setMLoad(false); }
   };
 
@@ -42,13 +43,13 @@ export function RndSettings() {
   }, [activeTab]);
 
   const handleAddParam = async () => {
-    if (!paramForm.name.trim()) return alert('Parameter name is required');
+    if (!paramForm.name.trim()) { showToast('Parameter name is required', 'warning'); return; }
     try {
       const { error } = await rndMasterParamsApi.create(paramForm);
       if (error) throw new Error(error.message);
       setParamForm({ name: '', category: 'Physical', default_unit: '' });
       loadParams();
-    } catch (e: any) { alert(e.message); }
+    } catch (e: unknown) { showToast((e as Error).message, 'info'); }
   };
 
   const handleDeleteParam = async (id: string) => {
@@ -57,11 +58,11 @@ export function RndSettings() {
       const { error } = await rndMasterParamsApi.remove(id);
       if (error) throw new Error(error.message);
       loadParams();
-    } catch (e: any) { alert(e.message); }
+    } catch (e: unknown) { showToast((e as Error).message, 'info'); }
   };
 
   const handleAddMachine = async () => {
-    if (!machineForm.name.trim() || !machineForm.equipment_code.trim()) return alert('Name and Code are required');
+    if (!machineForm.name.trim() || !machineForm.equipment_code.trim()) { showToast('Name and Code are required', 'warning'); return; }
     try {
       const orgId = user?.org_id || 'a0000000-0000-0000-0000-000000000001';
       const { error } = await equipmentApi.create({
@@ -75,7 +76,7 @@ export function RndSettings() {
       if (error) throw new Error(error.message);
       setMachineForm({ name: '', equipment_code: '', equipment_type: 'Mixer', status: 'ACTIVE' });
       loadMachines();
-    } catch (e: any) { alert(e.message); }
+    } catch (e: unknown) { showToast((e as Error).message, 'info'); }
   };
 
   const handleDeleteMachine = async (id: string) => {
@@ -84,7 +85,7 @@ export function RndSettings() {
       const { error } = await equipmentApi.remove(id);
       if (error) throw new Error(error.message);
       loadMachines();
-    } catch (e: any) { alert(e.message); }
+    } catch (e: unknown) { showToast((e as Error).message, 'info'); }
   };
 
   return (

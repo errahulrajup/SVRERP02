@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks';
 import { storeItemsApi, storeIndentsApi, storeTransactionsApi } from '../../lib/bosApi';
 
@@ -42,7 +42,6 @@ export function GeneralStore() {
   const [items, setItems]         = useState<any[]>([]);
   const [indents, setIndents]     = useState<any[]>([]);
   const [txns, setTxns]           = useState<any[]>([]);
-  const [loading, setLoading]     = useState(false);
   const [saving, setSaving]       = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'indents' | 'purchase' | 'issue' | 'stock' | 'items'>('dashboard');
 
@@ -75,7 +74,6 @@ export function GeneralStore() {
   useEffect(() => { loadAll(); }, []);
 
   const loadAll = async () => {
-    setLoading(true);
     try {
       const [iRes, indRes, tRes] = await Promise.all([
         storeItemsApi.list(), storeIndentsApi.list(), storeTransactionsApi.list()
@@ -83,7 +81,9 @@ export function GeneralStore() {
       setItems(iRes.data || []);
       setIndents(indRes.data || []);
       setTxns(tRes.data || []);
-    } finally { setLoading(false); }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   // ── Stats ──

@@ -2,7 +2,6 @@ import { useNavigate } from 'react-router';
 import { useState, useEffect } from 'react';
 import { productsApi, activityApi, supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks';
-import { ErrorState } from '../../components/ErrorState';
 import { PaginationControls } from '../../components/PaginationControls';
 import { showToast } from '../../lib/toast';
 
@@ -78,7 +77,7 @@ export function CmsProducts() {
             Products <span style={{ color:'rgba(255,255,255,0.25)', fontSize:'0.6em', fontFamily:"'DM Sans',sans-serif", fontWeight:400 }}>({filtered.length})</span>
           </h1>
         </div>
-        {canEdit && <button className="btn btn-gold" onClick={() => navigate('/admin/content/products/new')}>+ Add Product</button>}
+        {canEdit && <button className="btn btn-gold" onClick={() => navigate('/cms/products/new')}>+ Add Product</button>}
       </div>
 
       {/* FSMS Alert */}
@@ -166,7 +165,7 @@ export function CmsProducts() {
               </div>
               {/* Actions */}
               {canEdit && <div style={{ display:'flex', gap:8, flexShrink:0 }}>
-                <button className="btn btn-dark btn-sm" onClick={() => navigate(`/admin/content/products/${p.id}`)}>Edit</button>
+                <button className="btn btn-dark btn-sm" onClick={() => navigate(`/cms/products/${p.id}`)}>Edit</button>
                 <button className="btn-danger" onClick={() => remove(p.id, p.name)} disabled={deleting===p.id}>
                   {deleting===p.id? '…' : 'Obsolete'}
                 </button>

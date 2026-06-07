@@ -388,7 +388,7 @@ export function CmsTestimonials() {
   const upd = (k: string) => (e: ChangeEvent<HTMLInputElement|HTMLTextAreaElement>) => setForm(f => ({ ...f, [k]: e.target.value }));
 
   const save = async () => {
-    if (!form.name.trim() || !form.quote.trim()) return alert('Name and quote required.');
+    if (!form.name.trim() || !form.quote.trim()) { showToast('Name and quote required.', 'warning'); return; }
     setSaving(true);
     if (editing) {
       await testimonialsApi.update(editing.id, form);
@@ -409,7 +409,7 @@ export function CmsTestimonials() {
       await supabase.rpc('approve_testimonial', { p_id: id });
       showToast('Testimonial approved & published.', 'success');
       reload();
-    } catch(e: any) { alert(e.message); }
+    } catch(e: unknown) { showToast((e as Error).message, 'info'); }
   };
 
   return (
@@ -946,7 +946,7 @@ export function CmsCategories() {
   };
 
   const save = async () => {
-    if (!form.name.trim() || !form.slug.trim()) return alert('Name and slug are required.');
+    if (!form.name.trim() || !form.slug.trim()) { showToast('Name and slug are required.', 'warning'); return; }
     setSaving(true);
     if (editing) {
       await categoriesApi.update(editing.id, form);

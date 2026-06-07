@@ -1,11 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useBatches, useRecipes, useRecipeSteps } from '../../hooks/useBos';
 import { batchesApi } from '../../lib/bosApi';
-import { fmtINR, BatchStatus, Batch } from '../../types/bos';
+import { BatchStatus, Batch } from '../../types/bos';
 import { useAuth } from '../../hooks';
-import { supabase } from '../../lib/supabase';
 import { logAudit } from '../../lib/auditLogger';
 import { useCompleteProduction } from '../../hooks/useProduction';
+import { showToast } from '../../lib/toast';
 
 export function Batches() {
   const { items: batches, loading: bLoading, reload: bReload } = useBatches();
@@ -71,8 +71,8 @@ export function Batches() {
 
   const saveBatch = async () => {
     const pqty = parseFloat(bForm.plannedQty) || 0;
-    if (!bForm.recipeId) return alert('Select a recipe');
-    if (pqty <= 0) return alert('Planned qty must be > 0');
+    if (!bForm.recipeId) { showToast('Select a recipe', 'warning'); return; }
+    if (pqty <= 0) { showToast('Planned qty must be > 0', 'warning'); return; }
 
     const batchNo = bForm.batchNo.trim() || `B-${Date.now().toString(36).toUpperCase()}`;
 
@@ -101,13 +101,13 @@ export function Batches() {
         created_by: user?.name || null
       });
 
-      alert(`✅ Batch ${batchNo} created`);
+      showToast(`✅ Batch ${batchNo} created`, 'success');
       logAudit({ user_name: user?.name, action: 'INSERT', module: 'Production', record_label: batchNo, details: `New batch created: ${productName} | Line: ${bForm.line || 'N/A'}` });
       setIsBatchModalOpen(false);
       setBForm({ batchNo:'', recipeId:'', product:'', plannedQty:'', unit:'kg', line:'', operator:user?.name||'', overhead:'', labour:'', notes:'' });
       await bReload(); // FIX-5: await so list refreshes before user can click again
-    } catch (e: any) {
-      alert(`Error saving batch: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error saving batch: ${(e as Error).message}`, 'error');
     } finally {
       setSaving(false);
     }
@@ -115,7 +115,7 @@ export function Batches() {
 
   const moveBatch = async (id: string, nextStatus: BatchStatus) => {
     if (nextStatus === 'QC_HOLD' && !canComplete) {
-      return alert('QC or Manager role required to complete a batch');
+      showToast('QC or Manager role required to complete a batch', 'success'); return;
     }
 
     if (nextStatus === 'QC_HOLD') {
@@ -123,11 +123,11 @@ export function Batches() {
       const { batchesApi: bApi } = await import('../../lib/bosApi');
       const { data: fresh, error: fetchErr } = await bApi.byId(id);
       if (fetchErr || !fresh) {
-        alert('Could not fetch batch status. Please refresh.');
+        showToast('Could not fetch batch status. Please refresh.', 'warning');
         return;
       }
       if (fresh.status !== 'RUNNING') {
-        alert('Batch is no longer RUNNING — please refresh the page.');
+        showToast('Batch is no longer RUNNING — please refresh the page.', 'warning');
         return;
       }
       setCForm({ 
@@ -150,21 +150,22 @@ export function Batches() {
       }
       await batchesApi.update(id, payload);
       bReload();
-    } catch (e: any) {
-      alert(`Error moving batch: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error moving batch: ${(e as Error).message}`, 'error');
     }
   };
 
   const completeBatch = async () => {
     const actual = parseFloat(cForm.actualQty) || 0;
     const reject = parseFloat(cForm.rejectQty) || 0;
-    if (actual <= 0) return alert('Actual qty required');
+    if (actual <= 0) { showToast('Actual qty required', 'warning'); return; }
 
     setSaving(true);
     try {
-      const { data: b, error: fetchErr } = await batchesApi.byId(cForm.id);
-      if (fetchErr || !b || b.status !== 'RUNNING') {
-        alert('Batch already processed or status changed. Please refresh.');
+      const bRes = await batchesApi.byId(cForm.id);
+      const b = bRes.data;
+      if (!b || b.status !== 'RUNNING') {
+        showToast('Batch already processed or status changed. Please refresh.', 'warning');
         setIsCompleteModalOpen(false);
         bReload();
         return;
@@ -198,15 +199,23 @@ export function Batches() {
 
       // Still update dynamic params and notes on the batch
       await batchesApi.update(cForm.id, {
+        actual_qty: actual,
+        reject_qty: reject,
+        yield_pct: b.planned_qty > 0 ? (actual / b.planned_qty) * 100 : 0,
+        actual_rm_cost: rmCost || undefined,
+        labour: laborCost,
+        overhead: overhead,
+        total_cost: totalCost,
+        unit_cost: unitCost,
         dynamic_params: parsedParams,
         notes: cForm.notes
       });
 
-      alert(`✅ Batch completed — FG lot created (Quarantined) & RM deducted.`);
+      showToast(`✅ Batch completed — FG lot created (Quarantined, 'success') & RM deducted.`);
       setIsCompleteModalOpen(false);
       await bReload();
-    } catch (e: any) {
-      alert(`Error completing batch: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error completing batch: ${(e as Error).message}`, 'error');
     } finally {
       setSaving(false);
     }
@@ -219,7 +228,7 @@ export function Batches() {
       const { fgLotsApi } = await import('../../lib/bosApi');
       const { data: fgLots } = await fgLotsApi.byBatch(id);
       if (fgLots && fgLots.length > 0) {
-        return alert('Cannot delete — FG lots exist for this batch. Reject the batch via QC first.');
+        showToast('Cannot delete — FG lots exist for this batch. Reject the batch via QC first.', 'error'); return;
       }
       
       const { batchComponentsApi: bcApi } = await import('../../lib/bosApi');
@@ -232,8 +241,8 @@ export function Batches() {
 
       await batchesApi.remove(id);
       bReload();
-    } catch (e: any) {
-      alert(`Error deleting batch: ${e.message}`);
+    } catch (e: unknown) {
+      showToast(`Error deleting batch: ${(e as Error).message}`, 'error');
     }
   };
 

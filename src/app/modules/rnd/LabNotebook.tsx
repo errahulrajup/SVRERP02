@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { useRndNotebooks, useRndTrials, useAuth } from '../../hooks';
 import { rndNotebooksApi } from '../../lib/rndApi';
 import { fmtDate } from '../../types/rnd';
+import { showToast } from '../../lib/toast';
 
 export function LabNotebook() {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ export function LabNotebook() {
   const loading = eLoad || tLoad;
 
   const handleSave = async () => {
-    if (!form.title.trim() || !form.content.trim()) return alert('Title and Content are required');
+    if (!form.title.trim() || !form.content.trim()) { showToast('Title and Content are required', 'warning'); return; }
     setSaving(true);
     try {
       await rndNotebooksApi.create({
@@ -35,7 +36,7 @@ export function LabNotebook() {
       setIsFormOpen(false);
       setForm({ title: '', trial_id: '', content: '', tags: '', is_pinned: false });
       reload();
-    } catch (e: any) { alert('Error: ' + e.message); }
+    } catch (e: unknown) { showToast('Error: ' + (e as Error).message, 'error'); }
     finally { setSaving(false); }
   };
 
@@ -45,7 +46,7 @@ export function LabNotebook() {
     try {
       await rndNotebooksApi.remove(id);
       await reload();
-    } catch (e: any) { alert('Error: ' + e.message); }
+    } catch (e: unknown) { showToast('Error: ' + (e as Error).message, 'error'); }
     finally { setDeletingId(null); }
   };
 

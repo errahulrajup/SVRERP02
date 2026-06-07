@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useCapa } from '../../hooks/useBos';
 import { capaApi } from '../../lib/bosApi';
 import { Capa as CapaType, CapaStatus, fmtDate, CAPA_STATUS_LABEL } from '../../types/bos';
 import { useAuth } from '../../hooks';
+import { showToast } from '../../lib/toast';
 
 const CAPA_SOURCES = ["QC Rejection", "Customer Complaint", "FSSAI Inspection", "Internal Audit", "Third Party Audit", "CCP Deviation", "Near Miss", "Supplier Issue", "Process Observation", "Other"];
 const ROOT_CAUSE_METHODS = ["5 Whys", "Fishbone (Ishikawa)", "Fault Tree Analysis", "Brainstorming", "Other"];
@@ -49,7 +50,7 @@ export function Capa() {
   ];
 
   const handleSave = async () => {
-    if (!form.desc.trim() || !form.targetDate) return alert('Description and target date required');
+    if (!form.desc.trim() || !form.targetDate) { showToast('Description and target date required', 'warning'); return; }
     setSaving(true);
     try {
       const capaNo = `CAPA-${new Date().getFullYear()}-${String(capas.length + 1).padStart(3, "0")}`;
@@ -76,11 +77,11 @@ export function Capa() {
         verified_by: null,
         verified_at: null
       });
-      alert(`CAPA ${capaNo} raised successfully`);
+      showToast(`CAPA ${capaNo} raised successfully`, 'success');
       setIsModalOpen(false);
       setForm({ source: CAPA_SOURCES[0], owner: user?.name || '', targetDate: '', rcaMethod: ROOT_CAUSE_METHODS[0], desc: '', rcaText: '', corr: '', prev: '' });
       reload();
-    } catch (e: any) { alert(`Error saving CAPA: ${e.message}`); }
+    } catch (e: unknown) { showToast(`Error saving CAPA: ${(e as Error).message}`, 'error'); }
     finally { setSaving(false); }
   };
 
@@ -95,7 +96,7 @@ export function Capa() {
 
     if (next === 'CLOSED') {
       const note = prompt("Effectiveness verification note (required to close):");
-      if (!note) return alert("Verification note required to close CAPA");
+      if (!note) { showToast("Verification note required to close CAPA", 'warning'); return; }
       verificationNote = note;
       closedAt = new Date().toISOString();
       closedBy = user?.name || null;
@@ -106,9 +107,9 @@ export function Capa() {
         status: next as CapaStatus, 
         ...(verificationNote ? { verification_note: verificationNote, closed_at: closedAt, closed_by: closedBy } : {}) 
       });
-      alert(`CAPA moved to: ${next}`);
+      showToast(`CAPA moved to: ${next}`, 'info');
       reload();
-    } catch (e: any) { alert(`Error updating status: ${e.message}`); }
+    } catch (e: unknown) { showToast(`Error updating status: ${(e as Error).message}`, 'error'); }
   };
 
   if (loading) return <div style={{ padding: 40, color: '#9AAF96' }}>Loading CAPA Data...</div>;

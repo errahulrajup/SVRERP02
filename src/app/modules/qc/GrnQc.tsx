@@ -1,9 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useGrns } from '../../hooks/useBos';
-import { grnsApi, lotsApi, expensesApi, stockLedgerApi } from '../../lib/bosApi';
-import { fmtINR, daysUntil, today, GrnStatus, Grn } from '../../types/bos';
+import { fmtINR, daysUntil, GrnStatus, Grn } from '../../types/bos';
 import { useAuth } from '../../hooks';
 import { supabase } from '../../lib/supabase';
+import { showToast } from '../../lib/toast';
 
 export function GrnQc() {
   const { items: grns, loading, reload } = useGrns();
@@ -40,17 +40,17 @@ export function GrnQc() {
       
       if (error) throw error;
       
-      alert(`✅ GRN approved — stock lot created, ${fmtINR(g.total_cost)} logged to P&L`);
+      showToast(`✅ GRN approved — stock lot created, ${fmtINR(g.total_cost)} logged to P&L`, 'success');
       reload();
     } catch (e: any) {
-      alert(`Error approving GRN: ${e.message}`);
+      showToast(`Error approving GRN: ${e.message}`, 'error');
     } finally {
       setProcessingId(null);
     }
   };
 
   const confirmReject = async () => {
-    if (!rejectId || !rejectReason.trim()) return alert('Reason required');
+    if (!rejectId || !rejectReason.trim()) return showToast('Reason required', 'warning');
     setProcessingId(rejectId);
     try {
       const { error } = await supabase.rpc('reject_grn', {
@@ -63,7 +63,7 @@ export function GrnQc() {
       setRejectReason('');
       reload();
     } catch(e:any) { 
-      alert(`Error rejecting: ${e.message}`); 
+      showToast(`Error rejecting: ${e.message}`, 'error'); 
     } finally { 
       setProcessingId(null); 
     }

@@ -3,7 +3,7 @@ import { apiRequest } from './api';
 import type {
   Grn, Lot, FgLot, Batch, BatchComponent, QcCheck, Capa, HaccpCcp, Prp, Recall, CustomerComplaint,
   FssaiRecord, FssaiAudit, Invoice, Payment, Expense, Dispatch, Recipe, RecipeInput, RecipeStep, RecipeQcParam, Product, AllergenMatrix,
-  AllergenRecord, GrnStatus, BatchStatus, CapaStatus, DispatchStatus, InvoiceStatus, StockLedgerTransaction,
+  GrnStatus, BatchStatus, CapaStatus, DispatchStatus, InvoiceStatus, StockLedgerTransaction,
   Item, Sku, ItemRelationship, Brand, Site,
   Pallet, PalletItem, DispatchOrder, DispatchLine,
   CostCenter, UtilityConsumption, LaborHours, OverheadAllocation,

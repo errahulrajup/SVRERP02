@@ -6,7 +6,7 @@ import { showToast } from '../../lib/toast';
 export function AdminUsers() {
   const { user } = useAuth();
   const [users, setUsers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
   const [form, setForm] = useState({ 
@@ -17,19 +17,17 @@ export function AdminUsers() {
   const canManage = user?.role === 'ADMIN';
 
   const loadUsers = async () => {
-    setLoading(true);
     const { data } = await supabase
       .from('v_user_training_status')
       .select('*')
       .order('name');
     setUsers(data || []);
-    setLoading(false);
   };
 
   useEffect(() => { loadUsers(); }, []);
 
   const handleSave = async () => {
-    if (!form.email || !form.name) return alert('Name and email required');
+    if (!form.email || !form.name) return showToast('Name and email required', 'warning');
     
     try {
       if (editingUser) {
@@ -43,7 +41,7 @@ export function AdminUsers() {
         showToast('User role updated', 'success');
       } else {
         // Invite user via Supabase Auth
-        const { data, error } = await supabase.auth.admin.inviteUserByEmail(form.email, {
+        const { error } = await supabase.auth.admin.inviteUserByEmail(form.email, {
           data: { name: form.name, role: form.role, department: form.department, employee_code: form.employee_code }
         });
         if (error) throw error;
@@ -51,15 +49,12 @@ export function AdminUsers() {
       }
       setIsModalOpen(false);
       loadUsers();
-    } catch (e: any) {
-      showToast(`Error: ${e.message}`, 'error');
+    } catch (e: unknown) {
+      showToast(`Error: ${(e as Error).message}`, 'error');
     }
   };
 
-  const toggleActive = async (id: string, isActive: boolean) => {
-    await supabase.from('profiles').update({ is_active: !isActive }).eq('id', id);
-    loadUsers();
-  };
+
 
   if (!canManage) return <div style={{ padding: 40 }}>Access denied. ADMIN only.</div>;
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { locationsApi, stockTransfersApi, wastageLogsApi } from '../../lib/bosApi';
 
 export function StorageLocations() {

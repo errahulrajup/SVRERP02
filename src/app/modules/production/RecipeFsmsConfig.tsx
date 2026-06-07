@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { recipeFsmsCcpApi, recipeFsmsPrpApi } from '../../lib/bosApi';
+import { showToast } from '../../lib/toast';
+import { captureException } from '../../lib/observability';
 
 export function RecipeFsmsConfig({ recipeId, canEdit }: { recipeId: string, canEdit: boolean }) {
   const [ccps, setCcps] = useState<any[]>([]);
@@ -21,7 +23,7 @@ export function RecipeFsmsConfig({ recipeId, canEdit }: { recipeId: string, canE
       const prpRes = await recipeFsmsPrpApi.byRecipe(recipeId);
       if (prpRes.data) setPrps(prpRes.data);
     } catch (e) {
-      console.error(e);
+      captureException(e, { level: 'error', tags: { area: 'module' } });
     } finally {
       setLoading(false);
     }
@@ -30,7 +32,7 @@ export function RecipeFsmsConfig({ recipeId, canEdit }: { recipeId: string, canE
   useEffect(() => { loadData(); }, [loadData]);
 
   const saveCcp = async () => {
-    if (!ccpForm.ccp_no || !ccpForm.ccp_name) return alert('CCP No and Name required');
+    if (!ccpForm.ccp_no || !ccpForm.ccp_name) { showToast('CCP No and Name required', 'warning'); return; }
     await recipeFsmsCcpApi.create({ ...ccpForm, recipe_id: recipeId });
     setCcpForm({ ccp_no: '', ccp_name: '', parameter: '', critical_limit: '', hazard: '', control_measure: '' });
     setShowCcpForm(false);
@@ -44,7 +46,7 @@ export function RecipeFsmsConfig({ recipeId, canEdit }: { recipeId: string, canE
   };
 
   const savePrp = async () => {
-    if (!prpForm.prp_type || !prpForm.prp_name) return alert('PRP Type and Name required');
+    if (!prpForm.prp_type || !prpForm.prp_name) { showToast('PRP Type and Name required', 'warning'); return; }
     await recipeFsmsPrpApi.create({ ...prpForm, recipe_id: recipeId });
     setPrpForm({ prp_type: '', prp_name: '', frequency: '', target_area: '', procedure: '' });
     setShowPrpForm(false);

@@ -1,8 +1,9 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useFssai, useFssaiAudits } from '../../hooks/useBos';
 import { fssaiApi, fssaiAuditsApi } from '../../lib/bosApi';
-import { FssaiRecord, FssaiDocType, fmtDate } from '../../types/bos';
+import { FssaiDocType, fmtDate } from '../../types/bos';
 import { useAuth } from '../../hooks';
+import { showToast } from '../../lib/toast';
 
 const DOC_TYPES = ["FSSAI License", "FSSAI Registration", "State NOC", "Fire NOC", "Factory License", "MSME Certificate", "GST Registration", "ISO Certificate", "FSSC 22000", "Pollution NOC", "Water Testing Report", "Other"];
 
@@ -94,11 +95,11 @@ export function FssaiLog() {
         notes: docForm.notes.trim() || null,
         file_url: null
       });
-      alert('Document saved');
+      showToast('Document saved', 'success');
       setIsDocFormOpen(false);
       setDocForm({ docType: DOC_TYPES[0], docNo: '', issueDate: '', expiryDate: '', notes: '' });
       dReload();
-    } catch (e: any) { alert(`Error: ${e.message}`); }
+    } catch (e: unknown) { showToast(`Error: ${(e as Error).message}`, 'error'); }
     finally { setSaving(false); }
   };
 
@@ -107,11 +108,11 @@ export function FssaiLog() {
     try {
       await fssaiApi.remove(id);
       dReload();
-    } catch (e: any) { alert(`Error: ${e.message}`); }
+    } catch (e: unknown) { showToast(`Error: ${(e as Error).message}`, 'error'); }
   };
 
   const saveAudit = async () => {
-    if (!auditForm.auditDate) return alert('Date required');
+    if (!auditForm.auditDate) { showToast('Date required', 'warning'); return; }
     setSaving(true);
     try {
       await fssaiAuditsApi.create({
@@ -121,11 +122,11 @@ export function FssaiLog() {
         status: auditForm.status,
         findings: auditForm.findings.trim() || null
       });
-      alert('Audit logged');
+      showToast('Audit logged', 'success');
       setIsAuditFormOpen(false);
       setAuditForm({ auditDate: new Date().toISOString().slice(0, 10), auditType: 'Internal Audit', auditor: '', status: 'Open', findings: '' });
       aReload();
-    } catch (e: any) { alert(`Error: ${e.message}`); }
+    } catch (e: unknown) { showToast(`Error: ${(e as Error).message}`, 'error'); }
     finally { setSaving(false); }
   };
 

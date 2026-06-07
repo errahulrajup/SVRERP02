@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { DmsDocument, DmsCompany, DmsDocumentStats, DocStatus } from '../types/dms';
 import { dmsDocumentsApi, dmsCompaniesApi } from '../lib/dmsApi';
+import { showToast } from '../lib/toast';
 
 // ── Default company config (used before DB record exists) ─────────────────────
 export const DEFAULT_COMPANY: Omit<DmsCompany, 'id' | 'created_at'> = {
@@ -137,7 +138,7 @@ export function useDocumentActions(onSuccess?: () => void) {
     setBusy(true);
     const { error } = await dmsDocumentsApi.updateStatus(id, 'cancelled');
     setBusy(false);
-    if (error) { alert(`Failed to cancel: ${error.message}`); return; }
+    if (error) { showToast(`Failed to cancel: ${error.message}`, 'error'); return; }
     onSuccess?.();
   }, [onSuccess]);
 
@@ -145,7 +146,7 @@ export function useDocumentActions(onSuccess?: () => void) {
     setBusy(true);
     const { error } = await dmsDocumentsApi.updateStatus(id, 'draft');
     setBusy(false);
-    if (error) { alert(`Failed to restore: ${error.message}`); return; }
+    if (error) { showToast(`Failed to restore: ${error.message}`, 'error'); return; }
     onSuccess?.();
   }, [onSuccess]);
 
@@ -153,7 +154,7 @@ export function useDocumentActions(onSuccess?: () => void) {
     setBusy(true);
     const { error } = await dmsDocumentsApi.remove(id);
     setBusy(false);
-    if (error) { alert(`Failed to delete: ${error.message}`); return; }
+    if (error) { showToast(`Failed to delete: ${error.message}`, 'error'); return; }
     onSuccess?.();
   }, [onSuccess]);
 
@@ -161,7 +162,7 @@ export function useDocumentActions(onSuccess?: () => void) {
     setBusy(true);
     const { error } = await dmsDocumentsApi.updateStatus(id, 'pending_approval');
     setBusy(false);
-    if (error) { alert(`Failed to submit for approval: ${error.message}`); return; }
+    if (error) { showToast(`Failed to submit for approval: ${error.message}`, 'error'); return; }
     onSuccess?.();
   }, [onSuccess]);
 
@@ -169,7 +170,7 @@ export function useDocumentActions(onSuccess?: () => void) {
     setBusy(true);
     const { error } = await dmsDocumentsApi.updateStatus(id, 'approved', userId);
     setBusy(false);
-    if (error) { alert(`Failed to approve: ${error.message}`); return; }
+    if (error) { showToast(`Failed to approve: ${error.message}`, 'error'); return; }
     onSuccess?.();
   }, [onSuccess]);
 
@@ -177,7 +178,7 @@ export function useDocumentActions(onSuccess?: () => void) {
     setBusy(true);
     const { error } = await dmsDocumentsApi.updateStatus(id, 'issued');
     setBusy(false);
-    if (error) { alert(`Failed to issue: ${error.message}`); return; }
+    if (error) { showToast(`Failed to issue: ${error.message}`, 'error'); return; }
     onSuccess?.();
   }, [onSuccess]);
 
@@ -185,7 +186,7 @@ export function useDocumentActions(onSuccess?: () => void) {
     setBusy(true);
     const { error } = await dmsDocumentsApi.updateStatus(id, 'rejected');
     setBusy(false);
-    if (error) { alert(`Failed to reject: ${error.message}`); return; }
+    if (error) { showToast(`Failed to reject: ${error.message}`, 'error'); return; }
     onSuccess?.();
   }, [onSuccess]);
 

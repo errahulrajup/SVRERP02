@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuditSchedules } from '../../hooks/useBos';
 import { auditSchedulesApi } from '../../lib/bosApi';
 import { useAuth } from '../../hooks';
+import { showToast } from '../../lib/toast';
 
 const AUDIT_TYPES = ['Internal', 'External', 'Regulatory', 'Supplier', 'Customer', 'FSSAI'];
 const STATUSES    = ['Scheduled', 'In Progress', 'Completed', 'Cancelled'];
@@ -19,26 +20,26 @@ export function AuditSchedules() {
   const canEdit = user?.role === 'ADMIN' || user?.role === 'MANAGER';
 
   const handleSave = async () => {
-    if (!form.audit_no.trim()) return alert('Audit No. required');
-    if (!form.scheduled_date) return alert('Scheduled date required');
+    if (!form.audit_no.trim()) { showToast('Audit No. required', 'warning'); return; }
+    if (!form.scheduled_date) { showToast('Scheduled date required', 'success'); return; }
     setSaving(true);
     try {
       await auditSchedulesApi.create({ ...form, created_by: user?.id || null });
-      alert(`✅ Audit ${form.audit_no} scheduled`);
+      showToast(`✅ Audit ${form.audit_no} scheduled`, 'success');
       setIsOpen(false);
       setForm({ audit_no: '', audit_type: 'Internal', department: '', auditor: '', scheduled_date: '', scope: '', status: 'Scheduled', notes: '' });
       reload();
-    } catch (e: any) { alert(`Error: ${e.message}`); }
+    } catch (e: unknown) { showToast(`Error: ${(e as Error).message}`, 'error'); }
     finally { setSaving(false); }
   };
 
   const handleStatusChange = async (id: string, status: string) => {
-    try { await auditSchedulesApi.update(id, { status }); reload(); } catch (e: any) { alert(e.message); }
+    try { await auditSchedulesApi.update(id, { status }); reload(); } catch (e: unknown) { showToast((e as Error).message, 'info'); }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this audit?')) return;
-    try { await auditSchedulesApi.remove(id); reload(); } catch (e: any) { alert(e.message); }
+    try { await auditSchedulesApi.remove(id); reload(); } catch (e: unknown) { showToast((e as Error).message, 'info'); }
   };
 
   if (loading) return <div style={{ padding: 40, color: '#9AAF96' }}>Loading Audit Schedules...</div>;

@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { supabase } from './setup';
 
 describe('Inventory FEFO Allocation Integrity', () => {
   it('should be able to connect to Supabase staging environment', async () => {
     // Simple ping to ensure our staging config is working
-    const { data, error } = await supabase.rpc('hello_world');
+    const { error } = await supabase.rpc('hello_world');
     // Just ensuring we don't get network ENOTFOUND errors
     expect(error?.message).not.toContain('ENOTFOUND');
   });

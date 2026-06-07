@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   useBatches, useGrns, useLots, useInvoices, useDispatches, useQcChecks 
 } from '../../hooks/useBos';
-import { stockLedgerApi } from '../../lib/bosApi';
 import { fmtDate } from '../../types/bos';
+import { showToast } from '../../lib/toast';
 
 export function Traceability() {
   const { items: batches, loading: bLoading } = useBatches();
@@ -24,7 +24,7 @@ export function Traceability() {
   const loading = bLoading || gLoading || iLoading || dLoading || qLoading || lLoading;
 
   const runTrace = async () => {
-    if (!query.trim()) return alert('Enter a search term');
+    if (!query.trim()) { showToast('Enter a search term', 'warning'); return; }
     setResultHtml(<div style={{ padding: 20, textAlign: 'center', color: '#9AAF96' }}>Searching...</div>);
 
     const q = query.toLowerCase().trim();
@@ -127,10 +127,10 @@ export function Traceability() {
         try {
           // FSSAI Traceability - Backend RPC required
           throw new Error('Backend RPC get_batch_consumed_lots is required for accurate backward traceability.');
-        } catch (e: any) {
+        } catch (e: unknown) {
           nodes.push(
             <div key="warn" style={{ margin: '8px 0 12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, padding: '10px 14px', fontSize: 12, color: '#F87171' }}>
-              <strong>⚠ Traceability Limitation:</strong> {e.message}
+              <strong>⚠ Traceability Limitation:</strong> {(e as Error).message}
             </div>
           );
             const bProd = (batch.product || '').toLowerCase();

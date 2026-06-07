@@ -10,7 +10,7 @@
  *  5. Custom phase — user can type a custom phase instead of picking from list
  *  6. Cost auto-save — updates whenever composition changes
  *  7. Design — uses bos-design-system.css classes throughout
- *  8. Toast notifications instead of alert()
+ *  8. Toast notifications instead of showToast(, 'info')
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -20,8 +20,6 @@ import {
   rndFormulasApi, rndFormulaItemsApi, rndIngredientsApi,
   rndFormulaParamsApi, rndMasterParamsApi
 } from '../../lib/rndApi';
-import { recipesApi, recipeInputsApi, recipeQcParamsApi } from '../../lib/bosApi';
-import { useAuth } from '../../hooks';
 import type {
   RndFormula, RndFormulaItemWithIngredient, RndFormulaStatus,
   RndIngredient, RndFormulaParam, RndMasterParameter
@@ -61,7 +59,6 @@ function Toast({ msg, type, onClose }: { msg: string; type: 'success'|'error'; o
 export function FormulaBuilder() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   /* ── State ── */
   const [formula, setFormula]       = useState<RndFormula | null>(null);
@@ -160,8 +157,8 @@ export function FormulaBuilder() {
       if (ingRes.data?.length) {
         setNewItem(prev => prev.ingredient_id ? prev : ({ ...prev, ingredient_id: ingRes.data![0].id }));
       }
-    } catch (e: any) {
-      showToast('Error loading formula: ' + e.message, 'error');
+    } catch (e: unknown) {
+      showToast('Error loading formula: ' + (e as Error).message, 'error');
     } finally {
       setLoading(false);
     }
@@ -194,8 +191,8 @@ export function FormulaBuilder() {
       if (res.error) throw new Error(res.error.message);
       setFormula(res.data!);
       showToast('Formula saved ✓');
-    } catch (e: any) {
-      showToast(e.message, 'error');
+    } catch (e: unknown) {
+      showToast((e as Error).message, 'error');
     } finally {
       setSavingMeta(false);
     }
@@ -227,8 +224,8 @@ export function FormulaBuilder() {
       setNewItem(prev => ({ ...prev, percentage: '', qty_kg: '', notes: '', tolerance_pct: '0' }));
       load();
       showToast('Ingredient added ✓');
-    } catch (e: any) {
-      showToast(e.message, 'error');
+    } catch (e: unknown) {
+      showToast((e as Error).message, 'error');
     } finally {
       setAddingItem(false);
     }
@@ -297,8 +294,8 @@ export function FormulaBuilder() {
       setEditParamId(null);
       load();
       showToast(editParamId ? 'Parameter updated ✓' : 'Parameter added ✓');
-    } catch (e: any) {
-      showToast(e.message, 'error');
+    } catch (e: unknown) {
+      showToast((e as Error).message, 'error');
     } finally {
       setAddingParam(false);
     }
@@ -333,8 +330,8 @@ export function FormulaBuilder() {
       });
       showToast('Formula submitted for validation ✓');
       load();
-    } catch (e: any) {
-      showToast('Submission failed: ' + e.message, 'error');
+    } catch (e: unknown) {
+      showToast('Submission failed: ' + (e as Error).message, 'error');
     } finally {
       setPromoting(false);
     }
