@@ -23,61 +23,54 @@ a, button { font: inherit; }
 img { max-width: 100%; display: block; }
 
 :root {
-  /* ── Astrological Compatible Theme — SVR ERP v6.0 ── */
+  /* ── PLANTSMÖR Brand Theme — SVR ERP v7.0 ── */
   
-  /* 1. Primary Palette (85-90% compatibility) — Forest/Olive/Leaf Greens (~70% visual weight) */
-  --theme-forest-green:  #060D08;
-  --bg-main:             #060D08; /* Primary Deep Forest Green */
-  --bg-second:           #0B160E; /* Dark Olive/Forest tone */
-  --bg-card:             #112015; /* Leaf Green soft base */
-  --bg-card2:            #16281B;
-  --bg-elevated:         #1C3322;
-  --bg-hover:            #213E28;
+  /* 1. Primary Backgrounds — Deep Brand Navy Blue (~70% visual weight) */
+  --theme-forest-green:  #071526; /* Navy Blue background fallback */
+  --bg-main:             #071526; /* PLANTSMÖR Deep Navy Blue */
+  --bg-second:           #0C1D33; /* Darker navy panel tone */
+  --bg-card:             #112540; /* Navy Blue card base */
+  --bg-card2:            #162E4F;
+  --bg-elevated:         #1C3B61;
+  --bg-hover:            #214773;
   
-  --theme-olive:         #4B5320; /* Olive Green */
-  --theme-leaf:          #2E7D32;  /* Leaf Green */
-  --sage:                #7BA97B;  /* Sage Green */
-  --sage-soft:           rgba(123,169,123,0.10);
-  --sage-border:         rgba(123,169,123,0.18);
-  --text-3:              #86A286;
-  --text-4:              #4D664D;
-
-  /* 2. Secondary Palette (70-82% compatibility) — White & Cream/Ivory (~20% visual weight for high contrast) */
-  --text-1:              #FFFFFF; /* Pure White (82%) */
-  --text-2:              #FAF8F5; /* Cream White / Ivory (80%) */
+  /* 2. Secondary Palette — Cream/Ivory & Pure White (~20% visual weight for high readability) */
+  --text-1:              #FFFFFF; /* Pure White */
+  --text-2:              #FAF8F5; /* Cream White / Ivory */
   --theme-cream:         #FAF8F5;
   --theme-ivory:         #FFFFF0;
+  
+  /* Slate-blue midtones for subtexts & labels */
+  --text-3:              #A5B8D1; /* Slate blue-gray */
+  --text-4:              #4A607A;
 
-  /* 3. Accent Palette (65-75% compatibility) — Yellow & Golden Accents (~10% visual weight for highlights) */
-  --gold:                #EAB308; /* Yellow Accent (75%) */
+  /* 3. Accent Palette — Plantsmör Golden-Yellow (~10% visual weight for highlights) */
+  --gold:                #EAB308; /* PLANTSMÖR Golden-Yellow */
   --gold-hover:          #CA8A04;
   --gold-soft:           rgba(234,179,8,0.10);
   --gold-glow:           rgba(234,179,8,0.22);
   --gold-dim:            rgba(234,179,8,0.06);
   --theme-yellow:        #FEF08A; /* Light Yellow Accent */
-  
-  /* 4. Saturn / Structure (75-85% compatibility) — Navy Blue / Slate Blue */
-  --theme-navy:          #0F172A; /* Navy Blue */
-  --theme-navy-soft:     rgba(15,23,42,0.15);
-  --theme-navy-border:   rgba(15,23,42,0.3);
-  --theme-slate-blue:    #475569; /* Slate Blue */
-  --theme-teal:          #0D9488;
-  --theme-teal-soft:     rgba(13,148,136,0.12);
-  --theme-teal-border:   rgba(13,148,136,0.25);
 
+  /* 4. Plant-Based / Vegetarian Accents — Leaf Green */
+  --theme-leaf:          #2E7D32;  /* Leaf Green veg symbol style */
+  --sage:                #4ADE80;  /* Bright Leaf Green */
+  --sage-soft:           rgba(74,222,128,0.08);
+  --sage-border:         rgba(74,222,128,0.20);
+  
   /* 5. Best Metals (Stainless Steel / Silver) — Glimmer & Borders */
   --theme-silver:        #CBD5E1; /* Stainless Steel / Silver */
   --theme-silver-soft:   rgba(203,213,225,0.12);
   --border-silver:       rgba(203,213,225,0.18);
 
-  /* Warning state (Soft Maroon, 52% - avoids harsh red-black combos) */
+  /* Warning state (Soft Maroon — avoids harsh red-black combos) */
   --theme-maroon:        #5C2525;
   --theme-maroon-text:   #FFB8B8;
   --theme-maroon-border: rgba(220,100,100,0.3);
 
   /* Borders */
-  --border:              rgba(123,169,123,0.08);
-  --border-light:        rgba(123,169,123,0.16);
+  --border:              rgba(165,184,209,0.08);
+  --border-light:        rgba(165,184,209,0.16);
   --border-gold:         rgba(234,179,8,0.20);
 
   --radius-sm:  4px;
@@ -162,7 +155,7 @@ img { max-width: 100%; display: block; }
 
 /* ── Prod Card ── */
 .prod-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xl); overflow: hidden; transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s; }
-.prod-card:hover { transform: translateY(-8px); box-shadow: 0 24px 64px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,193,7,0.18); border-color: var(--border-gold); }
+.prod-card:hover { transform: translateY(-8px); box-shadow: 0 24px 64px rgba(0,0,0,0.65), 0 0 0 1px rgba(234,179,8,0.18); border-color: var(--border-gold); }
 .prod-card__img  { width: 100%; aspect-ratio: 4/3; object-fit: cover; transition: transform 0.5s; }
 .prod-card:hover .prod-card__img { transform: scale(1.05); }
 .prod-card__body { padding: 24px; }
@@ -170,7 +163,7 @@ img { max-width: 100%; display: block; }
 /* ── Form fields ── */
 .field { background: var(--bg-card2); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 5px 10px; font-family: 'DM Sans',sans-serif; font-size: var(--t-sm); color: var(--text-1); width: 100%; transition: border-color 0.2s, box-shadow 0.2s; outline: none; }
 .field::placeholder { color: var(--text-3); }
-.field:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(255,193,7,0.10); }
+.field:focus { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-soft); }
 .field-label { font-family: 'DM Sans',sans-serif; font-size: var(--t-xs); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); display: block; margin-bottom: 2px; }
 
 /* ── Status badges ── */
@@ -188,8 +181,8 @@ img { max-width: 100%; display: block; }
 .glow-bar { height: 1px; background: linear-gradient(90deg, transparent, var(--gold), transparent); opacity: 0.35; }
 
 /* ── Logo glow ── */
-.logo-glow { filter: drop-shadow(0 0 10px rgba(255,193,7,0.4)); transition: filter 0.3s; }
-.logo-glow:hover { filter: drop-shadow(0 0 20px rgba(255,193,7,0.7)); }
+.logo-glow { filter: drop-shadow(0 0 10px rgba(234,179,8,0.4)); transition: filter 0.3s; }
+.logo-glow:hover { filter: drop-shadow(0 0 20px rgba(234,179,8,0.7)); }
 
 /* ── Ticker ── */
 .ticker-track { display: flex; gap: 48px; align-items: center; padding: 14px 0; animation: tickerScroll 32s linear infinite; width: max-content; }
@@ -200,7 +193,7 @@ img { max-width: 100%; display: block; }
 .wa-float:hover { transform: translateY(-3px) scale(1.06); box-shadow: 0 8px 32px rgba(37,211,102,0.55); }
 
 /* ── Admin sidebar ── */
-.adm-sidebar { width: var(--sidebar-w); background: #050C07; border-right: 1px solid var(--border); height: 100vh; position: fixed; top: 0; left: 0; display: flex; flex-direction: column; z-index: 200; transition: transform 0.3s; }
+.adm-sidebar { width: var(--sidebar-w); background: #0B1E36; border-right: 1px solid var(--border); height: 100vh; position: fixed; top: 0; left: 0; display: flex; flex-direction: column; z-index: 200; transition: transform 0.3s; }
 .adm-content { margin-left: var(--sidebar-w); min-height: 100vh; background: var(--bg-main); }
 .adm-nav-link { display: flex; align-items: center; gap: 8px; padding: 6px 10px; font-family: 'DM Sans',sans-serif; font-size: var(--t-sm); font-weight: 500; color: var(--text-3); border: none; background: none; cursor: pointer; width: 100%; text-align: left; text-decoration: none; transition: color 0.2s, background 0.2s; border-radius: var(--radius-sm); margin: 1px 4px; width: calc(100% - 8px); }
 .adm-nav-link:hover  { color: var(--text-1); background: rgba(255,255,255,0.04); }

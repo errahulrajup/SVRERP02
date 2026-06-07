@@ -25,11 +25,11 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div style={{
           minHeight: '100vh', display: 'flex', alignItems: 'center',
-          justifyContent: 'center', background: '#0B0B0B', padding: '24px',
+          justifyContent: 'center', background: '#071526', padding: '24px',
         }}>
           <div style={{ textAlign: 'center', maxWidth: 480 }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
-            <h2 style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 24, color: '#FFC107', marginBottom: 12 }}>
+            <h2 style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 24, color: 'var(--gold)', marginBottom: 12 }}>
               Something went wrong
             </h2>
             <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 24, lineHeight: 1.6 }}>
@@ -38,7 +38,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <button
               onClick={() => { this.setState({ error: null }); window.location.reload(); }}
               style={{
-                background: '#FFC107', color: '#000', border: 'none', padding: '10px 24px',
+                background: 'var(--gold)', color: '#000', border: 'none', padding: '10px 24px',
                 borderRadius: 6, fontFamily: "'DM Sans',sans-serif", fontWeight: 600,
                 fontSize: 14, cursor: 'pointer',
               }}

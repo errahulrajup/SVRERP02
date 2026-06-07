@@ -93,7 +93,7 @@ export function Footer() {
   const socials = getFooterSocials(settings);
 
   return (
-    <footer style={{ background: '#070707', borderTop: '1px solid rgba(255,193,7,0.10)' }}>
+    <footer style={{ background: '#070707', borderTop: '1px solid var(--border-gold)' }}>
       <style>{`
         .ftr { max-width: var(--max-w); margin: 0 auto; padding: 64px var(--pad) 32px; }
         .ftr-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 56px; padding-bottom: 44px; border-bottom: 1px solid rgba(255,255,255,0.06); }
@@ -102,7 +102,7 @@ export function Footer() {
         .ftr-nav-btn:hover { color: var(--gold); }
         .ftr-social { display: flex; gap: 10px; margin-top: 20px; }
         .ftr-social-btn { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.38); transition: color 0.2s, border-color 0.2s, background 0.2s; text-decoration: none; }
-        .ftr-social-btn:hover { color: var(--gold); border-color: rgba(255,193,7,0.3); background: rgba(255,193,7,0.06); }
+        .ftr-social-btn:hover { color: var(--gold); border-color: rgba(234,179,8,0.3); background: rgba(234,179,8,0.06); }
         @media (max-width: 768px) { .ftr-grid { grid-template-columns: 1fr; gap: 28px; } .ftr-bottom { flex-direction: column; align-items: flex-start; } }
       `}</style>
       <div className="ftr">
@@ -111,7 +111,7 @@ export function Footer() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
               {logoSrc ? (
                 <img src={logoSrc} width={34} height={34} alt="logo"
-                  style={{ objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(255,193,7,0.35))' }} />
+                  style={{ objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(234,179,8,0.35))' }} />
               ) : (
                 <img src="/favicon.svg" alt="logo" width={34} height={34} style={{ objectFit: 'contain', display: 'block' }} />
               )}
@@ -119,7 +119,7 @@ export function Footer() {
                 <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 20, fontWeight: 700, color: '#fff', lineHeight: 1 }}>
                   {settings.site_name?.split(' ')[0] ?? 'Srivriddhi'}
                 </div>
-                <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.28em', color: 'rgba(255,193,7,0.55)', textTransform: 'uppercase', marginTop: 3 }}>
+                <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.28em', color: 'rgba(234,179,8,0.55)', textTransform: 'uppercase', marginTop: 3 }}>
                   {settings.site_name?.split(' ').slice(1).join(' ') ?? 'Enterprise'}
                 </div>
               </div>
@@ -160,7 +160,7 @@ export function Footer() {
           </p>
           <button onClick={() => go('/admin')}
             style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: 'rgba(255,255,255,0.08)', fontFamily: "'DM Sans',sans-serif", padding: '2px 4px', transition: 'color 0.3s' }}
-            onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,193,7,0.3)')}
+            onMouseEnter={e => (e.currentTarget.style.color = 'rgba(234,179,8,0.3)')}
             onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.08)')}>
             ·
           </button>

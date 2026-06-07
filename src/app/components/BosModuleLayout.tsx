@@ -34,15 +34,15 @@ interface Props {
   children: ReactNode;
 }
 
-const GOLD       = '#D4A843';
-const GOLD_RGB   = '212,168,67';
-const BG0        = '#060D08';
-const BG1        = '#0C1510';
-const BG2        = '#111C14';
-const BORDER     = 'rgba(123,169,123,0.12)';
-const TEXT1      = '#F0EDE6';
-const TEXT2      = '#9AAF96';
-const TEXT3      = '#556355';
+const GOLD       = '#EAB308';
+const GOLD_RGB   = '234,179,8';
+const BG0        = '#071526';
+const BG1        = '#0C1E36';
+const BG2        = '#112745';
+const BORDER     = 'rgba(165,184,209,0.12)';
+const TEXT1      = '#FFFFFF';
+const TEXT2      = '#FAF8F5';
+const TEXT3      = '#A5B8D1';
 
 export function BosModuleLayout({ module: mod, nav, children }: Props) {
   const { pathname } = useLocation();

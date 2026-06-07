@@ -130,8 +130,8 @@ function AdminLoader() {
       <div style={{ textAlign: 'center' }}>
         <div style={{
           width: 32, height: 32,
-          border: '2px solid rgba(255,193,7,0.15)',
-          borderTopColor: '#FFC107',
+          border: '2px solid rgba(234,179,8,0.15)',
+          borderTopColor: '#EAB308',
           borderRadius: '50%',
           animation: 'spin 0.75s linear infinite',
           margin: '0 auto 10px',
@@ -148,9 +148,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { loading, isAuthed } = useAuth();
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0B0B0B' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#071526' }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ width: 40, height: 40, border: '2px solid rgba(255,193,7,0.2)', borderTopColor: '#FFC107', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+        <div style={{ width: 40, height: 40, border: '2px solid rgba(234,179,8,0.2)', borderTopColor: '#EAB308', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
         <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: 'rgba(255,255,255,0.28)' }}>Verifying session…</p>
       </div>

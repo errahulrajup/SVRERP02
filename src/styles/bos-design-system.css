@@ -12,41 +12,41 @@
    § 0 — TOKENS  (mirror of svr-shared.js :root, React-side)
    ═══════════════════════════════════════════════════════════════════ */
 :root {
-  --bos-bg0:          #060D08; /* Deep Forest Green (92%) */
-  --bos-bg1:          #0B160E;
-  --bos-bg2:          #112015;
-  --bos-bg3:          #16281B;
-  --bos-bg4:          #1C3322;
-  --bos-hover:        #213E28;
+  --bos-bg0:          #071526; /* Deep Brand Navy Blue */
+  --bos-bg1:          #0C1E36;
+  --bos-bg2:          #112745;
+  --bos-bg3:          #163054;
+  --bos-bg4:          #1C3B61;
+  --bos-hover:        #214575;
 
-  --bos-gold:         #EAB308; /* Yellow Accent (75%) */
+  --bos-gold:         #EAB308; /* PLANTSMÖR Golden-Yellow */
   --bos-gold2:        #CA8A04;
   --bos-gold-soft:    rgba(234,179,8,0.09);
   --bos-gold-border:  rgba(234,179,8,0.22);
   --bos-gold-glow:    rgba(234,179,8,0.14);
 
-  --bos-sage:         #7BA97B; /* Light Green (88%) */
-  --bos-border:       rgba(123,169,123,0.10);
-  --bos-border2:      rgba(123,169,123,0.20);
+  --bos-sage:         #4ADE80; /* Leaf Green */
+  --bos-border:       rgba(165,184,209,0.10);
+  --bos-border2:      rgba(165,184,209,0.20);
 
-  --bos-text1:        #FFFFFF; /* White (82%) */
-  --bos-text2:        #FAF8F5; /* Cream/Ivory (80%) */
-  --bos-text3:        #86A286; /* Sage green-gray */
-  --bos-text4:        #4D664D;
+  --bos-text1:        #FFFFFF; /* White */
+  --bos-text2:        #FAF8F5; /* Cream/Ivory */
+  --bos-text3:        #A5B8D1; /* Slate blue-gray */
+  --bos-text4:        #4A607A;
 
-  --bos-green:        #4ADE80; /* Light Green (88%) */
+  --bos-green:        #4ADE80; /* Leaf Green */
   --bos-green-bg:     rgba(74,222,128,0.08);
   --bos-green-border: rgba(74,222,128,0.20);
   
-  --bos-red:          #FFB8B8; /* Soft Maroon/Pink Warning (52% - avoids bright red-black) */
+  --bos-red:          #FFB8B8; /* Soft Maroon/Pink Warning */
   --bos-red-bg:       rgba(92,37,37,0.4);
   --bos-red-border:   rgba(220,100,100,0.3);
   
-  --bos-yellow:       #FFF7CC; /* Light Yellow (75%) */
-  --bos-yellow-bg:    rgba(255,247,204,0.08);
-  --bos-yellow-border:rgba(255,247,204,0.20);
+  --bos-yellow:       #FEF08A; /* Light Yellow */
+  --bos-yellow-bg:    rgba(254,240,138,0.08);
+  --bos-yellow-border:rgba(254,240,138,0.20);
   
-  --bos-blue:         #38BDF8; /* Navy Blue/Teal Accent (85%-84%) */
+  --bos-blue:         #38BDF8; /* Blue Accent */
   --bos-blue-bg:      rgba(56,189,248,0.08);
   --bos-blue-border:  rgba(56,189,248,0.20);
   --bos-purple:       #C084FC;

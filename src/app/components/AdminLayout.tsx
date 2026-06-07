@@ -84,7 +84,7 @@ export function AdminLayout() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
               width: 32, height: 32, borderRadius: 8,
-              background: 'rgba(255,193,7,0.1)', border: '1px solid rgba(255,193,7,0.22)',
+              background: 'var(--gold-soft)', border: '1px solid var(--gold-glow)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               {logoSrc ? (
@@ -96,7 +96,7 @@ export function AdminLayout() {
             </div>
             <div>
               <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 13, fontWeight: 700, color: '#fff', lineHeight: 1 }}>SVR20</div>
-              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.25em', color: 'rgba(255,193,7,0.45)', textTransform: 'uppercase', marginTop: 2 }}>
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.25em', color: 'rgba(234,179,8,0.45)', textTransform: 'uppercase', marginTop: 2 }}>
                 CMS · {role ?? 'NO ROLE'}
               </div>
             </div>
@@ -190,7 +190,7 @@ export function AdminLayout() {
       {/* Mobile top bar */}
       <div style={{
         display: 'none', position: 'fixed', top: 0, left: 0, right: 0,
-        height: 52, background: '#080808', borderBottom: '1px solid var(--border)',
+        height: 52, background: 'var(--bg-second)', borderBottom: '1px solid var(--border)',
         zIndex: 198, alignItems: 'center', justifyContent: 'space-between', padding: '0 16px',
       }} className="adm-mob-bar">
         <button onClick={() => setOpen(o => !o)}
