@@ -65,8 +65,12 @@ export function ContactPage() {
         .ct-form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
         @media (max-width:1024px) { .ct-grid{grid-template-columns:1fr; gap:36px;} .ct-hero{height:60vh;min-height:400px;} }
         @media (max-width:900px) { .ct-steps-grid { grid-template-columns:1fr; gap:20px; } }
-        @media (max-width:768px) { .ct-content{padding:0 var(--pad) 56px;} .ct-form-card{padding:24px 20px;} }
+        @media (max-width:768px) { .ct-content{padding:0 var(--pad) 56px;} .ct-form-card{padding:24px 20px;} .ct-grid { padding:32px 0; } }
         @media (max-width:600px) { .ct-form-row { grid-template-columns:1fr; } }
+        @media (max-width:480px) {
+          .ct-info-card { padding:12px 14px; gap:10px; }
+          .ct-form-card { padding:16px 14px; }
+        }
       `}</style>
 
       <div style={{ background:'var(--bg-main)' }}>

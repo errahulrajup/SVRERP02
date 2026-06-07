@@ -53,6 +53,10 @@ export function HomePage() {
           .hp-prod-grid { grid-template-columns:1fr; gap:16px; }
           .hp-test-grid { grid-template-columns:1fr; gap:16px; }
         }
+        .hp-cta { padding:88px 0; background:linear-gradient(135deg,#111 0%,#0B0B0B 50%,#100A00 100%); position:relative; overflow:hidden; }
+        @media (max-width:768px) {
+          .hp-cta { padding:48px 0; }
+        }
       `}</style>
 
       {/* ═══ HERO ══════════════════════════════════════════════════════════ */}
@@ -224,7 +228,7 @@ export function HomePage() {
       )}
 
       {/* ═══ CTA BAND ════════════════════════════════════════════════════════ */}
-      <section style={{ padding:'88px 0', background:'linear-gradient(135deg,#111 0%,#0B0B0B 50%,#100A00 100%)', position:'relative', overflow:'hidden' }}>
+      <section className="hp-cta">
         <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse 70% 50% at 50% 50%, rgba(255,193,7,0.05) 0%, transparent 70%)', pointerEvents:'none' }} />
         <div style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:360, height:360, opacity:0.04, pointerEvents:'none' }}>
           <img src="/images/logo.png" alt="" aria-hidden style={{ width:'100%', height:'100%', objectFit:'contain', filter:'drop-shadow(0px 0px 4px rgba(0,0,0,0.5))' }} />

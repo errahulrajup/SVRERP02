@@ -43,7 +43,7 @@ export function ProductDetail() {
       <style>{`
         .pd-root { background:var(--bg-main); padding-top:var(--hdr-h); }
         .pd-crumb { background:#080808; border-bottom:1px solid rgba(255,193,7,0.08); padding:12px 0; }
-        .pd-crumb-inner { max-width:var(--max-w); margin:0 auto; padding:0 var(--pad); display:flex; align-items:center; gap:8px; }
+        .pd-crumb-inner { max-width:var(--max-w); margin:0 auto; padding:0 var(--pad); display:flex; align-items:center; gap:8px; overflow-x:auto; white-space:nowrap; }
         .pd-crumb-btn { background:none; border:none; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:12px; color:rgba(255,255,255,0.28); padding:0; transition:color 0.2s; }
         .pd-crumb-btn:hover { color:var(--gold); }
         .pd-main { display:grid; grid-template-columns:1fr 1fr; min-height:80vh; border-bottom:1px solid var(--border); }
@@ -61,6 +61,10 @@ export function ProductDetail() {
         @media (max-width:600px) {
           .pd-usage-grid { grid-template-columns:1fr; }
           .pd-related-grid { grid-template-columns:1fr; gap:16px; }
+        }
+        @media (max-width:480px) {
+          .pd-img-panel { padding:24px 12px; }
+          .pd-info { padding:24px 12px; }
         }
       `}</style>
 

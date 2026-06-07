@@ -23,36 +23,52 @@ a, button { font: inherit; }
 img { max-width: 100%; display: block; }
 
 :root {
-  /* ── Forest Prestige Theme — ERP01 v4.0 ── */
-  --gold:             #D4A843;
-  --gold-hover:       #C9993A;
-  --gold-soft:        rgba(212,168,67,0.10);
-  --gold-glow:        rgba(212,168,67,0.22);
-  --gold-dim:         rgba(212,168,67,0.06);
+  /* ── Astrological Compatible Theme — SVR ERP v5.0 ── */
+  /* Forest Green (92% compatibility) — Primary Theme Backgrounds */
+  --theme-forest-green:  #060D08;
+  --bg-main:             #060D08;
+  --bg-second:           #0B160E;
+  --bg-card:             #112015;
+  --bg-card2:            #16281B;
+  --bg-elevated:         #1C3322;
+  --bg-hover:            #213E28;
 
-  /* Sage green — secondary accent */
-  --sage:             #7BA97B;
-  --sage-soft:        rgba(123,169,123,0.10);
-  --sage-border:      rgba(123,169,123,0.18);
+  /* White (82% compatibility) & Cream (80% compatibility) — Main Text */
+  --text-1:              #FFFFFF;
+  --text-2:              #FAF8F5; /* Cream/Ivory */
+  
+  /* Navy Blue (85% compatibility) & Teal (84% compatibility) — Secondary Accents */
+  --theme-navy:          #112240;
+  --theme-navy-soft:     rgba(17,34,64,0.15);
+  --theme-navy-border:   rgba(17,34,64,0.3);
+  --theme-teal:          #0D9488;
+  --theme-teal-soft:     rgba(13,148,136,0.12);
+  --theme-teal-border:   rgba(13,148,136,0.25);
+  
+  /* Light Green (88% compatibility) — Positive status / Success */
+  --sage:                #7BA97B;
+  --sage-soft:           rgba(123,169,123,0.10);
+  --sage-border:         rgba(123,169,123,0.18);
+  --text-3:              #86A286; /* Light green-gray */
+  --text-4:              #4D664D;
 
-  /* Backgrounds — deep forest blacks */
-  --bg-main:          #060D08;
-  --bg-second:        #0C1510;
-  --bg-card:          #111C14;
-  --bg-card2:         #162018;
-  --bg-elevated:      #1C2A1E;
-  --bg-hover:         #213224;
+  /* Gold (72% compatibility) & Light Yellow (75% compatibility) — Accents & Indicators */
+  --gold:                #D4A843;
+  --gold-hover:          #C9993A;
+  --gold-soft:           rgba(212,168,67,0.10);
+  --gold-glow:           rgba(212,168,67,0.22);
+  --gold-dim:            rgba(212,168,67,0.06);
+  --theme-yellow:        #FFF7CC;
 
-  /* Text — warm whites with sage midtones */
-  --text-1:           #F0EDE6;
-  --text-2:           #9AAF96;
-  --text-3:           #556355;
-  --text-4:           #334033;
+  /* Soft Maroon (52% compatibility) — Safe warning state (avoid pure red/black) */
+  --theme-maroon:        #5C2525;
+  --theme-maroon-text:   #FFB8B8;
+  --theme-maroon-border: rgba(220,100,100,0.3);
 
   /* Borders */
-  --border:           rgba(123,169,123,0.08);
-  --border-light:     rgba(123,169,123,0.16);
-  --border-gold:      rgba(212,168,67,0.20);
+  --border:              rgba(123,169,123,0.08);
+  --border-light:        rgba(123,169,123,0.16);
+  --border-gold:         rgba(212,168,67,0.20);
 
   --radius-sm:  4px;
   --radius-md:  6px;
@@ -123,8 +139,8 @@ img { max-width: 100%; display: block; }
 .btn-dark { background: var(--bg-elevated); color: var(--text-1); border: 1px solid var(--border); }
 .btn-dark:hover { background: var(--bg-hover); border-color: var(--border-gold); transform: translateY(-1px); }
 
-.btn-danger { background: rgba(239,68,68,0.1); color: #F87171; border: 1px solid rgba(239,68,68,0.2); border-radius: var(--radius-md); padding: 5px 12px; font-family: 'DM Sans',sans-serif; font-size: var(--t-xs); font-weight: 600; cursor: pointer; transition: all 0.2s; }
-.btn-danger:hover { background: rgba(239,68,68,0.18); transform: translateY(-1px); }
+.btn-danger { background: rgba(92,37,37,0.35); color: var(--theme-maroon-text); border: 1px solid var(--theme-maroon-border); border-radius: var(--radius-md); padding: 5px 12px; font-family: 'DM Sans',sans-serif; font-size: var(--t-xs); font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.btn-danger:hover { background: rgba(92,37,37,0.55); transform: translateY(-1px); }
 
 .btn-success { background: rgba(74,222,128,0.1); color: #4ADE80; border: 1px solid rgba(74,222,128,0.2); border-radius: var(--radius-md); padding: 5px 12px; font-family: 'DM Sans',sans-serif; font-size: var(--t-xs); font-weight: 600; cursor: pointer; transition: all 0.2s; }
 
@@ -151,7 +167,7 @@ img { max-width: 100%; display: block; }
 .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: var(--radius-full); font-family: 'DM Sans',sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
 .badge-gold   { background: var(--gold-soft); border: 1px solid var(--border-gold); color: var(--gold); }
 .badge-green  { background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.2); color: #4ADE80; }
-.badge-red    { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); color: #F87171; }
+.badge-red    { background: rgba(92,37,37,0.3); border: 1px solid var(--theme-maroon-border); color: var(--theme-maroon-text); }
 .badge-muted  { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-3); }
 
 /* ── Section utilities ── */
@@ -184,9 +200,9 @@ img { max-width: 100%; display: block; }
 /* ── Responsive ── */
 @media (max-width: 1024px) { :root { --pad: clamp(16px, 4vw, 48px); } }
 @media (max-width: 768px) {
-  :root { --pad: 20px; }
-  .sec { padding: 56px 0; }
-  .sec-sm { padding: 40px 0; }
+  :root { --pad: 16px; }
+  .sec { padding: 28px 0; }
+  .sec-sm { padding: 18px 0; }
   .adm-sidebar { transform: translateX(-100%); }
   .adm-sidebar.open { transform: translateX(0); }
   .adm-content { margin-left: 0; }
@@ -194,7 +210,11 @@ img { max-width: 100%; display: block; }
   .adm-mob-bar { display: flex !important; }
   .adm-content { padding-top: var(--topbar-h); }
 }
-@media (max-width: 480px) { :root { --pad: 16px; } }
+@media (max-width: 480px) {
+  :root { --pad: 12px; }
+  .sec { padding: 20px 0; }
+  .sec-sm { padding: 12px 0; }
+}
 
 /* BUG-023: Respect reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
