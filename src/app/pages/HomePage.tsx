@@ -75,7 +75,7 @@ export function HomePage() {
         }
         @media (min-width:1024px) and (min-height:650px) {
           .hp-snap-active {
-            scroll-snap-type: y mandatory;
+            scroll-snap-type: y proximity;
             scroll-behavior: smooth;
           }
           .hp-snap-active .hp-snap-section {
@@ -130,6 +130,51 @@ export function HomePage() {
           .hp-snap-active .hp-content {
             padding-bottom: 44px !important;
           }
+        }
+        
+        .hp-b2b-card {
+          display: flex;
+          align-items: center;
+          gap: 24px;
+          padding: 20px 24px;
+          background: var(--bg-card);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          transition: border-color 0.25s, box-shadow 0.25s;
+        }
+        .hp-b2b-card:hover {
+          border-color: var(--border-gold) !important;
+          box-shadow: 0 0 20px rgba(255,193,7,0.07) !important;
+        }
+        .prod-card__img {
+          aspect-ratio: 4/3 !important;
+          object-fit: cover !important;
+        }
+
+        .hp-scroll-indicator {
+          position: absolute;
+          bottom: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 10;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          pointer-events: none;
+        }
+        .hp-scroll-indicator span {
+          display: block;
+          width: 10px;
+          height: 10px;
+          border-bottom: 2.5px solid rgba(255,255,255,0.4);
+          border-right: 2.5px solid rgba(255,255,255,0.4);
+          transform: rotate(45deg);
+          animation: scrollArrow 1.8s infinite;
+        }
+        @keyframes scrollArrow {
+          0% { opacity: 0; transform: rotate(45deg) translateY(-8px); }
+          50% { opacity: 1; }
+          100% { opacity: 0; transform: rotate(45deg) translateY(8px); }
         }
       `}</style>
 
@@ -187,6 +232,9 @@ export function HomePage() {
                 </button>
               </motion.div>
             </motion.div>
+          </div>
+          <div className="hp-scroll-indicator">
+            <span />
           </div>
         </section>
 
@@ -265,9 +313,7 @@ export function HomePage() {
                   { n:'100%',  l:'Plant-Based',   s:'No dairy. No compromise.' },
                   { n:'24h',   l:'Response Time', s:'Direct team access' },
                 ].map(s => (
-                  <div key={s.l} style={{ display:'flex', alignItems:'center', gap:24, padding:'20px 24px', background:'var(--bg-card)', border:'1px solid var(--border)', borderRadius:'var(--radius-md)', transition:'border-color 0.25s, box-shadow 0.25s' }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor='var(--border-gold)'; (e.currentTarget as HTMLDivElement).style.boxShadow='0 0 20px rgba(255,193,7,0.07)'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor='var(--border)'; (e.currentTarget as HTMLDivElement).style.boxShadow='none'; }}>
+                  <div key={s.l} className="hp-b2b-card">
                     <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:44, color:'var(--gold)', lineHeight:1, minWidth:72, letterSpacing:'0.02em' }}>{s.n}</span>
                     <div>
                       <span style={{ display:'block', fontFamily:"'DM Sans',sans-serif", fontSize:13, fontWeight:700, color:'#fff', letterSpacing:'0.04em' }}>{s.l}</span>

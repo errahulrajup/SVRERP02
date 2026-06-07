@@ -7,6 +7,41 @@ import { SEO } from '../components/SEO';
 const FI = { hidden: { opacity: 0, y: 24 }, show: { opacity: 1, y: 0 } };
 const FC = { hidden: {}, show: { transition: { staggerChildren: 0.1 } } };
 
+const SVGS = {
+  phone: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+    </svg>
+  ),
+  email: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+    </svg>
+  ),
+  mapPin: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+      <circle cx="12" cy="10" r="3" />
+    </svg>
+  ),
+  checkCircle: (
+    <svg className="svg-success-tick" viewBox="0 0 52 52" style={{ width:64, height:64, display:'block', margin:'0 auto 20px' }}>
+      <style>{`
+        .svg-success-tick { border-radius: 50%; stroke: var(--gold); stroke-width: 2; stroke-miterlimit: 10; box-shadow: inset 0px 0px 0px var(--gold-soft); animation: fillTick .4s ease-in-out .4s forwards, scaleTick .3s ease-in-out .9s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .svg-success-tick__circle { stroke-dasharray: 166; stroke-dashoffset: 166; stroke-width: 2; stroke-miterlimit: 10; stroke: var(--gold); fill: none; animation: strokeCircle 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards; }
+        .svg-success-tick__check { transform-origin: 50% 50%; stroke-dasharray: 48; stroke-dashoffset: 48; stroke: var(--gold); stroke-width: 3; fill: none; animation: strokeCheck 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards; }
+        @keyframes strokeCircle { 100% { stroke-dashoffset: 0; } }
+        @keyframes strokeCheck { 100% { stroke-dashoffset: 0; } }
+        @keyframes scaleTick { 0%, 100% { transform: none; } 50% { transform: scale3d(1.1, 1.1, 1); } }
+        @keyframes fillTick { 100% { box-shadow: inset 0px 0px 0px 30px var(--gold-soft); } }
+      `}</style>
+      <circle className="svg-success-tick__circle" cx="26" cy="26" r="25" fill="none" />
+      <path className="svg-success-tick__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+    </svg>
+  )
+};
+
 const SUBJECTS = ['Product Enquiry','Bulk / HoReCa Order','Sample Request','Retail Partnership','Distribution','Other'];
 
 export function ContactPage() {
@@ -31,6 +66,7 @@ export function ContactPage() {
     if (Date.now() - loadTime < 1500) { setError('Please wait a moment before submitting.'); return; }
     if (!form.name.trim())    return setError('Name is required.');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) return setError('Valid email is required.');
+    if (form.phone.trim() && !/^\+?[\d\s\-()]{10,15}$/.test(form.phone.trim())) return setError('Please enter a valid phone number.');
     if (form.message.trim().length < 10) return setError('Please write a bit more detail (min 10 chars).');
     setSending(true); setError('');
     const { error: err } = await inquiriesApi.submit({
@@ -111,12 +147,12 @@ export function ContactPage() {
               <p className="t-body" style={{ marginBottom:28 }}>No ticket systems. No chatbots. Call, WhatsApp, or email — we respond the same day.</p>
 
               {[
-                { icon:'📞', label:'Phone', val: settings.site_phone ?? '+91 7565 000 365', href:`tel:${settings.site_phone ?? '+917565000365'}` },
-                { icon:'✉️', label:'Email', val: settings.site_email ?? 'info@srivriddhi.com', href:`mailto:${settings.site_email ?? 'info@srivriddhi.com'}` },
-                { icon:'📍', label:'Office', val: settings.site_address ?? 'Sagar, M.P. — India', href: undefined },
+                { icon: SVGS.phone, label:'Phone', val: settings.site_phone ?? '+91 7565 000 365', href:`tel:${settings.site_phone ?? '+917565000365'}` },
+                { icon: SVGS.email, label:'Email', val: settings.site_email ?? 'info@srivriddhi.com', href:`mailto:${settings.site_email ?? 'info@srivriddhi.com'}` },
+                { icon: SVGS.mapPin, label:'Office', val: settings.site_address ?? 'Sagar, M.P. — India', href: undefined },
               ].map(c => (
                 <div key={c.label} className="ct-info-card">
-                  <div style={{ width:44,height:44,borderRadius:'50%',background:'var(--gold-soft)',border:'1px solid var(--border-gold)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,flexShrink:0 }}>
+                  <div style={{ width:44,height:44,borderRadius:'50%',background:'var(--gold-soft)',border:'1px solid var(--border-gold)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
                     {c.icon}
                   </div>
                   <div>
@@ -153,24 +189,24 @@ export function ContactPage() {
               {sent ? (
                 <motion.div initial={{ opacity:0, scale:0.95 }} animate={{ opacity:1, scale:1 }}
                   style={{ textAlign:'center', padding:'52px 32px', background:'var(--bg-card)', border:'1px solid var(--border-gold)', borderRadius:'var(--radius-xl)' }}>
-                  <div style={{ fontSize:48, marginBottom:16 }}>✓</div>
-                  <h3 style={{ fontFamily:"'Playfair Display',Georgia,serif", fontSize:26, color:'var(--gold)', marginBottom:12 }}>Message Sent!</h3>
+                  {SVGS.checkCircle}
+                  <h3 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:26, letterSpacing:'0.04em', color:'var(--gold)', marginBottom:12 }}>Message Sent!</h3>
                   <p className="t-body">Thank you. Our team will reach out within 24 hours.<br />For urgent needs, WhatsApp us directly.</p>
                 </motion.div>
               ) : (
                 <div className="ct-form-card">
                   <div className="ct-form-row">
-                    <div><label className="field-label">Name *</label><input className="field" placeholder="Your name" value={form.name} onChange={upd('name')} /></div>
-                    <div><label className="field-label">Phone</label><input className="field" type="tel" placeholder="+91 XXXXX XXXXX" value={form.phone} onChange={upd('phone')} /></div>
+                    <div><label className="field-label" htmlFor="ct_name">Name *</label><input id="ct_name" className="field" placeholder="Your name" value={form.name} onChange={upd('name')} /></div>
+                    <div><label className="field-label" htmlFor="ct_phone">Phone</label><input id="ct_phone" className="field" type="tel" placeholder="+91 XXXXX XXXXX" value={form.phone} onChange={upd('phone')} /></div>
                   </div>
-                  <div style={{ marginBottom:14 }}><label className="field-label">Email *</label><input className="field" type="email" placeholder="your@email.com" value={form.email} onChange={upd('email')} /></div>
+                  <div style={{ marginBottom:14 }}><label className="field-label" htmlFor="ct_email">Email *</label><input id="ct_email" className="field" type="email" placeholder="your@email.com" value={form.email} onChange={upd('email')} /></div>
                   <div style={{ marginBottom:14 }}>
-                    <label className="field-label">Subject</label>
-                    <select className="field" value={form.subject} onChange={upd('subject')} style={{ background:'var(--bg-card2)', cursor:'pointer' }}>
+                    <label className="field-label" htmlFor="ct_subject">Subject</label>
+                    <select id="ct_subject" className="field" value={form.subject} onChange={upd('subject')} style={{ background:'var(--bg-card2)', cursor:'pointer' }}>
                       {SUBJECTS.map(s => <option key={s}>{s}</option>)}
                     </select>
                   </div>
-                  <div style={{ marginBottom:22 }}><label className="field-label">Message *</label><textarea className="field" rows={5} placeholder="Tell us about your requirement — product, quantity, usage, timeline..." value={form.message} onChange={upd('message')} style={{ resize:'vertical' }} /></div>
+                  <div style={{ marginBottom:22 }}><label className="field-label" htmlFor="ct_message">Message *</label><textarea id="ct_message" className="field" rows={5} placeholder="Tell us about your requirement — product, quantity, usage, timeline..." value={form.message} onChange={upd('message')} style={{ resize:'vertical' }} /></div>
                   {error && <div style={{ background:'rgba(248,113,113,0.08)', border:'1px solid rgba(248,113,113,0.22)', borderRadius:'var(--radius-sm)', padding:'10px 14px', marginBottom:14 }}><p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:12, color:'#F87171' }}>{error}</p></div>}
                   {/* BUG-003: Honeypot field — visually hidden, aria-hidden, not labeled. Bots fill it; humans never see it. */}
                   <div aria-hidden="true" style={{ position:'absolute', left:'-9999px', top:'-9999px', height:0, overflow:'hidden' }}>
