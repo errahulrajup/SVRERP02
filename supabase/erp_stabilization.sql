@@ -138,18 +138,28 @@ create or replace function log.enqueue_event(
 returns uuid
 language plpgsql
 security definer
-set search_path = log, public
+set search_path = log, public, extensions
 as $$
 declare
   event_id uuid;
   key text;
 begin
-  key := event_name || ':' || entity_table_name || ':' || coalesce(entity_uuid::text, encode(digest(coalesce(event_payload, '{}')::text, 'sha256'), 'hex'));
+  -- 1. Cross-tenant Validation
+  IF auth.uid() IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND org_id = target_org_id
+  ) THEN
+    RAISE EXCEPTION 'Cross-tenant enqueue forbidden';
+  END IF;
 
+  -- 2. Idempotency Key Generation
+  key := event_name || ':' || entity_table_name || ':' || coalesce(entity_uuid::text, encode(extensions.digest(coalesce(event_payload, '{}')::text, 'sha256'), 'hex'));
+
+  -- 3. Immutable Outbox Insertion
   insert into log.outbox_events(org_id, event_type, entity_table, entity_id, payload, idempotency_key)
   values (target_org_id, event_name, entity_table_name, entity_uuid, coalesce(event_payload, '{}'), key)
   on conflict (org_id, idempotency_key)
-  do update set payload = excluded.payload
+  do nothing
   returning id into event_id;
 
   return event_id;

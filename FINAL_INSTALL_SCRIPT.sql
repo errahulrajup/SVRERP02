@@ -3606,22 +3606,38 @@ returns trigger
 language plpgsql
 as $$
 begin
-  if current_setting('app.workflow_context', true) <> 'rpc' then
+  if coalesce(current_setting('app.workflow_context', true), '') <> 'rpc' then
     raise exception 'Direct financial mutation is forbidden on %.%', tg_table_schema, tg_table_name
       using errcode = '42501';
   end if;
 
-  if tg_op in ('UPDATE','DELETE') and tg_table_schema = 'fin' and tg_table_name in ('journal_entries','journal_lines') then
-    if exists (
-      select 1
-      from fin.journal_entries je
-      where je.id = case
-        when tg_table_name = 'journal_entries' then old.id
-        else old.journal_entry_id
-      end
-      and je.status in ('POSTED','REVERSED')
-    ) and current_setting('app.allow_posted_finance_mutation', true) <> 'reversal' then
-      raise exception 'Posted financial records cannot be mutated directly';
+  if tg_op in ('UPDATE','DELETE') and tg_table_schema = 'fin' then
+    if tg_table_name = 'journal_entries' then
+      if exists (
+        select 1
+        from fin.journal_entries je
+        where je.id = old.id
+        and je.status in ('POSTED','REVERSED')
+      ) then
+        if tg_op = 'DELETE' then
+          raise exception 'Posted or reversed journal entries cannot be deleted';
+        elsif coalesce(current_setting('app.allow_posted_finance_mutation', true), '') <> 'reversal' then
+          raise exception 'Posted financial records cannot be mutated directly';
+        end if;
+      end if;
+    elsif tg_table_name = 'journal_lines' then
+      if exists (
+        select 1
+        from fin.journal_entries je
+        where je.id = old.journal_entry_id
+        and je.status in ('POSTED','REVERSED')
+      ) then
+        if tg_op = 'DELETE' then
+          raise exception 'Journal lines of posted or reversed entries cannot be deleted';
+        elsif coalesce(current_setting('app.allow_posted_finance_mutation', true), '') <> 'reversal' then
+          raise exception 'Posted financial records cannot be mutated directly';
+        end if;
+      end if;
     end if;
   end if;
 
@@ -5340,18 +5356,28 @@ create or replace function log.enqueue_event(
 returns uuid
 language plpgsql
 security definer
-set search_path = log, public
+set search_path = log, public, extensions
 as $$
 declare
   event_id uuid;
   key text;
 begin
-  key := event_name || ':' || entity_table_name || ':' || coalesce(entity_uuid::text, encode(digest(coalesce(event_payload, '{}')::text, 'sha256'), 'hex'));
+  -- 1. Cross-tenant Validation
+  IF auth.uid() IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND org_id = target_org_id
+  ) THEN
+    RAISE EXCEPTION 'Cross-tenant enqueue forbidden';
+  END IF;
 
+  -- 2. Idempotency Key Generation
+  key := event_name || ':' || entity_table_name || ':' || coalesce(entity_uuid::text, encode(extensions.digest(coalesce(event_payload, '{}')::text, 'sha256'), 'hex'));
+
+  -- 3. Immutable Outbox Insertion
   insert into log.outbox_events(org_id, event_type, entity_table, entity_id, payload, idempotency_key)
   values (target_org_id, event_name, entity_table_name, entity_uuid, coalesce(event_payload, '{}'), key)
   on conflict (org_id, idempotency_key)
-  do update set payload = excluded.payload
+  do nothing
   returning id into event_id;
 
   return event_id;

@@ -136,22 +136,38 @@ returns trigger
 language plpgsql
 as $$
 begin
-  if current_setting('app.workflow_context', true) <> 'rpc' then
+  if coalesce(current_setting('app.workflow_context', true), '') <> 'rpc' then
     raise exception 'Direct financial mutation is forbidden on %.%', tg_table_schema, tg_table_name
       using errcode = '42501';
   end if;
 
-  if tg_op in ('UPDATE','DELETE') and tg_table_schema = 'fin' and tg_table_name in ('journal_entries','journal_lines') then
-    if exists (
-      select 1
-      from fin.journal_entries je
-      where je.id = case
-        when tg_table_name = 'journal_entries' then old.id
-        else old.journal_entry_id
-      end
-      and je.status in ('POSTED','REVERSED')
-    ) and current_setting('app.allow_posted_finance_mutation', true) <> 'reversal' then
-      raise exception 'Posted financial records cannot be mutated directly';
+  if tg_op in ('UPDATE','DELETE') and tg_table_schema = 'fin' then
+    if tg_table_name = 'journal_entries' then
+      if exists (
+        select 1
+        from fin.journal_entries je
+        where je.id = old.id
+        and je.status in ('POSTED','REVERSED')
+      ) then
+        if tg_op = 'DELETE' then
+          raise exception 'Posted or reversed journal entries cannot be deleted';
+        elsif coalesce(current_setting('app.allow_posted_finance_mutation', true), '') <> 'reversal' then
+          raise exception 'Posted financial records cannot be mutated directly';
+        end if;
+      end if;
+    elsif tg_table_name = 'journal_lines' then
+      if exists (
+        select 1
+        from fin.journal_entries je
+        where je.id = old.journal_entry_id
+        and je.status in ('POSTED','REVERSED')
+      ) then
+        if tg_op = 'DELETE' then
+          raise exception 'Journal lines of posted or reversed entries cannot be deleted';
+        elsif coalesce(current_setting('app.allow_posted_finance_mutation', true), '') <> 'reversal' then
+          raise exception 'Posted financial records cannot be mutated directly';
+        end if;
+      end if;
     end if;
   end if;
 
